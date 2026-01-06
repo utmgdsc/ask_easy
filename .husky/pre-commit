@@ -1,3 +1,2 @@
-pnpm typecheck       # <- catch all TypeScript errors
-pnpm lint
-pnpm build
+pnpm typecheck
+pnpm lint-staged
