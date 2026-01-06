@@ -15,7 +15,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - run: pnpm install
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm build
+      - name: Install Deps
+        run: pnpm install
+      - name: Check Types
+        run: pnpm typecheck
+      - name: Lint Code
+        run: pnpm lint
+      - name: Test Build
+        run: pnpm build
