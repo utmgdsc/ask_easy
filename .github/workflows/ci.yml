@@ -8,21 +8,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+      strategy:
+        matrix:
+          node-version: [20]
+      steps:
+        - uses: actions/checkout@v4
+        - name: Install pnpm
+          uses: pnpm/action-setup@v4
+          with:
+            version: 10
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v4
+          with:
+            node-version: ${{ matrix.node-version }}
+            cache: "pnpm"
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - name: Install pnpm
-        run: npm install -g pnpm
-      - name: Install Deps
-        run: pnpm install
-      - name: Check Types
-        run: pnpm typecheck
-      - name: Lint Code
-        run: pnpm lint
-      - name: Test Build
-        run: pnpm build
+    - name: Install Deps
+      run: pnpm install
+    - name: Check Types
+      run: pnpm typecheck
+    - name: Lint Code
+      run: pnpm lint
+    - name: Test Build
+      run: pnpm build
