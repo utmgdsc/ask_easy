@@ -29,5 +29,7 @@ jobs:
         run: pnpm typecheck
       - name: Lint Code
         run: pnpm lint
-      - name: Test Build
+      - name: Try Build
         run: pnpm build
+      - name: Run Internal Tests
+        run: pnpm test
