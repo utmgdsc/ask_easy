@@ -1,0 +1,61 @@
+name: Deploy Next.js App
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+      - name: Install Deps
+        run: pnpm install
+      
+      # CI
+      - name: Check Types
+        run: pnpm typecheck
+      - name: Lint Code
+        run: pnpm lint
+      - name: Try Build
+        run: pnpm build
+      - name: Run Internal Tests
+        run: pnpm test
+
+      # CD
+      - name: Create .env file
+        run: echo "SITE_URL=${{ env.SITE_URL }}" >> .env
+      - name: Build Docker Image
+        run: docker build -t [repository link]
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Publish Docker Image to Docker Hub
+        run: docker push [repository link]:latest
+      
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull Image from Docker Hub
+        run: docker pull [repository link]:latest
+      - name: Stop and Remove Existing Container
+        run: docker rm -f [container name]
+      - name: Run Docker Container
+        run: docker run -d -p 3000:3000 --name [container name] [repository link]:latest
+
+  
