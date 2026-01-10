@@ -41,7 +41,7 @@ jobs:
       - name: Create .env file
         run: echo "SITE_URL=${{ env.SITE_URL }}" >> .env
       - name: Build Docker Image
-        run: docker build -t jadendocks/ask_easy
+        run: docker build -t jadendocks/ask_easy .
       - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Publish Docker Image to Docker Hub
