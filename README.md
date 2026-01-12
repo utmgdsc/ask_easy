@@ -1,36 +1,55 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Workflow
 
-First, run the development server:
+Please only use names from the assigned board, make a new ticket if needed.
 
 ```bash
-npm run dev TEAM DONT USE THIS
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git checkout -b NAME_NUM
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Run the development server WHILE you write code:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Once you think everything is all good test in the prod env locally by using
 
-## Learn More
+```bash
+docker run -p 3000:3000 ask_easy
+```
 
-To learn more about Next.js, take a look at the following resources:
+this will create a docker image and forward the 3000 port of the image to your computers 3000 port.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Commit as you go, you MUST use CONVENTIONAL COMMITS (see bottom for conventional commit cheat sheet):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+git add -A
+git commit -m "feat: add "
+git push
+```
 
-## Deploy on Vercel
+Once a task (branch) is completed send a PR to main. Do so through github DO NOT MERGE TO MAIN LOCALLY THEN PUSH.
+If you need help with this just shoot me (Jaden) a text.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Conventional Commit Cheat Sheet
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+A conventional commit message follows the following criteria,
+
+1. Is of the form <type>(optional scope): <short description>
+2. Uses present tense, ex. add (good) but added (bad)
+3. Describes one change not many if needed break into multiple commits each with one idea captured
+
+The following are examples of amazing conventional commit messages:
+
+feat: add JWT-based authentication
+fix: handle null user response from database
+docs: update setup instructions for local development
+refactor: extract validation logic into helper
+test: add unit tests for login endpoint
+chore: bump next.js from 14.0.2 to 14.1.0
+perf: reduce API response time by memoizing queries
+ci: add lint and test workflow
+
+Please do not make up your own <types> (unless you asked the team first sometimes this is needed but rarely) use one of the <types> in he above examples.
