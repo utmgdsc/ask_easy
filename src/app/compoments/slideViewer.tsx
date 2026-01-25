@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, ChevronsLeftRight, Presentation } from "lucide-react";
+
 import { createPluginRegistration } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
@@ -22,6 +24,7 @@ const plugins = [
 export default function SlideViewer() {
   const { engine, isLoading } = usePdfiumEngine();
   const [pageIndex, setPageIndex] = useState(0);
+  const [isManual, setIsManual] = useState(false);
 
   if (isLoading || !engine) {
     return <div className="p-4 text-center">Loading slides please wait...</div>;
@@ -49,25 +52,56 @@ export default function SlideViewer() {
                       />
                     </div>
 
-                    <div className="flex items-center gap-4 pb-2">
+                    <div className="flex items-center justify-center gap-4 pb-2">
+                      {/* Manual / Automatic Toggle */}
                       <button
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                        onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                        disabled={pageIndex === 0}
+                        onClick={() => setIsManual(!isManual)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors font-medium"
                       >
-                        Previous Slide
+                        {isManual ? (
+                          <>
+                            <Presentation className="w-5 h-5" />
+                            Automatic
+                          </>
+                        ) : (
+                          <>
+                            <ChevronsLeftRight className="w-5 h-5" />
+                            Manual
+                          </>
+                        )}
                       </button>
 
-                      <span className="text-sm font-medium text-gray-600">
-                        Slide {pageIndex + 1}
-                      </span>
+                      {isManual && (
+                        <>
+                          <button
+                            className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            onClick={() =>
+                              setPageIndex((p) => {
+                                const total = 100;
+                                return p === 0 ? total - 1 : p - 1;
+                              })
+                            }
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
 
-                      <button
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-                        onClick={() => setPageIndex((p) => p + 1)}
-                      >
-                        Next Slide
-                      </button>
+                          <span className="text-sm font-medium text-gray-600">
+                            Slide {pageIndex + 1}
+                          </span>
+
+                          <button
+                            className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            onClick={() =>
+                              setPageIndex((p) => {
+                                const total = 100;
+                                return (p + 1) % total;
+                              })
+                            }
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
