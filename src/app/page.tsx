@@ -1,10 +1,11 @@
-import ClassChat from "./compoments/classChat";
+"use client";
+import Room from "./compoments/room";
 
 export default function Home() {
   return (
     <div className="flex h-screen w-full flex-col bg-background font-sans">
       <main className="flex-1 overflow-hidden">
-        <ClassChat />
+        <Room />
       </main>
     </div>
   );
