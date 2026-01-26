@@ -26,6 +26,8 @@ jobs:
           cache: "pnpm"
       - name: Install Deps
         run: pnpm install
+      - name: Generate Prisma Client
+        run: pnpm db:generate
       
       # CI
       - name: Check Types
