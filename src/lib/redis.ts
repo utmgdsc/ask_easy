@@ -46,15 +46,15 @@ export const redisRateLimit = new Redis(REDIS_URL, {
 
 // Error handlers - log but don't crash
 redisCache.on("error", (error) => {
-  console.error("[Redis Cache] Error:", error.message);
+  console.error("[Redis Cache] Error:", error);
 });
 
 redisPubSub.on("error", (error) => {
-  console.error("[Redis PubSub] Error:", error.message);
+  console.error("[Redis PubSub] Error:", error);
 });
 
 redisRateLimit.on("error", (error) => {
-  console.error("[Redis RateLimit] Error:", error.message);
+  console.error("[Redis RateLimit] Error:", error);
 });
 
 // Connection handlers for debugging
@@ -82,34 +82,4 @@ const shutdown = async () => {
 if (typeof process !== "undefined") {
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
-const globalForRedis = globalThis as unknown as {
-  redis: Redis | undefined;
-};
-
-function getRedisClient() {
-  const redisUrl = process.env.REDIS_URL;
-
-  if (!redisUrl) {
-    throw new Error("REDIS_URL environment variable is not set");
-  }
-
-  const client = new Redis(redisUrl, {
-    maxRetriesPerRequest: 3,
-    retryStrategy(times) {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
-    },
-  });
-
-  client.on("error", (err) => {
-    console.error("Redis connection error:", err);
-  });
-
-  return client;
-}
-
-export const redis = globalForRedis.redis ?? getRedisClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForRedis.redis = redis;
 }

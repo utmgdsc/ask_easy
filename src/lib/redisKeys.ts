@@ -1,22 +1,21 @@
 /**
- * Centralized Redis key naming conventions
- * Ensures consistent, human-readable keys across the application
+ * Centralized Redis key naming conventions.
+ * Keeps keys consistent and human-readable.
  */
 
 /**
- * Generate a session cache key
- * @param sessionId - The session identifier
- * @returns Redis key: "session:{sessionId}"
+ * Session cache key
+ * Example: "session:{abc123}"
  */
 export function session(sessionId: string): string {
-  return `session:${sessionId}`;
+  return `session:{${sessionId}}`;
 }
 
 /**
- * Generate a rate limit key
- * @param key - The identifier for rate limiting (e.g., IP address, user ID)
- * @returns Redis key: "ratelimit:{key}"
+ * Rate limit key
+ * Example: "ratelimit:{user-42}"
  */
 export function rateLimit(key: string): string {
-  return `ratelimit:${key}`;
+  return `ratelimit:{${key}}`;
 }
+
