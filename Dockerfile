@@ -16,6 +16,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate Prisma client before building
+RUN pnpm db:generate
+
 RUN pnpm run build
 
 FROM base AS runner
