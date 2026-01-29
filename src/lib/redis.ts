@@ -11,7 +11,19 @@ function getRedisClient() {
     throw new Error("REDIS_URL environment variable is not set");
   }
 
-  return new Redis(redisUrl);
+  const client = new Redis(redisUrl, {
+    maxRetriesPerRequest: 3,
+    retryStrategy(times) {
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    },
+  });
+
+  client.on("error", (err) => {
+    console.error("Redis connection error:", err);
+  });
+
+  return client;
 }
 
 export const redis = globalForRedis.redis ?? getRedisClient();

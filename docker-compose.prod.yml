@@ -1,0 +1,14 @@
+# Production override - uses pre-built image from Docker Hub
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  app:
+    image: jadendocks/ask_easy:latest
+    build:
+      context: .
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

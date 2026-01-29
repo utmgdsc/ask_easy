@@ -21,10 +21,18 @@ pnpm install
 ### 2. Set up environment variables
 
 ```bash
+# For Docker Compose
+cp .env.example .env
+
+# For native development (pnpm dev) - edit to use localhost
 cp .env.example .env.local
+# Then change @postgres to @localhost and @redis to @localhost in .env.local
 ```
 
-Edit `.env.local` if you need to customize the database or Redis connection.
+| File | Used by | Host values |
+|------|---------|-------------|
+| `.env` | Docker Compose | `@postgres`, `@redis` (service names) |
+| `.env.local` | `pnpm dev` | `@localhost` |
 
 ### 3. Start services with Docker Compose
 
