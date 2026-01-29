@@ -7,19 +7,16 @@ import { rateLimit } from "./redisKeys";
  * @param windowSeconds - The time window in seconds
  * @returns The current count after increment
  */
-export async function incrementRateLimit(
-  key: string,
-  windowSeconds: number,
-): Promise<number> {
+export async function incrementRateLimit(key: string, windowSeconds: number): Promise<number> {
   try {
     const redisKey = rateLimit(key);
     const count = await redisRateLimit.incr(redisKey);
-    
+
     // Set expiration on first increment (when count is 1)
     if (count === 1) {
       await redisRateLimit.expire(redisKey, windowSeconds);
     }
-    
+
     return count;
   } catch (error) {
     console.error("[RateLimit] Failed to increment rate limit:", error);
@@ -38,7 +35,7 @@ export async function incrementRateLimit(
 export async function checkRateLimit(
   key: string,
   limit: number,
-  windowSeconds: number,
+  windowSeconds: number
 ): Promise<boolean> {
   try {
     const count = await incrementRateLimit(key, windowSeconds);

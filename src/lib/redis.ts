@@ -46,15 +46,15 @@ export const redisRateLimit = new Redis(REDIS_URL, {
 
 // Error handlers - log but don't crash
 redisCache.on("error", (error) => {
-  console.error("[Redis Cache] Error:", error);
+  console.error("[Redis Cache] Error:", error.message);
 });
 
 redisPubSub.on("error", (error) => {
-  console.error("[Redis PubSub] Error:", error);
+  console.error("[Redis PubSub] Error:", error.message);
 });
 
 redisRateLimit.on("error", (error) => {
-  console.error("[Redis RateLimit] Error:", error);
+  console.error("[Redis RateLimit] Error:", error.message);
 });
 
 // Connection handlers for debugging

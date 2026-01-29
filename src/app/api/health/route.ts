@@ -29,7 +29,7 @@ export async function GET() {
       },
       {
         status: allConnected ? 200 : 503,
-      },
+      }
     );
   } catch (error) {
     console.error("[Health] Health check failed:", error);
@@ -40,7 +40,7 @@ export async function GET() {
       },
       {
         status: 503,
-      },
+      }
     );
   }
 }

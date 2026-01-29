@@ -18,4 +18,3 @@ export function session(sessionId: string): string {
 export function rateLimit(key: string): string {
   return `ratelimit:{${key}}`;
 }
-
