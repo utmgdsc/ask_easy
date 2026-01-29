@@ -1,4 +1,4 @@
-import ClassChat from "./compoments/classChat";
+import ClassChat from "./components/classChat";
 
 export default function Home() {
   return (
