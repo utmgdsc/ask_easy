@@ -28,6 +28,12 @@
   },
   "dependencies": {
     "@prisma/client": "6.8.2",
+    "@embedpdf/core": "^2.3.0",
+    "@embedpdf/engines": "^2.3.0",
+    "@embedpdf/plugin-document-manager": "^2.3.0",
+    "@embedpdf/plugin-render": "^2.3.0",
+    "@embedpdf/plugin-scroll": "^2.3.0",
+    "@embedpdf/plugin-viewport": "^2.3.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
@@ -37,6 +43,7 @@
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-resizable-panels": "^2.0.19",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

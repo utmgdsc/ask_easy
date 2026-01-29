@@ -131,7 +131,7 @@ const ClassChat: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-background text-foreground">
       {/* Header */}
-      <header className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10">
+      <header className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-background z-10">
         <h1 className="text-xl font-bold">Class Discussion</h1>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">342 Online</span>
@@ -144,7 +144,6 @@ const ClassChat: React.FC = () => {
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Original Post Context (Optional) */}
           <Card className="p-6 mb-8 border-muted bg-muted/20">
             <h2 className="text-2xl font-bold mb-2">CSC148</h2>
             <p className="text-muted-foreground mb-4">Professor X • live</p>
@@ -164,7 +163,7 @@ const ClassChat: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-4">
             <Textarea placeholder="Add to the discussion..." className="min-h-[60px]" />
-            <Button className="h-auto">Post</Button>
+            <Button className="h-auto bg-foreground">Post</Button>
           </div>
         </div>
       </div>
