@@ -1,5 +1,5 @@
 "use client";
-import Room from "./compoments/room";
+import Room from "./components/room";
 
 export default function Home() {
   return (
