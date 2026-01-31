@@ -129,7 +129,6 @@ model Question {
   isAnonymous Boolean        @default(false)
   visibility  Visibility     @default(PUBLIC)
   status      QuestionStatus @default(OPEN)
-  upvoteCount Int            @default(0)
   createdAt   DateTime       @default(now())
 
   session Session          @relation(fields: [sessionId], references: [id])
