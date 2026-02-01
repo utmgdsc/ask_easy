@@ -1,33 +1,85 @@
 import Redis from "ioredis";
 
-const globalForRedis = globalThis as unknown as {
-  redis: Redis | undefined;
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+
+/**
+ * Redis client for general caching (DB 0)
+ */
+export const redisCache = new Redis(REDIS_URL, {
+  db: 0,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  lazyConnect: true,
+});
+
+/**
+ * Redis client for pub/sub operations (DB 1)
+ */
+export const redisPubSub = new Redis(REDIS_URL, {
+  db: 1,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  lazyConnect: true,
+});
+
+/**
+ * Redis client for rate limiting (DB 2)
+ */
+export const redisRateLimit = new Redis(REDIS_URL, {
+  db: 2,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  lazyConnect: true,
+});
+
+// Error handlers - log but don't crash
+redisCache.on("error", (error) => {
+  console.error("[Redis Cache] Error:", error.message);
+});
+
+redisPubSub.on("error", (error) => {
+  console.error("[Redis PubSub] Error:", error.message);
+});
+
+redisRateLimit.on("error", (error) => {
+  console.error("[Redis RateLimit] Error:", error.message);
+});
+
+// Connection handlers for debugging
+redisCache.on("connect", () => {
+  console.log("[Redis Cache] Connected");
+});
+
+redisPubSub.on("connect", () => {
+  console.log("[Redis PubSub] Connected");
+});
+
+redisRateLimit.on("connect", () => {
+  console.log("[Redis RateLimit] Connected");
+});
+
+// Graceful shutdown
+const shutdown = async () => {
+  await Promise.all([
+    redisCache.quit().catch(() => {}),
+    redisPubSub.quit().catch(() => {}),
+    redisRateLimit.quit().catch(() => {}),
+  ]);
 };
 
-function getRedisClient() {
-  const redisUrl = process.env.REDIS_URL;
-
-  if (!redisUrl) {
-    throw new Error("REDIS_URL environment variable is not set");
-  }
-
-  const client = new Redis(redisUrl, {
-    maxRetriesPerRequest: 3,
-    retryStrategy(times) {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
-    },
-  });
-
-  client.on("error", (err) => {
-    console.error("Redis connection error:", err);
-  });
-
-  return client;
-}
-
-export const redis = globalForRedis.redis ?? getRedisClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForRedis.redis = redis;
+if (typeof process !== "undefined") {
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 }
