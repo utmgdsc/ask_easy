@@ -1,4 +1,3 @@
-import ClassChat from "./components/classChat";
 "use client";
 import Room from "./components/room";
 
