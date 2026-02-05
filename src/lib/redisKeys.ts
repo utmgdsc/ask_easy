@@ -18,3 +18,11 @@ export function session(sessionId: string): string {
 export function rateLimit(key: string): string {
   return `ratelimit:{${key}}`;
 }
+
+/**
+ * Question rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{question:abc123}"
+ */
+export function questionRateLimit(userId: string): string {
+  return `question:${userId}`;
+}
