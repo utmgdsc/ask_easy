@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rateLimit";
-import { questionRateLimit } from "@/lib/redisKeys";
-
-// ---------------------------------------------------------------------------
-// Constants (matching socket handler)
-// ---------------------------------------------------------------------------
-
-const QUESTION_MIN_LENGTH = 5;
-const QUESTION_MAX_LENGTH = 500;
-const RATE_LIMIT_COUNT = 10;
-const RATE_LIMIT_WINDOW_SECONDS = 60;
-
-const VALID_VISIBILITIES = new Set(["PUBLIC", "INSTRUCTOR_ONLY"]);
+import {
+  validateQuestionContent,
+  validateVisibility,
+  checkQuestionRateLimit,
+  validateSessionForQuestions,
+} from "@/lib/questionValidation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,10 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!session) {
-      return NextResponse.json(
-        { error: "Session not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
 
     // Parse optional query parameters for filtering
@@ -163,42 +153,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Author ID is required." }, { status: 400 });
     }
 
-    // 2. Validate content
-    if (!body.content || typeof body.content !== "string") {
-      return NextResponse.json({ error: "Question content is required." }, { status: 400 });
+    // 2. Validate content using shared validation
+    const contentValidation = validateQuestionContent(body.content);
+    if (!contentValidation.valid) {
+      return NextResponse.json({ error: contentValidation.error }, { status: 400 });
     }
 
-    const trimmedContent = body.content.trim();
-
-    if (trimmedContent.length < QUESTION_MIN_LENGTH) {
-      return NextResponse.json(
-        { error: `Question must be at least ${QUESTION_MIN_LENGTH} characters.` },
-        { status: 400 }
-      );
+    // 3. Validate visibility using shared validation
+    const visibilityValidation = validateVisibility(body.visibility);
+    if (!visibilityValidation.valid) {
+      return NextResponse.json({ error: visibilityValidation.error }, { status: 400 });
     }
 
-    if (trimmedContent.length > QUESTION_MAX_LENGTH) {
-      return NextResponse.json(
-        { error: `Question must be no more than ${QUESTION_MAX_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    // 3. Validate visibility if provided
-    if (body.visibility && !VALID_VISIBILITIES.has(body.visibility)) {
-      return NextResponse.json(
-        { error: "Invalid visibility setting. Must be PUBLIC or INSTRUCTOR_ONLY." },
-        { status: 400 }
-      );
-    }
-
-    // 4. Check rate limit
-    const isRateLimited = await checkRateLimit(
-      questionRateLimit(body.authorId),
-      RATE_LIMIT_COUNT,
-      RATE_LIMIT_WINDOW_SECONDS
-    );
-
+    // 4. Check rate limit using shared validation
+    const isRateLimited = await checkQuestionRateLimit(body.authorId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before asking another question." },
@@ -206,20 +174,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 5. Validate session exists and has submissions enabled
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
-    }
-
-    if (!session.isSubmissionsEnabled) {
-      return NextResponse.json(
-        { error: "Question submissions are currently disabled for this session." },
-        { status: 403 }
-      );
+    // 5. Validate session using shared validation
+    const sessionValidation = await validateSessionForQuestions(sessionId);
+    if (!sessionValidation.valid) {
+      const statusCode = sessionValidation.error === "Session not found." ? 404 : 403;
+      return NextResponse.json({ error: sessionValidation.error }, { status: statusCode });
     }
 
     // 6. Create the question
@@ -227,7 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: {
         sessionId,
         authorId: body.authorId,
-        content: trimmedContent,
+        content: body.content.trim(),
         visibility: body.visibility ?? "PUBLIC",
         isAnonymous: body.isAnonymous ?? false,
         slideId: body.slideId ?? null,

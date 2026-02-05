@@ -1,20 +1,12 @@
 import { type Server, type Socket } from "socket.io";
 
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rateLimit";
-import { questionRateLimit } from "@/lib/redisKeys";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const QUESTION_MIN_LENGTH = 5;
-const QUESTION_MAX_LENGTH = 500;
-
-const RATE_LIMIT_COUNT = 10;
-const RATE_LIMIT_WINDOW_SECONDS = 60;
-
-const VALID_VISIBILITIES = new Set<string>(["PUBLIC", "INSTRUCTOR_ONLY"]);
+import {
+  validateQuestionContent,
+  validateVisibility,
+  checkQuestionRateLimit,
+  validateSessionForQuestions,
+} from "@/lib/questionValidation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,11 +18,6 @@ interface QuestionCreatePayload {
   visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
   isAnonymous?: boolean;
   slideId?: string;
-}
-
-interface ValidationResult {
-  valid: boolean;
-  error?: string;
 }
 
 interface QuestionBroadcastPayload {
@@ -46,40 +33,6 @@ interface QuestionBroadcastPayload {
 // ---------------------------------------------------------------------------
 // Exported functions
 // ---------------------------------------------------------------------------
-
-/**
- * Validates question content.
- * Checks that content is a non-empty string within the allowed length bounds.
- */
-export function validateQuestionContent(content: unknown): ValidationResult {
-  if (!content || typeof content !== "string") {
-    return { valid: false, error: "Question content is required." };
-  }
-
-  const trimmed = content.trim();
-
-  if (trimmed.length < QUESTION_MIN_LENGTH) {
-    return { valid: false, error: `Question must be at least ${QUESTION_MIN_LENGTH} characters.` };
-  }
-
-  if (trimmed.length > QUESTION_MAX_LENGTH) {
-    return {
-      valid: false,
-      error: `Question must be no more than ${QUESTION_MAX_LENGTH} characters.`,
-    };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Checks whether the given user has exceeded the question rate limit
- * (10 questions per 60-second window).
- * Returns true if the limit has been exceeded.
- */
-export async function checkQuestionRateLimit(userId: string): Promise<boolean> {
-  return checkRateLimit(questionRateLimit(userId), RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_SECONDS);
-}
 
 /**
  * Broadcasts a newly created question to the appropriate session room.
@@ -133,15 +86,16 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       }
 
       // 3. Content validation
-      const validation = validateQuestionContent(payload.content);
-      if (!validation.valid) {
-        socket.emit("question:error", { message: validation.error });
+      const contentValidation = validateQuestionContent(payload.content);
+      if (!contentValidation.valid) {
+        socket.emit("question:error", { message: contentValidation.error });
         return;
       }
 
-      // 4. Visibility validation — reject unknown values before they reach Prisma
-      if (payload.visibility && !VALID_VISIBILITIES.has(payload.visibility)) {
-        socket.emit("question:error", { message: "Invalid visibility setting." });
+      // 4. Visibility validation
+      const visibilityValidation = validateVisibility(payload.visibility);
+      if (!visibilityValidation.valid) {
+        socket.emit("question:error", { message: visibilityValidation.error });
         return;
       }
 
@@ -156,19 +110,9 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       }
 
       // 6. Session validation
-      const session = await prisma.session.findUnique({
-        where: { id: payload.sessionId },
-      });
-
-      if (!session) {
-        socket.emit("question:error", { message: "Session not found." });
-        return;
-      }
-
-      if (!session.isSubmissionsEnabled) {
-        socket.emit("question:error", {
-          message: "Question submissions are currently disabled.",
-        });
+      const sessionValidation = await validateSessionForQuestions(payload.sessionId);
+      if (!sessionValidation.valid) {
+        socket.emit("question:error", { message: sessionValidation.error });
         return;
       }
 
