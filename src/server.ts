@@ -29,9 +29,7 @@ async function main(): Promise<void> {
 
   // 4. Start listening
   httpServer.listen(port, () => {
-    console.log(
-      `> Ready on http://${hostname}:${port} (${dev ? "development" : "production"})`,
-    );
+    console.log(`> Ready on http://${hostname}:${port} (${dev ? "development" : "production"})`);
     console.log(`> Socket.IO server attached`);
   });
 }

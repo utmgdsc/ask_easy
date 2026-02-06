@@ -28,16 +28,14 @@ import type { SocketData } from "../types";
  */
 export function authMiddleware(
   socket: Socket<never, never, never, SocketData>,
-  next: (err?: Error) => void,
+  next: (err?: Error) => void
 ): void {
   // TODO: Replace with real token validation
   // const token = socket.handshake.auth?.token;
   const userId = socket.handshake.auth?.userId as string | undefined;
 
   if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
-    return next(
-      new Error("Authentication required. Provide userId in handshake auth."),
-    );
+    return next(new Error("Authentication required. Provide userId in handshake auth."));
   }
 
   // Attach user data to the socket for downstream handlers

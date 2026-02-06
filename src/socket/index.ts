@@ -37,14 +37,9 @@ let io: SocketIOServer<
  * Returns the fully initialised `io` instance.
  */
 export async function initSocketIO(
-  httpServer: HttpServer,
+  httpServer: HttpServer
 ): Promise<
-  SocketIOServer<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-  >
+  SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 > {
   const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -83,12 +78,8 @@ export async function initSocketIO(
   console.log("[Socket.IO] Redis adapter connected");
 
   // Log ongoing Redis errors (non-fatal after initial connect)
-  pubClient.on("error", (err) =>
-    console.error("[Socket.IO] Redis pub client error:", err.message),
-  );
-  subClient.on("error", (err) =>
-    console.error("[Socket.IO] Redis sub client error:", err.message),
-  );
+  pubClient.on("error", (err) => console.error("[Socket.IO] Redis pub client error:", err.message));
+  subClient.on("error", (err) => console.error("[Socket.IO] Redis sub client error:", err.message));
 
   // -----------------------------------------------------------------------
   // Authentication middleware
@@ -101,17 +92,13 @@ export async function initSocketIO(
   // -----------------------------------------------------------------------
 
   io.on("connection", (socket) => {
-    console.log(
-      `[Socket.IO] Client connected: ${socket.id} (user: ${socket.data.userId})`,
-    );
+    console.log(`[Socket.IO] Client connected: ${socket.id} (user: ${socket.data.userId})`);
 
     // Register per-socket event handlers
     handleQuestionCreate(socket, io!);
 
     socket.on("disconnect", (reason) => {
-      console.log(
-        `[Socket.IO] Client disconnected: ${socket.id} (reason: ${reason})`,
-      );
+      console.log(`[Socket.IO] Client disconnected: ${socket.id} (reason: ${reason})`);
     });
   });
 
@@ -121,10 +108,7 @@ export async function initSocketIO(
 
   const shutdown = async () => {
     console.log("[Socket.IO] Shutting down Redis adapter clients…");
-    await Promise.all([
-      pubClient.quit().catch(() => {}),
-      subClient.quit().catch(() => {}),
-    ]);
+    await Promise.all([pubClient.quit().catch(() => {}), subClient.quit().catch(() => {})]);
   };
 
   process.on("SIGTERM", shutdown);
@@ -149,9 +133,7 @@ export function getIO(): SocketIOServer<
   SocketData
 > {
   if (!io) {
-    throw new Error(
-      "Socket.IO has not been initialised. Call initSocketIO() first.",
-    );
+    throw new Error("Socket.IO has not been initialised. Call initSocketIO() first.");
   }
   return io;
 }
