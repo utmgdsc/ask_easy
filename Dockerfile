@@ -41,8 +41,9 @@ RUN adduser --system --uid 1001 nextjs
 # Production node_modules (includes socket.io, ioredis, tsx, etc.)
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Prisma engine binaries (skipped by --ignore-scripts in prod-deps, so copy from builder)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+# Prisma engine binaries (postinstall was skipped by --ignore-scripts in prod-deps)
+# In Prisma 6.x the engine is included in the generated output (src/generated/prisma/)
+# which is copied below via the src/ COPY. We only need @prisma/engines from builder.
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
 # package.json (needed by tsx / module resolution)
