@@ -17,7 +17,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml .npmrc* ./
-RUN pnpm config set node-linker hoisted && pnpm install --frozen-lockfile --prod
+# --ignore-scripts: skip lifecycle scripts (avoids "husky: not found" from prepare)
+RUN pnpm config set node-linker hoisted && pnpm install --frozen-lockfile --prod --ignore-scripts
 
 FROM base AS builder
 WORKDIR /app
@@ -39,6 +40,10 @@ RUN adduser --system --uid 1001 nextjs
 
 # Production node_modules (includes socket.io, ioredis, tsx, etc.)
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Prisma engine binaries (skipped by --ignore-scripts in prod-deps, so copy from builder)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
 # package.json (needed by tsx / module resolution)
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
