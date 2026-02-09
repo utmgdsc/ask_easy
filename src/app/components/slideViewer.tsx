@@ -12,6 +12,8 @@ import {
 import { RenderLayer, RenderPluginPackage } from "@embedpdf/plugin-render/react";
 import { ViewportPluginPackage } from "@embedpdf/plugin-viewport/react";
 import { useState } from "react";
+import useShowSlide from "./room";
+import { ShowSlideContextType } from "./room";
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
@@ -135,11 +137,15 @@ function SlideUI({ activeDocumentId }: { activeDocumentId: string | null }) {
 
 export default function SlideViewer() {
   const { engine, isLoading } = usePdfiumEngine();
+  const val = useShowSlide();
+  if (val?.show === false) {
+    return null;
+  }
 
   if (isLoading || !engine) {
     return <div className="p-4 text-center">Loading slides please wait...</div>;
   }
-
+  
   return (
     <div className="flex flex-col bg-stone-100 flex-1 w-full h-full items-center justify-center overflow-hidden">
       <EmbedPDF engine={engine} plugins={plugins}>
