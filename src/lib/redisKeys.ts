@@ -26,3 +26,11 @@ export function rateLimit(key: string): string {
 export function questionRateLimit(userId: string): string {
   return `question:${userId}`;
 }
+
+/**
+ * Answer rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{answer:abc123}"
+ */
+export function answerRateLimit(userId: string): string {
+  return `answer:${userId}`;
+}
