@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import PLACEHOLDER_QUESTIONS from "@/utils/placeholder";
-import CommentNode from "./CommentNode";
+import PLACEHOLDER_POSTS from "@/utils/placeholder";
+import PostItem from "./post";
 import ChatHeader from "./ChatHeader";
 import ChatInput from "./ChatInput";
 import FilterTabs from "./FilterTabs";
@@ -23,8 +23,8 @@ export default function ClassChat() {
         <div className="absolute inset-0 overflow-y-auto px-6 pt-16">
           <div className="max-w-4xl mx-auto space-y-6 pb-4">
             <div className="space-y-6">
-              {PLACEHOLDER_QUESTIONS.map((question) => (
-                <CommentNode key={question.id} post={question} commentView={commentView} />
+              {PLACEHOLDER_POSTS.map((post) => (
+                <PostItem key={post.id} post={post} commentView={commentView} />
               ))}
             </div>
           </div>

@@ -1,29 +1,33 @@
 "use client";
 
-export interface BasePost {
-  id: number;
-  user: string;
-  avatar: string;
-  content: string;
-  timestamp: string;
-  votes: number;
+export type Role = "ta" | "prof" | "student";
+
+export interface User {
+  username: string;
+  pfp: string;
+  role: Role;
 }
 
-export interface Answer extends BasePost {
-  type: "answer";
-  isMainAnswer?: boolean;
+interface BasePost {
+  id: number;
+  user: User;
+  timestamp: string;
+  content: string;
+  upvotes: number;
+}
+
+export interface Question extends BasePost {
+  type: "question";
+  replies: (BestAnswer | Comment)[];
+  isResolved: boolean;
+}
+
+export interface BestAnswer extends BasePost {
+  type: "bestAnswer";
 }
 
 export interface Comment extends BasePost {
   type: "comment";
 }
 
-export interface Question extends BasePost {
-  type: "question";
-  replies: (Answer | Comment)[];
-  isResolved: boolean;
-}
-
-export type Post = Question | Answer | Comment;
-
-export default Post;
+export type Post = Question | BestAnswer | Comment;

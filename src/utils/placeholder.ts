@@ -1,121 +1,184 @@
-"use client";
+import { Post } from "./types";
 
-import { Question } from "./types";
-
-const PLACEHOLDER_QUESTIONS: Question[] = [
-  // Resolved Discussions
+const PLACEHOLDER_POSTS: Post[] = [
+  // Resolved Question: Pointers
   {
     id: 1,
     type: "question",
-    user: "Alex Chen",
-    avatar: "",
-    content:
-      "I'm struggling with the difference between `useEffect` and `useLayoutEffect`. When should I use one over the other?",
-    timestamp: "10:30",
-    votes: 42,
+    user: {
+      username: "Hairy Potter",
+      pfp: "",
+      role: "student",
+    },
+    timestamp: "09:15",
+    content: "What is the specific difference between *p and &p? I keep mixing them up.",
+    upvotes: 12,
     isResolved: true,
     replies: [
       {
-        id: 101,
-        type: "answer",
-        user: "Sarah Jenkins",
-        avatar: "",
+        id: 2,
+        type: "bestAnswer",
+        user: {
+          username: "Snape Malfoy",
+          pfp: "",
+          role: "prof",
+        },
+        timestamp: "09:18",
         content:
-          "99% of the time you want `useEffect`. only use `useLayoutEffect` if you need to measure DOM elements before they paint to avoid flickering.",
-        timestamp: "10:45",
-        votes: 156,
-        isMainAnswer: true,
+          "Think of p as the variable itself, &p as the address in memory, and *p as the value stored at that address.",
+        upvotes: 45,
       },
-    ],
-  },
-  {
-    id: 2,
-    type: "question",
-    user: "Jordan Lee",
-    avatar: "",
-    content: "Is the midterm cumulative?",
-    timestamp: "09:00",
-    votes: 89,
-    isResolved: true,
-    replies: [
       {
-        id: 201,
-        type: "answer",
-        user: "TA - Michael",
-        avatar: "",
-        content: "Yes, it covers everything from Week 1 to Week 6.",
-        timestamp: "10:00",
-        votes: 210,
-        isMainAnswer: true,
+        id: 3,
+        type: "comment",
+        user: {
+          username: "Jack Jones",
+          pfp: "",
+          role: "ta",
+        },
+        timestamp: "09:25",
+        content: "Just remember: & is Address, * is Value.",
+        upvotes: 5,
+      },
+      {
+        id: 4,
+        type: "comment",
+        user: {
+          username: "Johnny Beans",
+          pfp: "",
+          role: "student",
+        },
+        timestamp: "09:28",
+        content: "That makes sense now. Thanks!",
+        upvotes: 2,
       },
     ],
   },
 
-  // Unresolved Discussions
+  // Conceptual Question: Stack vs Heap
   {
-    id: 3,
+    id: 5,
     type: "question",
-    user: "Jamie Rivera",
-    avatar: "",
-    content:
-      "I thought I understood recursion until the prof said 'it just calls itself' and moved on like that explained everything.",
-    timestamp: "11:45",
-    votes: 124,
+    user: {
+      username: "Lily Thompson",
+      pfp: "",
+      role: "student",
+    },
+    timestamp: "11:20",
+    content: "What is the actual difference between stack and heap memory? They seem similar.",
+    upvotes: 8,
     isResolved: false,
     replies: [
       {
-        id: 301,
+        id: 6,
         type: "comment",
-        user: "Alice Wonder",
-        avatar: "",
-        content:
-          "The base case makes sense. The recursive step makes sense. Them together? Absolutely not.",
-        timestamp: "12:45",
-        votes: 54,
-      },
-      {
-        id: 3011,
-        type: "comment",
-        user: "Bob Builder",
-        avatar: "",
-        content:
-          "My program works without recursion, but the assignment says I *must* use it, so now it doesn't work at all.",
-        timestamp: "13:00",
-        votes: 31,
-      },
-      {
-        id: 302,
-        type: "comment",
-        user: "Professor Snape",
-        avatar: "",
-        content: "Turn to page 394.",
-        timestamp: "13:35",
-        votes: 0,
+        user: {
+          username: "Jesse Retger",
+          pfp: "",
+          role: "prof",
+        },
+        timestamp: "11:24",
+        content: "I think they're the same thing?",
+        upvotes: 0,
       },
     ],
   },
+
+  // Discussion: Macro vs Const
   {
-    id: 4,
+    id: 8,
     type: "question",
-    user: "Chris Pat",
-    avatar: "",
-    content:
-      "Does anyone have good resources for learning Dynamic Programming? The leetcode problems are killing me.",
-    timestamp: "13:15",
-    votes: 15,
+    user: {
+      username: "Birdi McFly",
+      pfp: "",
+      role: "student",
+    },
+    timestamp: "14:05",
+    content: "Why do we use #define for array sizes instead of const int?",
+    upvotes: 7,
     isResolved: false,
     replies: [
       {
-        id: 401,
+        id: 9,
         type: "comment",
-        user: "Dev Guru",
-        avatar: "",
-        content: "Check out the 'Climbing Stairs' problem first. It's the classic intro.",
-        timestamp: "13:30",
-        votes: 8,
+        user: {
+          username: "Albert Einstein",
+          pfp: "",
+          role: "student",
+        },
+        timestamp: "14:10",
+        content: "No clue.",
+        upvotes: 15,
+      },
+      {
+        id: 10,
+        type: "comment",
+        user: {
+          username: "Kesha Sharma",
+          pfp: "",
+          role: "prof",
+        },
+        timestamp: "14:15",
+        content:
+          "I recommend const for type safety when possible not sure why it just works most of the time, but #define is very common.",
+        upvotes: 20,
+      },
+    ],
+  },
+
+  // Resolved Question: Semicolons (New)
+  {
+    id: 11,
+    type: "question",
+    user: {
+      username: "Jack Anaconda",
+      pfp: "",
+      role: "student",
+    },
+    timestamp: "16:20",
+    content: "I'm coming from Python. What are the semicolons for? They seem useless.",
+    upvotes: 2,
+    isResolved: true,
+    replies: [
+      {
+        id: 12,
+        type: "bestAnswer",
+        user: {
+          username: "Snape Malfoy",
+          pfp: "",
+          role: "prof",
+        },
+        timestamp: "16:21",
+        content:
+          "In C, whitespace doesn't matter. The semicolon tells the compiler exactly where the command ends.",
+        upvotes: 18,
+      },
+      {
+        id: 13,
+        type: "comment",
+        user: {
+          username: "Jack Anaconda",
+          pfp: "",
+          role: "student",
+        },
+        timestamp: "16:25",
+        content: "Wait, so I can write code on one line?",
+        upvotes: 1,
+      },
+      {
+        id: 14,
+        type: "comment",
+        user: {
+          username: "Joyce Chu",
+          pfp: "",
+          role: "ta",
+        },
+        timestamp: "16:26",
+        content: "Yes, but please don't.",
+        upvotes: 30,
       },
     ],
   },
 ];
 
-export default PLACEHOLDER_QUESTIONS;
+export default PLACEHOLDER_POSTS;
