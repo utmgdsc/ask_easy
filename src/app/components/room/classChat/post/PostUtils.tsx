@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp } from "lucide-react";
-import { Post } from "@/utils/types";
+import { ArrowBigUp, GraduationCap } from "lucide-react";
+import { Post, User } from "@/utils/types";
 
 export function renderAvatar(post: Post) {
   if (post && post.user) {
@@ -44,6 +44,13 @@ export function UpvoteButton({ initialVotes }: { initialVotes: number }) {
       <span>{Math.max(0, votes)}</span>
     </Button>
   );
+}
+
+export function renderRoleIcon(user: User) {
+  if (user.role === "ta" || user.role === "prof") {
+    return <GraduationCap className="h-4 w-4 text-stone-900" />;
+  }
+  return null;
 }
 
 export const bestToTop = (replies: Post[] | undefined) => {

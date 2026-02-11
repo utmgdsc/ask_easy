@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle } from "lucide-react";
 import { Question } from "@/utils/types";
-import { UpvoteButton } from "./PostUtils";
+import { UpvoteButton, renderRoleIcon } from "./PostUtils";
 
 function renderReplyButton(
   isReplying: boolean,
@@ -66,7 +66,10 @@ export default function QuestionPost({
             className={`w-2 h-2 rounded-full cursor-pointer ${resolved ? "bg-green-500" : "bg-red-500"}`}
             onClick={() => setResolved(!resolved)}
           />
-          <span className="font-semibold text-foreground">{post.user.username}</span>
+          <span className="font-semibold flex flex-row gap-1 text-foreground">
+            {renderRoleIcon(post.user)}
+            {post.user.username}
+          </span>
           <span>{post.timestamp}</span>
         </div>
         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { Comment } from "@/utils/types";
-import { renderAvatar, UpvoteButton } from "./PostUtils";
+import { renderAvatar, UpvoteButton, renderRoleIcon } from "./PostUtils";
 
 export default function CommentPost({ post }: { post: Comment }) {
   return (
@@ -13,7 +13,10 @@ export default function CommentPost({ post }: { post: Comment }) {
 
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-xs text-stone-900/50">
-          <span className="font-semibold text-foreground">{post.user.username}</span>
+          <span className="font-semibold flex flex-row gap-1 text-foreground">
+            {renderRoleIcon(post.user)}
+            {post.user.username}
+          </span>
           <span>{post.timestamp}</span>
         </div>
 
