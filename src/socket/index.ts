@@ -5,6 +5,7 @@ import Redis from "ioredis";
 
 import { authMiddleware } from "./middleware/auth";
 import { handleQuestionCreate } from "./handlers/questionHandlers";
+import { handleAnswerCreate } from "./handlers/answerHandlers";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -96,6 +97,7 @@ export async function initSocketIO(
 
     // Register per-socket event handlers
     handleQuestionCreate(socket, io!);
+    handleAnswerCreate(socket, io!);
 
     socket.on("disconnect", (reason) => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id} (reason: ${reason})`);
