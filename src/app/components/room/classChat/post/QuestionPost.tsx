@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle } from "lucide-react";
-import { Question } from "@/utils/types";
-import { UpvoteButton, renderRoleIcon } from "./PostUtils";
+import { Question, Post } from "@/utils/types";
+import { UpvoteButton, renderRoleIcon, ShowMoreLess } from "./PostUtils";
 
 function renderReplyButton(
   isReplying: boolean,
@@ -42,19 +42,28 @@ function renderReplySection(setIsReplying: React.Dispatch<React.SetStateAction<b
 export default function QuestionPost({
   post,
   commentView,
+  replies,
+  renderReply,
   children,
 }: {
   post: Question;
   commentView?: string;
+  replies?: Post[];
+  renderReply?: (reply: Post) => React.ReactNode;
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [resolved, setResolved] = useState(post.isResolved);
+  const [visibleCount, setVisibleCount] = useState(2);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (commentView === "unresolved" && resolved) return null;
   if (commentView === "resolved" && !resolved) return null;
 
-  const hasReplies = post.replies && post.replies.length > 0;
+  const hasReplies = (replies && replies.length > 0) || (children && true);
+  const totalReplies = replies ? replies.length : 0;
+
+  const displayedReplies = isCollapsed ? [] : replies ? replies.slice(0, visibleCount) : [];
 
   return (
     <div className="flex flex-col gap-2">
@@ -62,10 +71,7 @@ export default function QuestionPost({
 
       <div className="flex items-center justify-between text-xs text-stone-900/50">
         <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full cursor-pointer ${resolved ? "bg-green-500" : "bg-red-500"}`}
-            onClick={() => setResolved(!resolved)}
-          />
+          <div className={`w-2 h-2 rounded-full ${resolved ? "bg-green-500" : "bg-red-500"}`} />
           <span className="font-semibold flex flex-row gap-1 text-foreground">
             {renderRoleIcon(post.user)}
             {post.user.username}
@@ -81,7 +87,39 @@ export default function QuestionPost({
       {(isReplying || hasReplies) && (
         <div className="ml-1 pl-4 border-l border-border mt-2 space-y-4">
           {isReplying && renderReplySection(setIsReplying)}
-          {children}
+
+          {replies && renderReply ? (
+            <>
+              {displayedReplies.map((reply) => (
+                <div key={reply.id}>{renderReply(reply)}</div>
+              ))}
+
+              <div className="flex justify-center gap-4 pt-2">
+                {/* Show More Button */}
+                {((totalReplies > 2 && visibleCount < totalReplies && !isCollapsed) ||
+                  (isCollapsed && totalReplies > 0)) && (
+                  <ShowMoreLess
+                    label="Show more"
+                    onClick={() => {
+                      if (isCollapsed) {
+                        setIsCollapsed(false);
+                        setVisibleCount(2);
+                      } else {
+                        setVisibleCount((prev) => prev + 5);
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Show Less Button */}
+                {!isCollapsed && (totalReplies <= 2 || (totalReplies > 2 && visibleCount > 2)) && (
+                  <ShowMoreLess label="Show less" onClick={() => setIsCollapsed(true)} />
+                )}
+              </div>
+            </>
+          ) : (
+            children
+          )}
         </div>
       )}
     </div>

@@ -70,3 +70,16 @@ export const bestToTop = (replies: Post[] | undefined) => {
     return 0;
   });
 };
+
+export function ShowMoreLess({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-8 px-2 text-xs text-stone-900/50 hover:text-stone-900 hover:bg-stone-200/50"
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  );
+}

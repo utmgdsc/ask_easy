@@ -18,11 +18,12 @@ export default function PostItem({
       const sortedReplies = bestToTop(post.replies);
 
       return (
-        <QuestionPost post={post} commentView={commentView}>
-          {sortedReplies.map((reply: Post) => (
-            <PostItem key={reply.id} post={reply} />
-          ))}
-        </QuestionPost>
+        <QuestionPost
+          post={post}
+          commentView={commentView}
+          replies={sortedReplies}
+          renderReply={(reply) => <PostItem key={reply.id} post={reply} />}
+        />
       );
     case "bestAnswer":
       return <BestAnswerPost post={post} />;
