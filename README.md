@@ -18,6 +18,8 @@ cd ask_easy
 pnpm install
 ```
 
+> **Note:** `pnpm install` will automatically run `prisma generate` via the postinstall script to generate the Prisma client.
+
 ### 2. Set up environment variables
 
 ```bash
@@ -61,8 +63,7 @@ pnpm dev
 Generate Prisma client and push schema:
 
 ```bash
-pnpm db:generate
-pnpm db:push
+pnpm db:setup
 ```
 
 ## Available Scripts
@@ -80,6 +81,7 @@ pnpm db:push
 | `pnpm db:generate` | Generate Prisma client |
 | `pnpm db:push` | Push schema to database |
 | `pnpm db:migrate` | Run database migrations |
+| `pnpm db:setup` | Generate client + push schema (for initial setup) |
 | `pnpm db:studio` | Open Prisma Studio |
 
 ## Docker Commands
