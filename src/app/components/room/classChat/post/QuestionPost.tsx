@@ -26,7 +26,7 @@ function renderReplyButton(
 function renderReplySection(setIsReplying: React.Dispatch<React.SetStateAction<boolean>>) {
   return (
     <div className="mt-2 pl-2">
-      <Textarea placeholder="What are your thoughts?" className="min-h-[80px] mb-2" />
+      <Textarea placeholder="Answer..." className="min-h-[80px] mb-2" />
       <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => setIsReplying(false)}>
           Cancel

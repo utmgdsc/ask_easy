@@ -97,7 +97,7 @@ function SlideUI({ activeDocumentId }: { activeDocumentId: string | null }) {
               {isManual && (
                 <>
                   <button
-                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-white rounded-md transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
                     onClick={() =>
                       handlePageIndexChange(pageIndex === 0 ? pageCount - 1 : pageIndex - 1)
                     }
@@ -118,7 +118,7 @@ function SlideUI({ activeDocumentId }: { activeDocumentId: string | null }) {
                   </div>
 
                   <button
-                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-white rounded-md transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
                     onClick={() => handlePageIndexChange((pageIndex + 1) % pageCount)}
                   >
                     <ChevronRight className="w-6 h-6" />
