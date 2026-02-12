@@ -34,3 +34,19 @@ export function questionRateLimit(userId: string): string {
 export function answerRateLimit(userId: string): string {
   return `answer:${userId}`;
 }
+
+/**
+ * Upvote rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{upvote:abc123}"
+ */
+export function upvoteRateLimit(userId: string): string {
+  return `upvote:${userId}`;
+}
+
+/**
+ * Resolve rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{resolve:abc123}"
+ */
+export function resolveRateLimit(userId: string): string {
+  return `resolve:${userId}`;
+}

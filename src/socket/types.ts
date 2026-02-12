@@ -45,6 +45,24 @@ export interface AnswerCreatedPayload {
   createdAt: Date;
 }
 
+export interface QuestionUpvotePayload {
+  questionId: string;
+}
+
+export interface QuestionResolvePayload {
+  questionId: string;
+}
+
+export interface QuestionUpdatedPayload {
+  id: string;
+  upvoteCount: number;
+}
+
+export interface QuestionResolvedPayload {
+  id: string;
+  status: "RESOLVED";
+}
+
 // ---------------------------------------------------------------------------
 // Event maps
 // ---------------------------------------------------------------------------
@@ -55,6 +73,8 @@ export interface ClientToServerEvents {
   "answer:create": (payload: AnswerCreatePayload) => void;
   "session:join": (payload: SessionJoinPayload) => void;
   "session:leave": (payload: SessionLeavePayload) => void;
+  "question:upvote": (payload: QuestionUpvotePayload) => void;
+  "question:resolve": (payload: QuestionResolvePayload) => void;
 }
 
 /** Events the **server** can send to the **client**. */
@@ -63,6 +83,8 @@ export interface ServerToClientEvents {
   "question:error": (payload: { message: string }) => void;
   "answer:created": (payload: AnswerCreatedPayload) => void;
   "answer:error": (payload: { message: string }) => void;
+  "question:updated": (payload: QuestionUpdatedPayload) => void;
+  "question:resolved": (payload: QuestionResolvedPayload) => void;
 }
 
 /** Events exchanged between Socket.IO server instances (via Redis adapter). */
