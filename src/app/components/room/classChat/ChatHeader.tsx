@@ -2,9 +2,9 @@
 
 import { Input } from "@/components/ui/input";
 import { useContext } from "react";
-import { SlideUpdateContext } from "../room";
 import { PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { SlideUpdateContext } from "../index";
 
 function SlideToggle() {
   // toggles slides on and off
