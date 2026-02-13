@@ -16,6 +16,7 @@ async function main() {
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
   await prisma.slide.deleteMany();
+  await prisma.slideSet.deleteMany();
   await prisma.session.deleteMany();
   await prisma.courseEnrollment.deleteMany();
   await prisma.course.deleteMany();
@@ -149,35 +150,46 @@ async function main() {
   console.log(`  - Scheduled: ${scheduledSession.title}\n`);
 
   // ============================================================================
-  // CREATE SLIDES
+  // CREATE SLIDE SETS AND SLIDES
   // ============================================================================
-  console.log("🖼️ Creating slides...");
+  console.log("🖼️ Creating slide sets and slides...");
 
+  // Create a SlideSet for the active session
+  const slideSet = await prisma.slideSet.create({
+    data: {
+      sessionId: activeSession.id,
+      filename: "Lecture5-Variables.pdf",
+      storageKey: "sessions/seed-session/slides/seed-slideset.pdf",
+      pageCount: 3,
+      fileSize: 1024000, // 1MB example
+      uploadedBy: professor.id,
+    },
+  });
+
+  // Create individual slides for the SlideSet
   const slides = await Promise.all([
     prisma.slide.create({
       data: {
-        sessionId: activeSession.id,
-        slideNumber: 1,
-        contentUrl: "https://example.com/slides/lecture5/slide1.png",
+        slideSetId: slideSet.id,
+        pageNumber: 1,
       },
     }),
     prisma.slide.create({
       data: {
-        sessionId: activeSession.id,
-        slideNumber: 2,
-        contentUrl: "https://example.com/slides/lecture5/slide2.png",
+        slideSetId: slideSet.id,
+        pageNumber: 2,
       },
     }),
     prisma.slide.create({
       data: {
-        sessionId: activeSession.id,
-        slideNumber: 3,
-        contentUrl: "https://example.com/slides/lecture5/slide3.png",
+        slideSetId: slideSet.id,
+        pageNumber: 3,
       },
     }),
   ]);
 
-  console.log(`  - Created ${slides.length} slides for active session\n`);
+  console.log(`  - Created SlideSet: ${slideSet.filename}`);
+  console.log(`  - Created ${slides.length} slides for the slide set\n`);
 
   // ============================================================================
   // CREATE QUESTIONS

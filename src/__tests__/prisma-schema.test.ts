@@ -18,6 +18,7 @@ beforeEach(async () => {
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
   await prisma.slide.deleteMany();
+  await prisma.slideSet.deleteMany();
   await prisma.session.deleteMany();
   await prisma.courseEnrollment.deleteMany();
   await prisma.course.deleteMany();
@@ -302,10 +303,10 @@ describe("Session model", () => {
 });
 
 // =============================================================================
-// Slide Model
+// SlideSet Model
 // =============================================================================
-describe("Slide model", () => {
-  it("creates a slide linked to a session", async () => {
+describe("SlideSet model", () => {
+  it("creates a slide set linked to a session", async () => {
     const user = await prisma.user.create({
       data: { utorid: "p1", email: "p@test.ca", name: "Prof", role: Role.PROFESSOR },
     });
@@ -316,18 +317,63 @@ describe("Slide model", () => {
       data: { courseId: course.id, createdById: user.id, title: "L1", joinCode: "X1" },
     });
 
-    const slide = await prisma.slide.create({
+    const slideSet = await prisma.slideSet.create({
       data: {
         sessionId: session.id,
-        slideNumber: 1,
-        contentUrl: "https://example.com/slide1.png",
+        filename: "lecture1.pdf",
+        storageKey: "sessions/test/slides/test.pdf",
+        pageCount: 10,
+        fileSize: 1024000,
+        uploadedBy: user.id,
+      },
+    });
+
+    expect(slideSet).toMatchObject({
+      sessionId: session.id,
+      filename: "lecture1.pdf",
+      storageKey: "sessions/test/slides/test.pdf",
+      pageCount: 10,
+      fileSize: 1024000,
+      uploadedBy: user.id,
+    });
+  });
+});
+
+// =============================================================================
+// Slide Model
+// =============================================================================
+describe("Slide model", () => {
+  it("creates a slide linked to a slide set", async () => {
+    const user = await prisma.user.create({
+      data: { utorid: "p1", email: "p@test.ca", name: "Prof", role: Role.PROFESSOR },
+    });
+    const course = await prisma.course.create({
+      data: { code: "CSC108", name: "Intro", semester: "W25", createdById: user.id },
+    });
+    const session = await prisma.session.create({
+      data: { courseId: course.id, createdById: user.id, title: "L1", joinCode: "X1" },
+    });
+    const slideSet = await prisma.slideSet.create({
+      data: {
+        sessionId: session.id,
+        filename: "lecture1.pdf",
+        storageKey: "sessions/test/slides/test.pdf",
+        pageCount: 3,
+        fileSize: 1024000,
+        uploadedBy: user.id,
+      },
+    });
+
+    const slide = await prisma.slide.create({
+      data: {
+        slideSetId: slideSet.id,
+        pageNumber: 1,
       },
     });
 
     expect(slide).toMatchObject({
-      sessionId: session.id,
-      slideNumber: 1,
-      contentUrl: "https://example.com/slide1.png",
+      slideSetId: slideSet.id,
+      pageNumber: 1,
     });
   });
 });
@@ -349,8 +395,18 @@ describe("Question model", () => {
     const session = await prisma.session.create({
       data: { courseId: course.id, createdById: prof.id, title: "L1", joinCode: "X1" },
     });
+    const slideSet = await prisma.slideSet.create({
+      data: {
+        sessionId: session.id,
+        filename: "test.pdf",
+        storageKey: "sessions/test/slides/test.pdf",
+        pageCount: 1,
+        fileSize: 1024,
+        uploadedBy: prof.id,
+      },
+    });
     const slide = await prisma.slide.create({
-      data: { sessionId: session.id, slideNumber: 1, contentUrl: "https://example.com/s1.png" },
+      data: { slideSetId: slideSet.id, pageNumber: 1 },
     });
 
     const question = await prisma.question.create({
@@ -657,7 +713,7 @@ describe("Relationships", () => {
     expect(authors).toEqual(["Prof", "TA"]);
   });
 
-  it("queries course.sessions and session.slides", async () => {
+  it("queries course.sessions and session.slideSets", async () => {
     const prof = await prisma.user.create({
       data: { utorid: "p1", email: "p@test.ca", name: "Prof", role: Role.PROFESSOR },
     });
@@ -668,20 +724,32 @@ describe("Relationships", () => {
       data: { courseId: course.id, createdById: prof.id, title: "L1", joinCode: "X1" },
     });
 
+    const slideSet = await prisma.slideSet.create({
+      data: {
+        sessionId: session.id,
+        filename: "test.pdf",
+        storageKey: "sessions/test/slides/test.pdf",
+        pageCount: 2,
+        fileSize: 1024,
+        uploadedBy: prof.id,
+      },
+    });
+
     await prisma.slide.createMany({
       data: [
-        { sessionId: session.id, slideNumber: 1, contentUrl: "https://example.com/s1.png" },
-        { sessionId: session.id, slideNumber: 2, contentUrl: "https://example.com/s2.png" },
+        { slideSetId: slideSet.id, pageNumber: 1 },
+        { slideSetId: slideSet.id, pageNumber: 2 },
       ],
     });
 
     const result = await prisma.course.findUnique({
       where: { id: course.id },
-      include: { sessions: { include: { slides: true } } },
+      include: { sessions: { include: { slideSets: { include: { slides: true } } } } },
     });
 
     expect(result!.sessions).toHaveLength(1);
-    expect(result!.sessions[0].slides).toHaveLength(2);
+    expect(result!.sessions[0].slideSets).toHaveLength(1);
+    expect(result!.sessions[0].slideSets[0].slides).toHaveLength(2);
   });
 
   it("queries question.slide and question.session", async () => {
@@ -694,8 +762,18 @@ describe("Relationships", () => {
     const session = await prisma.session.create({
       data: { courseId: course.id, createdById: prof.id, title: "L1", joinCode: "X1" },
     });
+    const slideSet = await prisma.slideSet.create({
+      data: {
+        sessionId: session.id,
+        filename: "test.pdf",
+        storageKey: "sessions/test/slides/test.pdf",
+        pageCount: 1,
+        fileSize: 1024,
+        uploadedBy: prof.id,
+      },
+    });
     const slide = await prisma.slide.create({
-      data: { sessionId: session.id, slideNumber: 1, contentUrl: "https://example.com/s1.png" },
+      data: { slideSetId: slideSet.id, pageNumber: 1 },
     });
     const question = await prisma.question.create({
       data: { sessionId: session.id, slideId: slide.id, content: "Q1" },
@@ -707,7 +785,7 @@ describe("Relationships", () => {
     });
 
     expect(result!.session.title).toBe("L1");
-    expect(result!.slide!.slideNumber).toBe(1);
+    expect(result!.slide!.pageNumber).toBe(1);
   });
 
   it("queries question.upvotes and upvote.user", async () => {
