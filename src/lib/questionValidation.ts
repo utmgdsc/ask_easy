@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { questionRateLimit } from "@/lib/redisKeys";
+import { questionRateLimit, upvoteRateLimit, resolveRateLimit } from "@/lib/redisKeys";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -10,6 +10,11 @@ export const QUESTION_MIN_LENGTH = 5;
 export const QUESTION_MAX_LENGTH = 500;
 export const RATE_LIMIT_COUNT = 10;
 export const RATE_LIMIT_WINDOW_SECONDS = 60;
+
+export const UPVOTE_RATE_LIMIT_COUNT = 30;
+export const UPVOTE_RATE_LIMIT_WINDOW_SECONDS = 60;
+export const RESOLVE_RATE_LIMIT_COUNT = 20;
+export const RESOLVE_RATE_LIMIT_WINDOW_SECONDS = 60;
 
 export const VALID_VISIBILITIES = new Set<string>(["PUBLIC", "INSTRUCTOR_ONLY"]);
 
@@ -89,6 +94,32 @@ export function validateVisibility(visibility: unknown): ValidationResult {
  */
 export async function checkQuestionRateLimit(userId: string): Promise<boolean> {
   return checkRateLimit(questionRateLimit(userId), RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_SECONDS);
+}
+
+/**
+ * Checks whether the given user has exceeded the upvote rate limit
+ * (30 upvotes per 60-second window).
+ * Returns true if the limit has been exceeded.
+ */
+export async function checkUpvoteRateLimit(userId: string): Promise<boolean> {
+  return checkRateLimit(
+    upvoteRateLimit(userId),
+    UPVOTE_RATE_LIMIT_COUNT,
+    UPVOTE_RATE_LIMIT_WINDOW_SECONDS
+  );
+}
+
+/**
+ * Checks whether the given user has exceeded the resolve rate limit
+ * (20 resolves per 60-second window).
+ * Returns true if the limit has been exceeded.
+ */
+export async function checkResolveRateLimit(userId: string): Promise<boolean> {
+  return checkRateLimit(
+    resolveRateLimit(userId),
+    RESOLVE_RATE_LIMIT_COUNT,
+    RESOLVE_RATE_LIMIT_WINDOW_SECONDS
+  );
 }
 
 /**

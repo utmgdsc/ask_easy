@@ -4,7 +4,11 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 
 import { authMiddleware } from "./middleware/auth";
-import { handleQuestionCreate } from "./handlers/questionHandlers";
+import {
+  handleQuestionCreate,
+  handleQuestionUpvote,
+  handleQuestionResolve,
+} from "./handlers/questionHandlers";
 import { handleAnswerCreate } from "./handlers/answerHandlers";
 import type {
   ClientToServerEvents,
@@ -95,8 +99,25 @@ export async function initSocketIO(
   io.on("connection", (socket) => {
     console.log(`[Socket.IO] Client connected: ${socket.id} (user: ${socket.data.userId})`);
 
+    // Session room management
+    socket.on("session:join", (payload) => {
+      if (payload?.sessionId && typeof payload.sessionId === "string") {
+        socket.join(`session:${payload.sessionId}`);
+        console.log(`[Socket.IO] ${socket.id} joined session:${payload.sessionId}`);
+      }
+    });
+
+    socket.on("session:leave", (payload) => {
+      if (payload?.sessionId && typeof payload.sessionId === "string") {
+        socket.leave(`session:${payload.sessionId}`);
+        console.log(`[Socket.IO] ${socket.id} left session:${payload.sessionId}`);
+      }
+    });
+
     // Register per-socket event handlers
     handleQuestionCreate(socket, io!);
+    handleQuestionUpvote(socket, io!);
+    handleQuestionResolve(socket, io!);
     handleAnswerCreate(socket, io!);
 
     socket.on("disconnect", (reason) => {
