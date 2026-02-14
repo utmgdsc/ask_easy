@@ -21,7 +21,7 @@ export function renderAvatar(post: Post) {
 export function UpvoteButton({ initialVotes }: { initialVotes: number }) {
   const [votes, setVotes] = useState(initialVotes);
   const [isUpvoted, setIsUpvoted] = useState(false);
-
+  // TODO: future API Integration
   const handleUpvote = () => {
     if (isUpvoted) {
       setVotes(votes - 1);

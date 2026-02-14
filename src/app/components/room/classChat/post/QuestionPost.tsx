@@ -32,6 +32,9 @@ function renderReplySection(setIsReplying: React.Dispatch<React.SetStateAction<b
           Cancel
         </Button>
         <Button size="sm" onClick={() => setIsReplying(false)}>
+          {
+            //TODO: add API integration when the reply button is pressed
+          }
           Reply
         </Button>
       </div>
