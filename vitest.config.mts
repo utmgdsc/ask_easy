@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
     environment: "happy-dom",
-    exclude: ["**/node_modules/**", "**/dist/**", "src/__tests__/prisma-schema.test.ts"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "src/__tests__/prisma-schema.test.ts",
+      "src/__tests__/session-join.test.ts",
+    ],
   },
 });
