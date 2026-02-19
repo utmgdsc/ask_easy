@@ -58,3 +58,19 @@ export function upvoteRateLimit(userId: string): string {
 export function resolveRateLimit(userId: string): string {
   return `resolve:${userId}`;
 }
+
+/**
+ * Session creation rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{session-create:abc123}"
+ */
+export function sessionCreateRateLimit(userId: string): string {
+  return `session-create:${userId}`;
+}
+
+/**
+ * Code regeneration rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{code-regen:abc123}"
+ */
+export function codeRegenRateLimit(userId: string): string {
+  return `code-regen:${userId}`;
+}
