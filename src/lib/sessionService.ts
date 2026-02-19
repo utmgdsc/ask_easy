@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { generateUniqueSessionCode } from "@/lib/sessionCode";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,15 +31,6 @@ export interface SessionCreateResult {
     createdAt: Date;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-// Characters for join code generation (excluding confusing chars: 0/O, 1/I/L)
-const JOIN_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const JOIN_CODE_LENGTH = 6;
-const MAX_JOIN_CODE_ATTEMPTS = 10;
 
 // ---------------------------------------------------------------------------
 // Service Functions
@@ -101,34 +93,6 @@ export async function validateProfessorRole(
 }
 
 /**
- * Generates a unique 6-character alphanumeric join code.
- * Retries up to MAX_JOIN_CODE_ATTEMPTS times if collision is detected.
- *
- * @returns A unique join code string
- * @throws Error if unable to generate unique code after max attempts
- */
-export async function generateJoinCode(): Promise<string> {
-  for (let attempt = 0; attempt < MAX_JOIN_CODE_ATTEMPTS; attempt++) {
-    const code = Array.from(
-      { length: JOIN_CODE_LENGTH },
-      () => JOIN_CODE_CHARS[Math.floor(Math.random() * JOIN_CODE_CHARS.length)]
-    ).join("");
-
-    // Check if code already exists
-    const existing = await prisma.session.findUnique({
-      where: { joinCode: code },
-      select: { id: true },
-    });
-
-    if (!existing) {
-      return code;
-    }
-  }
-
-  throw new Error("Failed to generate unique join code after maximum attempts.");
-}
-
-/**
  * Creates a new session for a course.
  * Validates professor role and generates unique join code.
  *
@@ -148,8 +112,8 @@ export async function createSession(data: SessionCreateInput): Promise<SessionCr
     };
   }
 
-  // Generate unique join code
-  const joinCode = await generateJoinCode();
+  // Generate unique join code (cryptographically secure)
+  const joinCode = await generateUniqueSessionCode();
 
   // Create session with SCHEDULED status
   const session = await prisma.session.create({
