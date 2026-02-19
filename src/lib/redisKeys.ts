@@ -74,3 +74,19 @@ export function sessionCreateRateLimit(userId: string): string {
 export function codeRegenRateLimit(userId: string): string {
   return `code-regen:${userId}`;
 }
+
+/**
+ * Session join lookup rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{session-join-lookup:abc123}"
+ */
+export function sessionJoinLookupRateLimit(userId: string): string {
+  return `session-join-lookup:${userId}`;
+}
+
+/**
+ * Session join registration rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{session-join-register:abc123}"
+ */
+export function sessionJoinRegisterRateLimit(userId: string): string {
+  return `session-join-register:${userId}`;
+}
