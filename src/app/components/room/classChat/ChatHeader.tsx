@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SlideUpdateContext } from "../index";
+import Link from "next/link";
 
 function SlideToggle() {
   // toggles slides on and off
@@ -45,7 +46,9 @@ export default function ChatHeader() {
       <header className="pl-2 pr-4 py-2 flex items-center justify-between">
         <div className="flex items-center justify-left gap-2 ">
           <SlideToggle />
-          <h1 className="text-xl font-bold">CSC209</h1>
+          <Link href="/">
+            <h1 className="text-xl font-bold">CSC209</h1>
+          </Link>
         </div>
         <Input className="h-10 w-1/2 max-w-xs bg-stone-200" placeholder="Search" />
       </header>
