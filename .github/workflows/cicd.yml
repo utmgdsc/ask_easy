@@ -28,7 +28,7 @@ jobs:
         run: pnpm install
       - name: Generate Prisma Client
         run: pnpm db:generate
-      
+
       # CI
       - name: Check Types
         run: pnpm typecheck
@@ -48,16 +48,16 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Publish Docker Image to Docker Hub
         run: docker push jadendocks/ask_easy:latest
-      
+
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Clean up Docker to free disk space
+        run: docker system prune -af --volumes
       - name: Pull Image from Docker Hub
         run: docker pull jadendocks/ask_easy:latest
       - name: Stop and Remove Existing Container
         run: docker rm -f ask_easy
       - name: Run Docker Container
         run: docker run -d -p 3000:3000 --name ask_easy jadendocks/ask_easy:latest
-
-  

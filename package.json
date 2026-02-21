@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prisma:generate": "prisma generate",
     "typecheck": "tsc --noEmit",
     "dev": "tsx watch src/server.ts",
     "build": "next build",
@@ -15,6 +16,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:setup": "prisma generate && prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
@@ -54,6 +56,7 @@
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "radix-ui": "^1.4.3",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-resizable-panels": "^2.0.19",

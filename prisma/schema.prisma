@@ -46,12 +46,13 @@ model User {
   name  String
   role  Role   @default(STUDENT)
 
-  enrollments    CourseEnrollment[]
-  createdCourses Course[]
-  createdSessions Session[]
-  questions      Question[]
-  answers        Answer[]
-  upvotes        QuestionUpvote[]
+  enrollments       CourseEnrollment[]
+  createdCourses    Course[]
+  createdSessions   Session[]
+  questions         Question[]
+  answers           Answer[]
+  upvotes           QuestionUpvote[]
+  uploadedSlideSets SlideSet[]        @relation("SlideSetUploader")
 
   @@index([role])
 }
@@ -100,7 +101,7 @@ model Session {
 
   course    Course     @relation(fields: [courseId], references: [id])
   createdBy User       @relation(fields: [createdById], references: [id])
-  slides    Slide[]
+  slideSets SlideSet[]
   questions Question[]
 
   @@index([courseId])
@@ -108,16 +109,36 @@ model Session {
   @@index([status])
 }
 
-model Slide {
-  id          String @id @default(cuid())
-  sessionId   String
-  slideNumber Int
-  contentUrl  String
+model SlideSet {
+  id         String   @id @default(cuid())
+  sessionId  String
+  filename   String
+  storageKey String
+  pageCount  Int
+  fileSize   Int
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  session   Session    @relation(fields: [sessionId], references: [id])
-  questions Question[]
+  session  Session @relation(fields: [sessionId], references: [id])
+  uploader User    @relation("SlideSetUploader", fields: [uploadedBy], references: [id])
+  slides   Slide[]
 
   @@index([sessionId])
+  @@index([uploadedBy])
+}
+
+model Slide {
+  id         String   @id @default(cuid())
+  slideSetId String
+  pageNumber Int
+  createdAt  DateTime @default(now())
+
+  slideSet  SlideSet   @relation(fields: [slideSetId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([slideSetId, pageNumber])
+  @@index([slideSetId])
 }
 
 model Question {

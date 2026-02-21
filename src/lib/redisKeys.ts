@@ -36,6 +36,14 @@ export function answerRateLimit(userId: string): string {
 }
 
 /**
+ * Slide upload rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{slide-upload:abc123}"
+ */
+export function slideUploadRateLimit(userId: string): string {
+  return `slide-upload:${userId}`;
+}
+
+/**
  * Upvote rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
  * Final Redis key: "ratelimit:{upvote:abc123}"
  */
