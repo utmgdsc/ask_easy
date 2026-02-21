@@ -15,6 +15,7 @@ import type { AnswerCreatedPayload } from "@/socket/types";
 interface AnswerCreatePayload {
   questionId: string;
   content: string;
+  isAnonymous?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +92,7 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
           questionId: payload.questionId,
           authorId: userId,
           content: payload.content.trim(),
+          isAnonymous: payload.isAnonymous ?? false,
         },
         include: {
           author: {
@@ -108,8 +110,13 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         id: answer.id,
         questionId: answer.questionId,
         content: answer.content,
-        authorId: answer.author.id,
-        authorName: answer.author.name,
+        isAnonymous: answer.isAnonymous,
+        ...(answer.isAnonymous
+          ? {}
+          : {
+              authorId: answer.author.id,
+              authorName: answer.author.name,
+            }),
         authorRole: answer.author.role,
         isAccepted: answer.isAccepted,
         createdAt: answer.createdAt,

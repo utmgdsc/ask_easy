@@ -168,12 +168,13 @@ model Question {
 }
 
 model Answer {
-  id         String   @id @default(cuid())
-  questionId String
-  authorId   String
-  content    String
-  isAccepted Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  questionId  String
+  authorId    String
+  content     String
+  isAnonymous Boolean  @default(false)
+  isAccepted  Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   question Question @relation(fields: [questionId], references: [id])
   author   User     @relation(fields: [authorId], references: [id])

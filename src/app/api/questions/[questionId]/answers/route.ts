@@ -6,6 +6,7 @@ import {
   checkAnswerRateLimit,
   validateQuestionForAnswers,
 } from "@/lib/answerValidation";
+import { getQuestionAnswers } from "@/services/answerService";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -17,7 +18,8 @@ interface RouteParams {
 
 interface AnswerCreateBody {
   content: string;
-  authorId: string; // Required for REST API (no socket auth)
+  authorId: string;
+  isAnonymous?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -25,55 +27,38 @@ interface AnswerCreateBody {
 // ---------------------------------------------------------------------------
 
 /**
- * Retrieves all answers for a given question.
+ * Retrieves answers for a given question with cursor-based pagination.
  *
- * Returns answers ordered by createdAt ascending (oldest first).
+ * Query params:
+ *   - userId  (required) — the requesting user, used for access control
+ *   - cursor  (optional) — answer id to paginate from
+ *   - limit   (optional) — page size (default 20, max 50)
+ *
+ * Returns answers sorted by: accepted first, then createdAt asc.
+ * Anonymous answer authors are hidden from students.
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { questionId } = await params;
+    const { searchParams } = new URL(request.url);
 
-    // Validate question exists
-    const question = await prisma.question.findUnique({
-      where: { id: questionId },
-    });
-
-    if (!question) {
-      return NextResponse.json({ error: "Question not found." }, { status: 404 });
+    // TODO: replace with auth session once NextAuth.js is integrated
+    const userId = searchParams.get("userId");
+    if (!userId) {
+      return NextResponse.json({ error: "userId query parameter is required." }, { status: 400 });
     }
 
-    // Fetch answers with author info
-    const answers = await prisma.answer.findMany({
-      where: { questionId },
-      orderBy: { createdAt: "asc" },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          },
-        },
-      },
-    });
+    const cursor = searchParams.get("cursor") ?? undefined;
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-    // Transform response
-    const transformedAnswers = answers.map((a) => ({
-      id: a.id,
-      questionId: a.questionId,
-      content: a.content,
-      authorId: a.author.id,
-      authorName: a.author.name,
-      authorRole: a.author.role,
-      isAccepted: a.isAccepted,
-      createdAt: a.createdAt,
-    }));
+    const result = await getQuestionAnswers(questionId, userId, { cursor, limit });
 
-    return NextResponse.json({
-      questionId,
-      answers: transformedAnswers,
-      count: transformedAnswers.length,
-    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error.message }, { status: result.error.status });
+    }
+
+    return NextResponse.json(result.data);
   } catch (error) {
     console.error("[Answers API] Failed to fetch answers:", error);
     return NextResponse.json(
@@ -91,8 +76,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Creates a new answer for the given question.
  *
  * Request body:
- *   - content: string (required, 1-1000 characters)
- *   - authorId: string (required)
+ *   - content:     string  (required, 1-1000 characters)
+ *   - authorId:    string  (required)
+ *   - isAnonymous: boolean (optional, default false)
  *
  * Validations:
  *   1. Author ID provided
@@ -107,7 +93,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { questionId } = await params;
 
-    // Parse request body
     let body: AnswerCreateBody;
     try {
       body = await request.json();
@@ -115,27 +100,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    // TO-DO: check with auth to make sure that authorId being sent matches with the auth id
+    // TODO: check with auth to make sure that authorId being sent matches with the auth id
 
-    // 1. Validate authorId is provided
     if (!body.authorId || typeof body.authorId !== "string") {
       return NextResponse.json({ error: "Author ID is required." }, { status: 400 });
     }
 
-    // 2. Validate question — check early to avoid exhausting rate limit on invalid questions
     const questionValidation = await validateQuestionForAnswers(questionId);
     if (!questionValidation.valid) {
       const statusCode = questionValidation.error === "Question not found." ? 404 : 403;
       return NextResponse.json({ error: questionValidation.error }, { status: statusCode });
     }
 
-    // 3. Validate content using shared validation
     const contentValidation = validateAnswerContent(body.content);
     if (!contentValidation.valid) {
       return NextResponse.json({ error: contentValidation.error }, { status: 400 });
     }
 
-    // 4. Check rate limit — only increment after validating question exists
     const isRateLimited = await checkAnswerRateLimit(body.authorId);
     if (isRateLimited) {
       return NextResponse.json(
@@ -144,12 +125,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 5. Create the answer
     const answer = await prisma.answer.create({
       data: {
         questionId,
         authorId: body.authorId,
         content: body.content.trim(),
+        isAnonymous: body.isAnonymous ?? false,
       },
       include: {
         author: {
@@ -162,7 +143,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    // 6. Return the created answer
     return NextResponse.json(
       {
         id: answer.id,
@@ -172,6 +152,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         authorName: answer.author.name,
         authorRole: answer.author.role,
         isAccepted: answer.isAccepted,
+        isAnonymous: answer.isAnonymous,
         createdAt: answer.createdAt,
       },
       { status: 201 }
