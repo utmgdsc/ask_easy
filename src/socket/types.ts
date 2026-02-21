@@ -32,14 +32,16 @@ export interface SessionLeavePayload {
 export interface AnswerCreatePayload {
   questionId: string;
   content: string;
+  isAnonymous?: boolean;
 }
 
 export interface AnswerCreatedPayload {
   id: string;
   questionId: string;
   content: string;
-  authorId: string;
-  authorName: string;
+  isAnonymous: boolean;
+  authorId?: string;
+  authorName?: string;
   authorRole: "STUDENT" | "TA" | "PROFESSOR";
   isAccepted: boolean;
   createdAt: Date;
