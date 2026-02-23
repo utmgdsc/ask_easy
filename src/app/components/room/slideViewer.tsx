@@ -97,7 +97,7 @@ function SlideUI({ activeDocumentId }: { activeDocumentId: string | null }) {
               {isManual && (
                 <>
                   <button
-                    className="w-10 h-10 flex items-center justify-center bg-foreground hover:bg-foreground/80 text-white rounded-md transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
                     onClick={() =>
                       handlePageIndexChange(pageIndex === 0 ? pageCount - 1 : pageIndex - 1)
                     }
@@ -118,7 +118,7 @@ function SlideUI({ activeDocumentId }: { activeDocumentId: string | null }) {
                   </div>
 
                   <button
-                    className="w-10 h-10 flex items-center justify-center bg-foreground hover:bg-foreground/80 text-white rounded-md transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
                     onClick={() => handlePageIndexChange((pageIndex + 1) % pageCount)}
                   >
                     <ChevronRight className="w-6 h-6" />
@@ -141,7 +141,7 @@ export default function SlideViewer() {
   }
 
   return (
-    <div className="flex flex-col bg-stone-100 flex-1 w-full h-full items-center justify-center overflow-hidden">
+    <div className="flex flex-col bg-stone-50 flex-1 w-full h-full items-center justify-center overflow-hidden">
       <EmbedPDF engine={engine} plugins={plugins}>
         {({ activeDocumentId }) => <SlideUI activeDocumentId={activeDocumentId} />}
       </EmbedPDF>
