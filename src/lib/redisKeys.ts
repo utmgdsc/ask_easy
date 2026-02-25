@@ -90,3 +90,19 @@ export function sessionJoinLookupRateLimit(userId: string): string {
 export function sessionJoinRegisterRateLimit(userId: string): string {
   return `session-join-register:${userId}`;
 }
+
+/**
+ * QR code generation rate-limit key (passed into checkRateLimit, which wraps it via rateLimit()).
+ * Final Redis key: "ratelimit:{qr-generate:abc123}"
+ */
+export function qrCodeRateLimit(userId: string): string {
+  return `qr-generate:${userId}`;
+}
+
+/**
+ * QR code cache key.
+ * Example: "qr:abc123:f4a3b2c1d5e6"
+ */
+export function qrCode(sessionId: string, optionsHash: string): string {
+  return `qr:${sessionId}:${optionsHash}`;
+}

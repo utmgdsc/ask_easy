@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { codeRegenRateLimit } from "@/lib/redisKeys";
 import { regenerateSessionCode } from "@/lib/sessionCode";
+import { invalidateQRCache } from "@/lib/qrCode";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -85,6 +86,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: result.statusCode || 500 });
     }
+
+    // Invalidate all QR code cache entries for this session
+    await invalidateQRCache(sessionId);
 
     return NextResponse.json({ joinCode: result.code }, { status: 200 });
   } catch (error) {
