@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getCurrentUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  buildQuestionsWhere,
+  getQuestionsOrderBy,
+  parseQuestionsQueryParams,
+} from "@/lib/questionFilters";
 import {
   validateQuestionContent,
   validateVisibility,
   checkQuestionRateLimit,
   validateSessionForQuestions,
 } from "@/lib/questionValidation";
+import { getSessionMembership } from "@/lib/sessionService";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,69 +36,81 @@ interface QuestionCreateBody {
 // ---------------------------------------------------------------------------
 
 /**
- * Retrieves all questions for a given session.
+ * Retrieves questions for a session with cursor-based pagination, filters, and role-based visibility.
+ *
+ * Requires authentication (placeholder: x-user-id or Authorization Bearer header).
+ * User must be enrolled in the session's course.
  *
  * Query parameters:
- *   - visibility: "PUBLIC" | "INSTRUCTOR_ONLY" (optional filter)
- *   - status: "OPEN" | "ANSWERED" | "RESOLVED" (optional filter)
- *
- * Returns questions ordered by createdAt descending (newest first).
+ *   - limit: number (default 20, max 50)
+ *   - cursor: id of last question from previous page
+ *   - search: partial case-insensitive match on content
+ *   - slideId: filter by slide
+ *   - status: OPEN | ANSWERED | RESOLVED
+ *   - sortBy: newest | votes (default newest)
+ *   - includeTotal: true to include total matching count
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    // Validate session exists
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+    const userId = getCurrentUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    // Parse optional query parameters for filtering
+    const membership = await getSessionMembership(sessionId, userId);
+    if (!membership.valid || !membership.role) {
+      const statusCode = membership.statusCode ?? 403;
+      return NextResponse.json({ error: membership.error ?? "Forbidden." }, { status: statusCode });
+    }
+
+    const role = membership.role;
     const { searchParams } = new URL(request.url);
-    const visibility = searchParams.get("visibility");
-
-    // TO-DO: if visibility chosen is INSTRUCTOR_ONLY, check if the user calling this function is an instructor or not, through auth
-
-    const status = searchParams.get("status");
-
-    // Build dynamic where clause
-    const where: {
-      sessionId: string;
-      visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
-      status?: "OPEN" | "ANSWERED" | "RESOLVED";
-    } = { sessionId };
-
-    if (visibility === "PUBLIC" || visibility === "INSTRUCTOR_ONLY") {
-      where.visibility = visibility;
-    }
-
-    if (status === "OPEN" || status === "ANSWERED" || status === "RESOLVED") {
-      where.status = status;
-    }
-
-    // Fetch questions with author info (respecting anonymity)
-    const questions = await prisma.question.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        _count: {
-          select: { answers: true },
-        },
-      },
+    const queryParams = parseQuestionsQueryParams(searchParams);
+    const where = buildQuestionsWhere(sessionId, role, {
+      search: queryParams.search,
+      slideId: queryParams.slideId,
+      status: queryParams.status,
     });
 
-    // Transform response to respect anonymity
-    const transformedQuestions = questions.map((q) => ({
+    let total: number | undefined;
+    if (queryParams.includeTotal) {
+      total = await prisma.question.count({ where });
+    }
+
+    const take = queryParams.limit + 1;
+    const orderBy = getQuestionsOrderBy(queryParams.sortBy);
+    const include = {
+      author: { select: { id: true, name: true } },
+      _count: { select: { answers: true } },
+      answers: { where: { isAccepted: true }, select: { id: true }, take: 1 },
+    } as const;
+
+    const questions =
+      queryParams.cursor !== null
+        ? await prisma.question.findMany({
+            where,
+            orderBy,
+            take,
+            cursor: { id: queryParams.cursor },
+            skip: 1,
+            include,
+          })
+        : await prisma.question.findMany({
+            where,
+            orderBy,
+            take,
+            include,
+          });
+
+    const hasMore = questions.length > queryParams.limit;
+    const page = hasMore ? questions.slice(0, queryParams.limit) : questions;
+    const nextCursor = hasMore && page.length > 0 ? page[page.length - 1].id : null;
+
+    const canRevealAnonymous = role === "TA" || role === "PROFESSOR";
+
+    const transformedQuestions = page.map((q) => ({
       id: q.id,
       content: q.content,
       visibility: q.visibility,
@@ -99,17 +118,30 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       isAnonymous: q.isAnonymous,
       upvoteCount: q.upvoteCount,
       answerCount: q._count.answers,
+      hasAcceptedAnswer: q.answers.length > 0,
+      acceptedAnswerId: q.answers[0]?.id ?? null,
       slideId: q.slideId,
       createdAt: q.createdAt,
-      // Only include author info if not anonymous
-      author: q.isAnonymous ? null : q.author,
+      author: q.isAnonymous && !canRevealAnonymous ? null : q.author,
     }));
 
-    return NextResponse.json({
+    const payload: {
+      sessionId: string;
+      questions: typeof transformedQuestions;
+      nextCursor: string | null;
+      count: number;
+      total?: number;
+    } = {
       sessionId,
       questions: transformedQuestions,
+      nextCursor,
       count: transformedQuestions.length,
-    });
+    };
+    if (total !== undefined) {
+      payload.total = total;
+    }
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("[Questions API] Failed to fetch questions:", error);
     return NextResponse.json(
