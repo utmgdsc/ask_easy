@@ -108,27 +108,21 @@ export function parseQuestionsQueryParams(searchParams: URLSearchParams): Questi
 // Where clause builder
 // ---------------------------------------------------------------------------
 
-/** Shape passed to prisma.question.findMany({ where }). */
-export interface QuestionsWhereInput {
-  sessionId: string;
-  visibility: { in: ("PUBLIC" | "INSTRUCTOR_ONLY")[] };
-  status?: "OPEN" | "ANSWERED" | "RESOLVED";
-  slideId?: string;
-  content?: { contains: string; mode: "insensitive" };
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Builds the Prisma where object for listing questions.
  * Applies sessionId, visibility (from role), and optional status, slideId, search.
+ * Returns a plain object compatible with prisma.question.findMany({ where }).
  */
 export function buildQuestionsWhere(
   sessionId: string,
   role: Role,
   params: Pick<QuestionsQueryParams, "search" | "slideId" | "status">
-): QuestionsWhereInput {
+): Record<string, any> {
   const visibilityValues = getAllowedVisibilityForRole(role);
 
-  const where: QuestionsWhereInput = {
+  const where: Record<string, any> = {
     sessionId,
     visibility: { in: visibilityValues },
   };
@@ -151,15 +145,15 @@ export function buildQuestionsWhere(
   return where;
 }
 
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 /**
  * Returns the orderBy clause for the questions list based on sortBy.
  * Stable cursor: secondary sort by id ascending.
  */
-export function getQuestionsOrderBy(
-  sortBy: "newest" | "votes"
-): Array<{ createdAt?: "desc"; upvoteCount?: "desc"; id?: "asc" }> {
+export function getQuestionsOrderBy(sortBy: "newest" | "votes") {
   if (sortBy === "votes") {
-    return [{ upvoteCount: "desc" }, { id: "asc" }];
+    return [{ upvoteCount: "desc" as const }, { id: "asc" as const }];
   }
-  return [{ createdAt: "desc" }, { id: "asc" }];
+  return [{ createdAt: "desc" as const }, { id: "asc" as const }];
 }

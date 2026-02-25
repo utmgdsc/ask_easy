@@ -83,28 +83,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const take = queryParams.limit + 1;
-    const cursorClause =
-      queryParams.cursor !== null
-        ? { cursor: { id: queryParams.cursor }, skip: 1 }
-        : {};
+    const orderBy = getQuestionsOrderBy(queryParams.sortBy);
+    const include = {
+      author: { select: { id: true, name: true } },
+      _count: { select: { answers: true } },
+      answers: { where: { isAccepted: true }, select: { id: true }, take: 1 },
+    } as const;
 
-    const questions = await prisma.question.findMany({
-      where,
-      orderBy: getQuestionsOrderBy(queryParams.sortBy),
-      take,
-      ...cursorClause,
-      include: {
-        author: {
-          select: { id: true, name: true },
-        },
-        _count: { select: { answers: true } },
-        answers: {
-          where: { isAccepted: true },
-          select: { id: true },
-          take: 1,
-        },
-      },
-    });
+    const questions =
+      queryParams.cursor !== null
+        ? await prisma.question.findMany({
+            where,
+            orderBy,
+            take,
+            cursor: { id: queryParams.cursor },
+            skip: 1,
+            include,
+          })
+        : await prisma.question.findMany({
+            where,
+            orderBy,
+            take,
+            include,
+          });
 
     const hasMore = questions.length > queryParams.limit;
     const page = hasMore ? questions.slice(0, queryParams.limit) : questions;
