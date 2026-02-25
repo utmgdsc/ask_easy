@@ -16,16 +16,29 @@ const port = parseInt(process.env.PORT || "3000", 10);
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  // 1. Prepare the Next.js application
+  console.log("1. Preparing Next.js...");
   const app = next({ dev, hostname, port });
   const handle = app.getRequestHandler();
-  await app.prepare();
+  try {
+    await app.prepare();
+    console.log("Next.js prepared successfully.");
+  } catch (err) {
+    console.error("Next.js prepare failed:", err);
+    throw err;
+  }
 
   // 2. Create an HTTP server that delegates to Next.js
   const httpServer = createServer(handle);
 
+  console.log("2. Init Socket.IO...");
   // 3. Attach Socket.IO (+ Redis adapter) to the same HTTP server
-  await initSocketIO(httpServer);
+  try {
+    await initSocketIO(httpServer);
+    console.log("Socket.IO initialized successfully.");
+  } catch (err) {
+    console.error("Socket.IO init failed:", err);
+    throw err;
+  }
 
   // 4. Start listening
   httpServer.listen(port, () => {

@@ -204,6 +204,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             sessionId,
             filename: file.name,
             storageKey: generatedStorageKey,
+            storageUrl: `/api/storage/${generatedStorageKey}`, // Provide an access URL (placeholder or real route)
             pageCount,
             fileSize: file.size,
             uploadedBy: userId,
@@ -214,6 +215,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         const slideData = Array.from({ length: pageCount }, (_, i) => ({
           slideSetId: slideSet.id,
           pageNumber: i + 1,
+          sessionId,
         }));
 
         await tx.slide.createMany({

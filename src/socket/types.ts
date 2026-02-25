@@ -65,6 +65,18 @@ export interface QuestionResolvedPayload {
   status: "RESOLVED";
 }
 
+export interface CurrentStatePayload {
+  slideSetId: string;
+  slideId: string;
+  pageNumber: number;
+}
+
+export interface SlideChangedPayload {
+  slideSetId: string;
+  slideId: string;
+  pageNumber: number;
+}
+
 // ---------------------------------------------------------------------------
 // Event maps
 // ---------------------------------------------------------------------------
@@ -87,6 +99,8 @@ export interface ServerToClientEvents {
   "answer:error": (payload: { message: string }) => void;
   "question:updated": (payload: QuestionUpdatedPayload) => void;
   "question:resolved": (payload: QuestionResolvedPayload) => void;
+  current_state: (payload: CurrentStatePayload) => void;
+  slide_changed: (payload: SlideChangedPayload) => void;
 }
 
 /** Events exchanged between Socket.IO server instances (via Redis adapter). */

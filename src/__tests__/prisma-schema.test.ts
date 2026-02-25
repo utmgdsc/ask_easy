@@ -322,6 +322,7 @@ describe("SlideSet model", () => {
         sessionId: session.id,
         filename: "lecture1.pdf",
         storageKey: "sessions/test/slides/test.pdf",
+        storageUrl: "/api/storage/test",
         pageCount: 10,
         fileSize: 1024000,
         uploadedBy: user.id,
@@ -358,6 +359,7 @@ describe("Slide model", () => {
         sessionId: session.id,
         filename: "lecture1.pdf",
         storageKey: "sessions/test/slides/test.pdf",
+        storageUrl: "/api/storage/test",
         pageCount: 3,
         fileSize: 1024000,
         uploadedBy: user.id,
@@ -368,6 +370,7 @@ describe("Slide model", () => {
       data: {
         slideSetId: slideSet.id,
         pageNumber: 1,
+        sessionId: session.id,
       },
     });
 
@@ -400,13 +403,14 @@ describe("Question model", () => {
         sessionId: session.id,
         filename: "test.pdf",
         storageKey: "sessions/test/slides/test.pdf",
+        storageUrl: "/api/storage/test",
         pageCount: 1,
         fileSize: 1024,
         uploadedBy: prof.id,
       },
     });
     const slide = await prisma.slide.create({
-      data: { slideSetId: slideSet.id, pageNumber: 1 },
+      data: { slideSetId: slideSet.id, pageNumber: 1, sessionId: session.id },
     });
 
     const question = await prisma.question.create({
@@ -729,6 +733,7 @@ describe("Relationships", () => {
         sessionId: session.id,
         filename: "test.pdf",
         storageKey: "sessions/test/slides/test.pdf",
+        storageUrl: "/api/storage/test",
         pageCount: 2,
         fileSize: 1024,
         uploadedBy: prof.id,
@@ -737,8 +742,8 @@ describe("Relationships", () => {
 
     await prisma.slide.createMany({
       data: [
-        { slideSetId: slideSet.id, pageNumber: 1 },
-        { slideSetId: slideSet.id, pageNumber: 2 },
+        { slideSetId: slideSet.id, pageNumber: 1, sessionId: session.id },
+        { slideSetId: slideSet.id, pageNumber: 2, sessionId: session.id },
       ],
     });
 
@@ -767,13 +772,14 @@ describe("Relationships", () => {
         sessionId: session.id,
         filename: "test.pdf",
         storageKey: "sessions/test/slides/test.pdf",
+        storageUrl: "/api/storage/test",
         pageCount: 1,
         fileSize: 1024,
         uploadedBy: prof.id,
       },
     });
     const slide = await prisma.slide.create({
-      data: { slideSetId: slideSet.id, pageNumber: 1 },
+      data: { slideSetId: slideSet.id, pageNumber: 1, sessionId: session.id },
     });
     const question = await prisma.question.create({
       data: { sessionId: session.id, slideId: slide.id, content: "Q1" },

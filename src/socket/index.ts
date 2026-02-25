@@ -10,6 +10,7 @@ import {
   handleQuestionResolve,
 } from "./handlers/questionHandlers";
 import { handleAnswerCreate } from "./handlers/answerHandlers";
+import { sendCurrentStateToUser } from "./handlers/slideHandlers";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -104,6 +105,7 @@ export async function initSocketIO(
       if (payload?.sessionId && typeof payload.sessionId === "string") {
         socket.join(`session:${payload.sessionId}`);
         console.log(`[Socket.IO] ${socket.id} joined session:${payload.sessionId}`);
+        sendCurrentStateToUser(socket, payload.sessionId);
       }
     });
 

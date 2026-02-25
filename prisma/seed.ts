@@ -160,6 +160,7 @@ async function main() {
       sessionId: activeSession.id,
       filename: "Lecture5-Variables.pdf",
       storageKey: "sessions/seed-session/slides/seed-slideset.pdf",
+      storageUrl: "/api/storage/sessions/seed-session/slides/seed-slideset.pdf",
       pageCount: 3,
       fileSize: 1024000, // 1MB example
       uploadedBy: professor.id,
@@ -172,18 +173,21 @@ async function main() {
       data: {
         slideSetId: slideSet.id,
         pageNumber: 1,
+        sessionId: activeSession.id,
       },
     }),
     prisma.slide.create({
       data: {
         slideSetId: slideSet.id,
         pageNumber: 2,
+        sessionId: activeSession.id,
       },
     }),
     prisma.slide.create({
       data: {
         slideSetId: slideSet.id,
         pageNumber: 3,
+        sessionId: activeSession.id,
       },
     }),
   ]);
