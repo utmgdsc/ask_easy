@@ -62,10 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const membership = await getSessionMembership(sessionId, userId);
     if (!membership.valid || !membership.role) {
       const statusCode = membership.statusCode ?? 403;
-      return NextResponse.json(
-        { error: membership.error ?? "Forbidden." },
-        { status: statusCode }
-      );
+      return NextResponse.json({ error: membership.error ?? "Forbidden." }, { status: statusCode });
     }
 
     const role = membership.role;
@@ -125,10 +122,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       acceptedAnswerId: q.answers[0]?.id ?? null,
       slideId: q.slideId,
       createdAt: q.createdAt,
-      author:
-        q.isAnonymous && !canRevealAnonymous
-          ? null
-          : q.author,
+      author: q.isAnonymous && !canRevealAnonymous ? null : q.author,
     }));
 
     const payload: {

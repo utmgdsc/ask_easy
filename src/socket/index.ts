@@ -155,10 +155,7 @@ export async function initSocketIO(
   const shutdown = async () => {
     if (pubClient || subClient) {
       console.log("[Socket.IO] Shutting down Redis adapter clients…");
-      await Promise.all([
-        pubClient?.quit().catch(() => {}),
-        subClient?.quit().catch(() => {}),
-      ]);
+      await Promise.all([pubClient?.quit().catch(() => {}), subClient?.quit().catch(() => {})]);
     }
   };
 
