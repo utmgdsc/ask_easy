@@ -13,6 +13,7 @@
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,html}'",
     "prepare": "husky",
     "test": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
