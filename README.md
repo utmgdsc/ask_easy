@@ -18,6 +18,8 @@ cd ask_easy
 pnpm install
 ```
 
+> **Note:** `pnpm install` will automatically run `prisma generate` via the postinstall script to generate the Prisma client.
+
 ### 2. Set up environment variables
 
 ```bash
@@ -29,10 +31,10 @@ cp .env.example .env.local
 # Then change @postgres to @localhost and @redis to @localhost in .env.local
 ```
 
-| File | Used by | Host values |
-|------|---------|-------------|
-| `.env` | Docker Compose | `@postgres`, `@redis` (service names) |
-| `.env.local` | `pnpm dev` | `@localhost` |
+| File         | Used by        | Host values                           |
+| ------------ | -------------- | ------------------------------------- |
+| `.env`       | Docker Compose | `@postgres`, `@redis` (service names) |
+| `.env.local` | `pnpm dev`     | `@localhost`                          |
 
 ### 3. Start services with Docker Compose
 
@@ -61,26 +63,26 @@ pnpm dev
 Generate Prisma client and push schema:
 
 ```bash
-pnpm db:generate
-pnpm db:push
+pnpm db:setup
 ```
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm typecheck` | Run TypeScript type checking |
-| `pnpm lint` | Run ESLint |
-| `pnpm lint:fix` | Fix ESLint issues |
-| `pnpm format` | Format code with Prettier |
-| `pnpm test` | Run tests with Vitest |
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:push` | Push schema to database |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:studio` | Open Prisma Studio |
+| Script             | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `pnpm dev`         | Start development server                          |
+| `pnpm build`       | Build for production                              |
+| `pnpm start`       | Start production server                           |
+| `pnpm typecheck`   | Run TypeScript type checking                      |
+| `pnpm lint`        | Run ESLint                                        |
+| `pnpm lint:fix`    | Fix ESLint issues                                 |
+| `pnpm format`      | Format code with Prettier                         |
+| `pnpm test`        | Run tests with Vitest                             |
+| `pnpm db:generate` | Generate Prisma client                            |
+| `pnpm db:push`     | Push schema to database                           |
+| `pnpm db:migrate`  | Run database migrations                           |
+| `pnpm db:setup`    | Generate client + push schema (for initial setup) |
+| `pnpm db:studio`   | Open Prisma Studio                                |
 
 ## Docker Commands
 

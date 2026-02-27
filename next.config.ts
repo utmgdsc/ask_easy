@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   output: "standalone",
+  serverExternalPackages: ["socket.io", "ioredis", "@socket.io/redis-adapter"],
 };
 
 export default nextConfig;

@@ -1,11 +1,196 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum Role {
+  STUDENT
+  TA
+  PROFESSOR
+}
+
+enum SessionStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+}
+
+enum Visibility {
+  PUBLIC
+  INSTRUCTOR_ONLY
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  RESOLVED
+}
+
+// =============================================================================
+// Models
+// =============================================================================
+
+model User {
+  id    String @id @default(cuid())
+  utorid String @unique
+  email String @unique
+  name  String
+  role  Role   @default(STUDENT)
+
+  enrollments       CourseEnrollment[]
+  createdCourses    Course[]
+  createdSessions   Session[]
+  questions         Question[]
+  answers           Answer[]
+  upvotes           QuestionUpvote[]
+  uploadedSlideSets SlideSet[]        @relation("SlideSetUploader")
+
+  @@index([role])
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  code      String
+  name      String
+  semester  String
+  createdById String
+
+  createdBy   User               @relation(fields: [createdById], references: [id])
+  enrollments CourseEnrollment[]
+  sessions    Session[]
+
+  @@index([createdById])
+  @@index([semester])
+}
+
+model CourseEnrollment {
+  id       String @id @default(cuid())
+  userId   String
+  courseId  String
+  role     Role
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Session {
+  id                   String        @id @default(cuid())
+  courseId              String
+  createdById          String
+  title                String
+  joinCode             String        @unique
+  status               SessionStatus @default(SCHEDULED)
+  isSubmissionsEnabled Boolean       @default(false)
+  startTime            DateTime?
+  endTime              DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  course    Course     @relation(fields: [courseId], references: [id])
+  createdBy User       @relation(fields: [createdById], references: [id])
+  slideSets SlideSet[]
+  questions Question[]
+
+  @@index([courseId])
+  @@index([createdById])
+  @@index([status])
+}
+
+model SlideSet {
+  id         String   @id @default(cuid())
+  sessionId  String
+  filename   String
+  storageKey String
+  pageCount  Int
+  fileSize   Int
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  session  Session @relation(fields: [sessionId], references: [id])
+  uploader User    @relation("SlideSetUploader", fields: [uploadedBy], references: [id])
+  slides   Slide[]
+
+  @@index([sessionId])
+  @@index([uploadedBy])
+}
+
+model Slide {
+  id         String   @id @default(cuid())
+  slideSetId String
+  pageNumber Int
+  createdAt  DateTime @default(now())
+
+  slideSet  SlideSet   @relation(fields: [slideSetId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([slideSetId, pageNumber])
+  @@index([slideSetId])
+}
+
+model Question {
+  id          String         @id @default(cuid())
+  sessionId   String
+  slideId     String?
+  authorId    String?
+  content     String
+  isAnonymous Boolean        @default(false)
+  visibility  Visibility     @default(PUBLIC)
+  status      QuestionStatus @default(OPEN)
+  upvoteCount Int            @default(0)
+  createdAt   DateTime       @default(now())
+
+  session Session          @relation(fields: [sessionId], references: [id])
+  slide   Slide?           @relation(fields: [slideId], references: [id])
+  author  User?            @relation(fields: [authorId], references: [id])
+  answers Answer[]
+  upvotes QuestionUpvote[]
+
+  @@index([sessionId])
+  @@index([slideId])
+  @@index([authorId])
+  @@index([status])
+  @@index([visibility])
+  @@index([createdAt])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  authorId   String
+  content    String
+  isAccepted Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id])
+  author   User     @relation(fields: [authorId], references: [id])
+
+  @@index([questionId])
+  @@index([authorId])
+}
+
+model QuestionUpvote {
+  id         String @id @default(cuid())
+  questionId String
+  userId     String
+
+  question Question @relation(fields: [questionId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([questionId, userId])
+  @@index([questionId])
+  @@index([userId])
 }

@@ -8,8 +8,17 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml .npmrc* ./
+RUN pnpm config set node-linker hoisted && pnpm install --frozen-lockfile
+
+FROM base AS prod-deps
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml .npmrc* ./
+# --ignore-scripts: skip lifecycle scripts (avoids "husky: not found" from prepare)
+RUN pnpm config set node-linker hoisted && pnpm install --frozen-lockfile --prod --ignore-scripts
 
 FROM base AS builder
 WORKDIR /app
@@ -29,13 +38,27 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+# Production node_modules (includes socket.io, ioredis, tsx, etc.)
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Prisma engine binaries (postinstall was skipped by --ignore-scripts in prod-deps)
+# In Prisma 6.x the engine is included in the generated output (src/generated/prisma/)
+# which is copied below via the src/ COPY. We only need @prisma/engines from builder.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# package.json (needed by tsx / module resolution)
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+
+# Next.js build output
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Next.js & TypeScript config (needed at runtime by the custom server)
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./
+
+# Source files needed for the custom server (tsx transpiles at runtime)
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 
 USER nextjs
 
@@ -44,4 +67,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["npx", "tsx", "src/server.ts"]

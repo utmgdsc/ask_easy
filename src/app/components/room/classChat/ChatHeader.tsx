@@ -3,42 +3,28 @@
 import { Input } from "@/components/ui/input";
 import { useContext } from "react";
 import { PanelRightClose } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { SlideUpdateContext } from "../index";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 function SlideToggle() {
   // toggles slides on and off
   const { isSlidesVisible, rerender } = useContext(SlideUpdateContext);
-  const isMDsize = useMediaQuery("(min-width: 1024px)");
-  if (!isMDsize) {
-    return (
-      <button
-        className="w-10 h-10 flex items-center justify-center text-stone-900/50 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
-        onClick={() => rerender()}
-      >
-        {isSlidesVisible ? (
-          <PanelRightClose className="w-6 h-6 rotate-270" />
-        ) : (
-          <PanelRightClose className="w-6 h-6 rotate-90" />
-        )}
-      </button>
-    );
-  } else {
-    return (
-      <button
-        className="w-10 h-10 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
-        onClick={() => rerender()}
-      >
-        {isSlidesVisible ? (
-          <PanelRightClose className="w-6 h-6 rotate-180" />
-        ) : (
-          <PanelRightClose className="w-6 h-6 " />
-        )}
-      </button>
-    );
-  }
+  const slideIcon: string = isSlidesVisible ? slideIconStyling["open"] : slideIconStyling["closed"];
+  return (
+    <button
+      className="w-10 h-10 flex items-center justify-center text-stone-900/50 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
+      onClick={() => rerender()}
+    >
+      <PanelRightClose className={cn("w-6 h-6 ", slideIcon)} />
+    </button>
+  );
 }
+
+const slideIconStyling = {
+  open: "rotate-270 md:rotate-180",
+  closed: "rotate-90 md:rotate-0",
+};
 
 export default function ChatHeader() {
   return (
