@@ -13,7 +13,7 @@ function SlideToggle() {
   const slideIcon: string = isSlidesVisible ? slideIconStyling["open"] : slideIconStyling["closed"];
   return (
     <button
-      className="w-10 h-10 flex items-center justify-center text-stone-900/50 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
+      className="w-10 h-10 flex items-center justify-center text-stone-450 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
       onClick={() => rerender()}
     >
       <PanelRightClose className={cn("w-6 h-6 ", slideIcon)} />
@@ -22,8 +22,8 @@ function SlideToggle() {
 }
 
 const slideIconStyling = {
-  open: "rotate-270 md:rotate-180",
-  closed: "rotate-90 md:rotate-0",
+  open: "rotate-270 lg:rotate-180",
+  closed: "rotate-90 lg:rotate-0",
 };
 
 export default function ChatHeader() {
