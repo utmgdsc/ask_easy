@@ -1,5 +1,4 @@
 "use client";
-import Room from "../../room";
 import { PLACEHOLDER_USERS } from "@/utils/placeholder";
 import { Course, User } from "@/utils/types";
 import { PLACEHOLDER_COURSES } from "@/utils/placeholder";
@@ -21,9 +20,14 @@ function renderCourseButtons() {
             key={index}
             href="/room"
             className="flex flex-col items-center justify-center
-             bg-black py-6 px-4
-             rounded-2xl shadow-lg hover:shadow-xl
-             transition duration-300 text-white text-center"
+             py-6 px-4 
+             transition duration-300 text-black text-center
+             rounded-2xl
+             bg-white-020
+             shadow-xl        
+             backdrop-blur-[1.2px]
+             border-4 border-blue-50
+             "
           >
             <h3 className="font-bold text-4xl mb-2">{course.name}</h3>
 
@@ -39,22 +43,24 @@ function renderCourseButtons() {
 
 export default function LandingPage() {
   return (
-    <div className=" overflow-y-auto">
+    <div className=" overflow-y-auto dot-grid">
       <h1
-        className="absolute items-center justify-between shadow-md top-8 left-8 right-8 z-[5] bg-white rounded-lg pw-full 
-        text-2xl font-bold text-left py-2 px-4 flex"
+        className="absolute items-center justify-between shadow-md top-6
+         left-8 right-8 z-[5] bg-white rounded-lg pw-full 
+         text-2xl font-bold text-left py-2 px-4 flex 
+         border-2 border-blue-50"
       >
         <span className="text-lg font-bold text-black">AskEasy</span>
 
-        <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
-          Log in
+        <button className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium hover:bg-stone-100 transition">
+          QR Code Login
         </button>
       </h1>
 
-      <div className="flexflex-col py-30 min-h-screen dot-grid bg-background">
-        <div className="h-50 flex flex-col">
-          <h1 className="top-24 text-4xl py-4 font-bold text-center  ">Classrooms</h1>
-          <div className="flex-1 px-4 space-y-6">{renderCourseButtons()}</div>
+      <div className="flex flex-col py-30 min-h-screen ">
+        <div className="h-50 flex flex-col pb-50">
+          <h1 className="top-24 text-4xl py-4 text-center  ">Classrooms</h1>
+          <div className="flex-1 f-jetbrains-mono  px-4 space-y-6">{renderCourseButtons()}</div>
         </div>
       </div>
     </div>

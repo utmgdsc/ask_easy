@@ -1,3 +1,4 @@
+"use client";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import ClassChat from "./classChat";
 import SlideViewer from "./slideViewer";

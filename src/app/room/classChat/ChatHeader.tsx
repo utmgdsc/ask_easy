@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input";
 import { useContext } from "react";
 import { PanelRightClose } from "lucide-react";
-import { SlideUpdateContext } from "../index";
+import { SlideUpdateContext } from "../page";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
