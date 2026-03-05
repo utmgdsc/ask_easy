@@ -14,32 +14,28 @@ function renderCourseButtons() {
   }
   if (validcourses.length > 0) {
     return (
-      <div
-        className="flex-1 p-4 py-10  w-full backdrop-blur-[1.5px]
-             border-4 rounded-2xl border-blue-50 bg-yellow-050"
-      >
+      <div className="flex-1 p-4 py-10">
         <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto text-center">
           {validcourses.map((course, index) => (
             <Link
               key={index}
               href="/room"
               className="flex flex-col items-center justify-center
-             py-6 px-4 transition-all duration-300 ease-in-out text-center rounded-2xl
-             bg-white/80 shadow-lg backdrop-blur-md border-2 border-slate-100
-             hover:-translate-y-2 hover:shadow-2xl hover:border-green-100 hover:bg-white
+             py-6 px-4 transition-all duration-300 ease-in-out text-center rounded-md
+             bg-stone-100 shadow-lg backdrop-blur-md
+             hover:-translate-y-2 hover:bg-stone-200 hover:shadow-2xl
              h-[15rem] group relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-100/0 via-green-100/0 to-green-100/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
               <div className="relative z-10 flex flex-col items-center gap-3">
-                <h3 className="font-bold text-3xl text-slate-800 transition-colors duration-300 group-hover:text-green-500">
+                <h3 className="font-bold text-3xl text-forground transition-colors duration-300 ">
                   {course.name}
                 </h3>
-                <h3 className="text-lg text-slate-600 font-medium">{course.professor}</h3>
-                <div className="flex gap-3 mt-2 text-sm text-slate-500 justify-center font-medium">
-                  <span className="px-3 py-1 bg-slate-100/80 rounded-full group-hover:bg-green-100 group-hover:text-green-700 transition-colors duration-300">
+                <h3 className="text-lg text-stone-900/50 font-medium">{course.professor}</h3>
+                <div className="flex gap-3 mt-2 text-sm text-stone-900/50 justify-center font-medium">
+                  <span className="px-3 py-1 bg-stone-200 rounded-md transition-colors duration-300">
                     Begins: {course.beginDate}
                   </span>
-                  <span className="px-3 py-1 bg-slate-100/80 rounded-full group-hover:bg-green-100 group-hover:text-green-700 transition-colors duration-300">
+                  <span className="px-3 py-1 bg-stone-200 rounded-md transition-colors duration-300">
                     Ends: {course.endDate}
                   </span>
                 </div>
@@ -65,7 +61,7 @@ function renderCourseButtons() {
 export default function LandingPage() {
   return (
     <div className="overflow-x-hidden dot-grid min-h-[100dvh] flex flex-col w-full relative">
-      <h1
+      <div
         className="absolute items-center justify-between shadow-md top-6
      left-7 right-7 z-[5] bg-white rounded-lg 
      text-2xl font-bold text-left py-2 px-3 flex 
@@ -81,10 +77,10 @@ export default function LandingPage() {
             Qr Code login
           </button>
         </div>
-      </h1>
+      </div>
 
       <div className="flex-1 pt-32 pb-10">
-        <h1 className="text-4xl py-4 text-center">Classrooms</h1>
+        <h1 className="text-4xl py-4 text-center font-bold">Classrooms</h1>
         <div className="flex-1 px-4 py-4">{renderCourseButtons()}</div>
       </div>
 
@@ -96,7 +92,7 @@ export default function LandingPage() {
                 Contact Us
               </h2>
               <a
-                href="mailto:support@askeasy.com"
+                href="mailto:[EMAIL_ADDRESS]"
                 className="hover:text-blue-400 transition-colors duration-200 flex items-center gap-2"
               >
                 <svg
