@@ -9,12 +9,12 @@ import header from "../components/header";
 const placeholder_user: User = {
   username: "Hi",
   pfp: "H",
-  role: "prof",
+  role: "student",
 };
 
 export default function LandingPage() {
   return (
-    <div className="  max-h-screen overlow-y-auto flex flex-col dot-grid relative">
+    <div className="max-h-screen flex flex-col dot-grid relative">
       {header(placeholder_user)}
       <div className="overflow-y-auto">
         <div className="flex-1 p-5 pt-32 items-center justify-center pb-10">

@@ -28,7 +28,7 @@ export default function renderCourseButtons() {
               h-[15rem] group"
             >
               <div className="relative z-10 flex flex-col items-center gap-3">
-                <h3 className="font-bold text-3xl text-forground transition-colors duration-300 ">
+                <h3 className="font-bold text-3xl text-foreground transition-colors duration-300 ">
                   {course.name}
                 </h3>
                 <h3 className="text-lg text-stone-800 font-medium">{course.professor}</h3>

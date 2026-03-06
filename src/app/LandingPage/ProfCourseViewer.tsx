@@ -38,7 +38,7 @@ export default function renderProfCourseButtons() {
               {clickedCourseId === course.name ? (
                 // Show buttons when clicked
                 <div className="relative z-10 flex flex-col items-center gap-4">
-                  <h3 className="font-bold text-3xl text-forground">{course.name}</h3>
+                  <h3 className="font-bold text-3xl text-foreground">{course.name}</h3>
                   <div className="flex gap-4">
                     <Link
                       href={`/room/`}
@@ -59,7 +59,7 @@ export default function renderProfCourseButtons() {
               ) : (
                 // Show course details when not clicked
                 <div className="relative z-10 flex flex-col items-center gap-3">
-                  <h3 className="font-bold text-3xl text-forground transition-colors duration-300">
+                  <h3 className="font-bold text-3xl text-foreground transition-colors duration-300">
                     {course.name}
                   </h3>
                   <h3 className="text-lg text-stone-800 font-medium">{course.professor}</h3>
@@ -81,7 +81,8 @@ export default function renderProfCourseButtons() {
   } else {
     return (
       <div className="p-4 py-10 w-full rounded-2xl flex items-center justify-center h-120">
-        <div
+        <Link
+          href={"create-class"} // not currently configured
           className="
             hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden
             flex flex-col items-center justify-center
@@ -89,10 +90,9 @@ export default function renderProfCourseButtons() {
             shadow-xl backdrop-blur-[1.5px] border-4 border-blue-50
             h-[15rem] group cursor-pointer w-md
           "
-          onClick={() => (window.location.href = "/create-class")}
         >
           <span className="text-2xl font-bold ">Create a Class</span>
-        </div>
+        </Link>
       </div>
     );
   }
