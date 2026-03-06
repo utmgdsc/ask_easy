@@ -1,6 +1,7 @@
 "use client";
 import { User } from "@/utils/types";
 import renderCourseButtons from "./CourseViewer";
+import renderProfCourseButtons from "./ProfCourseViewer";
 import footer from "../components/footer";
 import header from "../components/header";
 
@@ -18,7 +19,7 @@ export default function LandingPage() {
       <div className="overflow-y-auto">
         <div className="flex-1 p-5 pt-32 items-center justify-center pb-10">
           <h1 className="text-4xl font-bold py-4 text-center">Classrooms</h1>
-          {renderCourseButtons()}
+          {placeholder_user.role === "prof" ? renderProfCourseButtons() : renderCourseButtons()}
         </div>
         {footer()}
       </div>
