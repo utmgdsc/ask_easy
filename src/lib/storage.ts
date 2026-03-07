@@ -25,6 +25,7 @@ async function ensureDirectory(dirPath: string): Promise<void> {
 export async function uploadFile(
   key: string,
   buffer: Buffer,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for interface compatibility
   _contentType: string
 ): Promise<string> {
   const filePath = path.join(UPLOADS_DIR, key);

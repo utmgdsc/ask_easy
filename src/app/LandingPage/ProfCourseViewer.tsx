@@ -4,7 +4,7 @@ import { PLACEHOLDER_COURSES } from "@/utils/placeholder";
 import { useState } from "react";
 import Link from "next/link";
 
-export default function renderProfCourseButtons() {
+export default function ProfCourseButtons() {
   const [clickedCourseId, setClickedCourseId] = useState("");
   const user: User = PLACEHOLDER_USERS[1];
   const validcourses: Course[] = [];

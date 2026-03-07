@@ -56,7 +56,7 @@ export default function QuestionPost({
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
-  const [resolved, setResolved] = useState(post.isResolved);
+  const [resolved] = useState(post.isResolved);
   const [visibleCount, setVisibleCount] = useState(2);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
