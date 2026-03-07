@@ -61,30 +61,53 @@ export async function initSocketIO(
   });
 
   // -----------------------------------------------------------------------
-  // Redis adapter — two dedicated clients (pub + sub)
+  // Redis adapter — two dedicated clients (pub + sub). Optional in dev.
   // -----------------------------------------------------------------------
 
-  const pubClient = new Redis(REDIS_URL);
-  const subClient = new Redis(REDIS_URL);
+  const useRedisAdapter = process.env.SOCKET_IO_USE_REDIS !== "false";
+  let pubClient: Redis | null = null;
+  let subClient: Redis | null = null;
 
-  // Wait for both clients to be ready before attaching the adapter
-  await Promise.all([
-    new Promise<void>((resolve, reject) => {
-      pubClient.on("ready", resolve);
-      pubClient.on("error", reject);
-    }),
-    new Promise<void>((resolve, reject) => {
-      subClient.on("ready", resolve);
-      subClient.on("error", reject);
-    }),
-  ]);
+  if (useRedisAdapter) {
+    try {
+      pubClient = new Redis(REDIS_URL);
+      subClient = new Redis(REDIS_URL);
 
-  io.adapter(createAdapter(pubClient, subClient));
-  console.log("[Socket.IO] Redis adapter connected");
+      await Promise.all([
+        new Promise<void>((resolve, reject) => {
+          pubClient!.on("ready", resolve);
+          pubClient!.on("error", reject);
+        }),
+        new Promise<void>((resolve, reject) => {
+          subClient!.on("ready", resolve);
+          subClient!.on("error", reject);
+        }),
+      ]);
 
-  // Log ongoing Redis errors (non-fatal after initial connect)
-  pubClient.on("error", (err) => console.error("[Socket.IO] Redis pub client error:", err.message));
-  subClient.on("error", (err) => console.error("[Socket.IO] Redis sub client error:", err.message));
+      io.adapter(createAdapter(pubClient!, subClient!));
+      console.log("[Socket.IO] Redis adapter connected");
+
+      pubClient.on("error", (err) =>
+        console.error("[Socket.IO] Redis pub client error:", err.message)
+      );
+      subClient.on("error", (err) =>
+        console.error("[Socket.IO] Redis sub client error:", err.message)
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          "[Socket.IO] Redis unavailable, running without adapter (single-instance only):",
+          err instanceof Error ? err.message : err
+        );
+        pubClient?.quit().catch(() => {});
+        subClient?.quit().catch(() => {});
+        pubClient = null;
+        subClient = null;
+      } else {
+        throw err;
+      }
+    }
+  }
 
   // -----------------------------------------------------------------------
   // Authentication middleware
@@ -130,8 +153,10 @@ export async function initSocketIO(
   // -----------------------------------------------------------------------
 
   const shutdown = async () => {
-    console.log("[Socket.IO] Shutting down Redis adapter clients…");
-    await Promise.all([pubClient.quit().catch(() => {}), subClient.quit().catch(() => {})]);
+    if (pubClient || subClient) {
+      console.log("[Socket.IO] Shutting down Redis adapter clients…");
+      await Promise.all([pubClient?.quit().catch(() => {}), subClient?.quit().catch(() => {})]);
+    }
   };
 
   process.on("SIGTERM", shutdown);

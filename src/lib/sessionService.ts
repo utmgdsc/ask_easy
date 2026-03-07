@@ -1,9 +1,17 @@
+import type { Role } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { generateUniqueSessionCode } from "@/lib/sessionCode";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+export interface SessionMembershipResult {
+  valid: boolean;
+  error?: string;
+  statusCode?: number;
+  role?: Role;
+}
 
 export interface ProfessorRoleValidationResult {
   valid: boolean;
@@ -35,6 +43,55 @@ export interface SessionCreateResult {
 // ---------------------------------------------------------------------------
 // Service Functions
 // ---------------------------------------------------------------------------
+
+/**
+ * Resolves session membership: returns the user's role in the session's course.
+ * Use for authorization on session-scoped endpoints (e.g. list questions).
+ *
+ * @param sessionId - The session ID
+ * @param userId - The user ID
+ * @returns Success with role (STUDENT | TA | PROFESSOR), or error with statusCode (404 session not found, 403 not enrolled)
+ */
+export async function getSessionMembership(
+  sessionId: string,
+  userId: string
+): Promise<SessionMembershipResult> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { id: true, courseId: true },
+  });
+
+  if (!session) {
+    return {
+      valid: false,
+      error: "Session not found.",
+      statusCode: 404,
+    };
+  }
+
+  const enrollment = await prisma.courseEnrollment.findUnique({
+    where: {
+      userId_courseId: {
+        userId,
+        courseId: session.courseId,
+      },
+    },
+    select: { role: true },
+  });
+
+  if (!enrollment) {
+    return {
+      valid: false,
+      error: "You are not enrolled in this course.",
+      statusCode: 403,
+    };
+  }
+
+  return {
+    valid: true,
+    role: enrollment.role,
+  };
+}
 
 /**
  * Validates that a user is a professor in the specified course.
