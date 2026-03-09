@@ -464,7 +464,15 @@ async function main() {
   console.log(`   Question: "${anonQuestion?.content.substring(0, 50)}..."`);
   console.log(`   authorId: ${anonQuestion?.authorId} (should be null)`);
 
+  const base = "http://localhost:3000";
   console.log("\n🎉 Database seeded successfully!\n");
+  console.log("Open these URLs in your browser (after running `pnpm dev`):\n");
+  console.log(`  Classes (all):  ${base}/classes\n`);
+  console.log(`  Professor:      ${base}/?sessionId=${activeSession.id}&userId=${professor.id}&role=professor`);
+  console.log(`  TA:             ${base}/?sessionId=${activeSession.id}&userId=${ta.id}&role=ta`);
+  console.log(`  Student:        ${base}/?sessionId=${activeSession.id}&userId=${student.id}&role=student`);
+  console.log(`  Student 2:      ${base}/?sessionId=${activeSession.id}&userId=${student2.id}&role=student`);
+  console.log("");
 }
 
 main()

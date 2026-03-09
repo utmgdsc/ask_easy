@@ -49,22 +49,46 @@ Access the app at [http://localhost:3000](http://localhost:3000)
 **Option B: Services only (for native development)**
 
 ```bash
-docker-compose up postgres redis
+docker-compose up -d postgres redis
 ```
 
-Then run the development server:
+Copy env and point DB/Redis at localhost (for `pnpm dev`):
+
+```bash
+cp .env.example .env
+# Edit .env: use host "localhost" for DATABASE_URL and REDIS_URL
+#   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ask_easy
+#   REDIS_URL=redis://localhost:6379
+```
+
+Generate Prisma client, push schema, and seed:
+
+```bash
+pnpm db:setup
+pnpm db:seed
+```
+
+Then run the dev server:
 
 ```bash
 pnpm dev
 ```
 
-### 4. Set up the database
+After seeding, the terminal prints localhost URLs for each role. You can also use:
 
-Generate Prisma client and push schema:
+| Page | URL |
+|------|-----|
+| **All classes** | [http://localhost:3000/classes](http://localhost:3000/classes) |
+| **Room (role in query)** | `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<USER_ID>&role=<role>` |
 
-```bash
-pnpm db:setup
-```
+**Open as different roles (use IDs from seed output):**
+
+- **Professor** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<PROFESSOR_USER_ID>&role=professor`
+- **TA** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<TA_USER_ID>&role=ta`
+- **Student** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<STUDENT_USER_ID>&role=student`
+- **Student 2** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<STUDENT2_USER_ID>&role=student`
+
+Run `pnpm db:seed` once; at the end it prints the exact URLs for professor, TA, student, and student 2. Copy those into your browser to open each role. To open all four at once, run the seed, copy the four printed URLs into separate tabs or windows.
 
 ## Available Scripts
 
@@ -82,6 +106,7 @@ pnpm db:setup
 | `pnpm db:push`     | Push schema to database                           |
 | `pnpm db:migrate`  | Run database migrations                           |
 | `pnpm db:setup`    | Generate client + push schema (for initial setup) |
+| `pnpm db:seed`     | Seed database (prints localhost URLs per role)    |
 | `pnpm db:studio`   | Open Prisma Studio                                |
 
 ## Docker Commands
