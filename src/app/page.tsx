@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import Room from "./components/room";
+import Room from "./room/page";
 import type { Role } from "@/utils/types";
 
 export default function Home() {

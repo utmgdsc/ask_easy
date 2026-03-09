@@ -1,6 +1,7 @@
-import { Post } from "./types";
+import { Post, Course, User } from "./types";
 
-const PLACEHOLDER_POSTS: Post[] = [
+export const PLACEHOLDER_POSTS: Post[] = [
+  // Resolved Question: Pointers
   {
     id: "1",
     type: "question",
@@ -105,4 +106,78 @@ const PLACEHOLDER_POSTS: Post[] = [
   },
 ];
 
-export default PLACEHOLDER_POSTS;
+export const PLACEHOLDER_COURSES: Course[] = [
+  {
+    id: 1,
+    name: "Introduction to Physics",
+    professor: "Dr. Emily Carter",
+    beginDate: "2026-01-10",
+    endDate: "2026-04-20",
+  },
+  {
+    id: 2,
+    name: "Advanced Calculus",
+    professor: "Prof. Michael Nguyen",
+    beginDate: "2026-01-12",
+    endDate: "2026-04-22",
+  },
+  {
+    id: 3,
+    name: "Machine Learning Fundamentals",
+    professor: "Dr. Sarah Ahmed",
+    beginDate: "2026-01-15",
+    endDate: "2026-04-25",
+  },
+  {
+    id: 4,
+    name: "Thermodynamics",
+    professor: "Dr. James Patel",
+    beginDate: "2026-01-11",
+    endDate: "2026-04-18",
+  },
+  {
+    id: 5,
+    name: "Data Structures and Algorithms",
+    professor: "Prof. Laura Chen",
+    beginDate: "2026-01-14",
+    endDate: "2026-04-24",
+  },
+];
+
+export const PLACEHOLDER_USERS: User[] = [
+  {
+    username: "student_alex",
+    pfp: "https://i.pravatar.cc/150?img=1",
+    courses: ["Introduction to Physics", "Machine Learning Fundamentals"],
+    courseids: [1, 2, 3, 4, 5],
+    role: "student",
+  },
+  {
+    username: "student_maya",
+    pfp: "https://i.pravatar.cc/150?img=5",
+    courses: ["Advanced Calculus", "Thermodynamics"],
+    courseids: [5, 2, 1, 4],
+    role: "student",
+  },
+  {
+    username: "prof_carter",
+    pfp: "https://i.pravatar.cc/150?img=12",
+    courses: ["Introduction to Physics"],
+    courseids: [1],
+    role: "student",
+  },
+  {
+    username: "prof_nguyen",
+    pfp: "https://i.pravatar.cc/150?img=15",
+    courses: ["Advanced Calculus"],
+    courseids: [2],
+    role: "student",
+  },
+  {
+    username: "admin_user",
+    pfp: "https://i.pravatar.cc/150?img=20",
+    courses: [],
+    courseids: [],
+    role: "student",
+  },
+];
