@@ -9,7 +9,7 @@ import header from "../components/header";
 const placeholder_user: User = {
   username: "Hi",
   pfp: "H",
-  role: "student",
+  role: "STUDENT",
 };
 
 export default function LandingPage() {
@@ -19,7 +19,7 @@ export default function LandingPage() {
       <div className="overflow-y-auto">
         <div className="flex-1 p-5 pt-32 items-center justify-center pb-10">
           <h1 className="text-4xl font-bold py-4 text-center">Classrooms</h1>
-          {placeholder_user.role === "prof" ? renderProfCourseButtons() : renderCourseButtons()}
+          {placeholder_user.role === "PROFESSOR" ? renderProfCourseButtons() : renderCourseButtons()}
         </div>
         {footer()}
       </div>
