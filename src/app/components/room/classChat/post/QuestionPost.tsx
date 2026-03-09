@@ -3,125 +3,263 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, CheckCircle2 } from "lucide-react";
 import { Question, Post } from "@/utils/types";
-import { UpvoteButton, ShowMoreLess, renderUsername } from "./PostUtils";
+import { UpvoteButton, renderUsername } from "./PostUtils";
 
-function renderReplyButton(
-  isReplying: boolean,
-  setIsReplying: React.Dispatch<React.SetStateAction<boolean>>
-) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-8 px-2 text-xs gap-2 text-stone-900/50 hover:text-stone-900 hover:bg-stone-200/50"
-      onClick={() => setIsReplying(!isReplying)}
-    >
-      <MessageCircle className="h-4 w-4" />
-    </Button>
-  );
+// ---------------------------------------------------------------------------
+// Reply composer
+// ---------------------------------------------------------------------------
+
+interface ReplySectionProps {
+  canAnswer: boolean;
+  onSubmit: (content: string, isAnonymous: boolean) => void;
+  onCancel: () => void;
 }
 
-function renderReplySection(setIsReplying: React.Dispatch<React.SetStateAction<boolean>>) {
+function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
+  const [text, setText] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  if (!canAnswer) {
+    return (
+      <div className="py-2 text-xs text-stone-400 italic">
+        Only TAs and professors can answer right now.
+      </div>
+    );
+  }
+
+  const handleSubmit = () => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed, isAnonymous);
+    setText("");
+    onCancel();
+  };
+
   return (
-    <div className="mt-2 pl-2">
-      <Textarea placeholder="Answer..." className="min-h-[80px] mb-2" />
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setIsReplying(false)}>
-          Cancel
-        </Button>
-        <Button size="sm" onClick={() => setIsReplying(false)}>
-          {
-            //TODO: add API integration when the reply button is pressed
-          }
-          Reply
-        </Button>
+    <div className="pt-1 pb-2">
+      <Textarea
+        placeholder="Write an answer..."
+        className="min-h-[72px] mb-2 focus-visible:ring-0 focus-visible:border-stone-400"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+        }}
+      />
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+            className="rounded"
+          />
+          Anonymous
+        </label>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={handleSubmit} disabled={!text.trim()}>
+            Post reply
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Thread toggle button (+/-)
+// ---------------------------------------------------------------------------
+
+function ThreadToggle({
+  label,
+  symbol,
+  onClick,
+}: {
+  label: string;
+  symbol: "+" | "−";
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className="flex items-center justify-center w-4 h-4 rounded-full border border-stone-400 text-stone-400 hover:border-stone-700 hover:text-stone-700 transition-colors leading-none"
+    >
+      <span className="text-[10px] font-bold select-none">{symbol}</span>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// QuestionPost
+// ---------------------------------------------------------------------------
+
+/**
+ * Thread states:
+ *  "default"  — best answers (professor) visible, other replies hidden
+ *  "expanded" — all replies visible
+ *  "collapsed"— no replies visible
+ */
+type ThreadState = "default" | "expanded" | "collapsed";
 
 export default function QuestionPost({
   post,
   commentView,
   replies,
   renderReply,
+  canAnswer = true,
+  onUpvote,
+  onResolve,
+  onSubmitAnswer,
   children,
 }: {
   post: Question;
   commentView?: string;
   replies?: Post[];
   renderReply?: (reply: Post) => React.ReactNode;
+  canAnswer?: boolean;
+  onUpvote?: () => void;
+  onResolve?: () => void;
+  onSubmitAnswer?: (content: string, isAnonymous: boolean) => void;
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [resolved, setResolved] = useState(post.isResolved);
-  const [visibleCount, setVisibleCount] = useState(2);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [threadState, setThreadState] = useState<ThreadState>("default");
+
+  // Keep resolved in sync if parent state updates
+  if (post.isResolved && !resolved) setResolved(true);
 
   if (commentView === "unresolved" && resolved) return null;
   if (commentView === "resolved" && !resolved) return null;
 
-  const hasReplies = (replies && replies.length > 0) || (children && true);
-  const totalReplies = replies ? replies.length : 0;
+  const replyList = replies ?? [];
+  const bestAnswers = replyList.filter((r) => r.type === "bestAnswer");
+  const otherReplies = replyList.filter((r) => r.type !== "bestAnswer");
+  const hasAnyReplies = replyList.length > 0 || !!children || isReplying;
 
-  const displayedReplies = isCollapsed ? [] : replies ? replies.slice(0, visibleCount) : [];
+  // What the +/- button should show:
+  //  collapsed  → "+" (click → default)
+  //  default, has other replies → "+" (click → expanded)
+  //  default, no other replies  → "−" (click → collapsed)
+  //  expanded   → "−" (click → collapsed)
+  const toggleSymbol: "+" | "−" =
+    threadState === "collapsed" || (threadState === "default" && otherReplies.length > 0)
+      ? "+"
+      : "−";
+
+  const handleToggle = () => {
+    if (threadState === "collapsed") {
+      setThreadState("expanded");
+    } else if (threadState === "default") {
+      if (otherReplies.length > 0 || isReplying) {
+        setThreadState("expanded");
+      } else {
+        setThreadState("collapsed");
+      }
+    } else {
+      // expanded → collapsed
+      setThreadState("collapsed");
+    }
+  };
+
+  const handleResolve = () => {
+    setResolved(true);
+    onResolve?.();
+  };
+
+  // Which replies to render in the thread
+  const visibleReplies =
+    threadState === "collapsed"
+      ? []
+      : threadState === "default"
+        ? bestAnswers
+        : replyList; // expanded → all
+
+  const showThread =
+    threadState !== "collapsed" && (visibleReplies.length > 0 || (isReplying && threadState === "expanded"));
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="font-bold whitespace-pre-wrap">{post.content}</div>
+    <div className="flex flex-col gap-2 bg-stone-100 rounded-xl p-4 border border-stone-200">
+      {/* Question body */}
+      <div className="font-semibold whitespace-pre-wrap text-stone-900">{post.content}</div>
 
-      <div className="flex items-center justify-between text-xs text-stone-900/50">
+      {/* Meta row */}
+      <div className="flex items-center justify-between text-xs text-stone-500">
+        {/* Left: status dot + username + time + toggle */}
         <div className="flex items-center gap-2">
           <div
-            className={`w-2 h-2 rounded-full shrink-0 ${resolved ? "bg-green-500" : "bg-red-500"}`}
+            className={`w-2 h-2 rounded-full shrink-0 ${resolved ? "bg-green-500" : "bg-amber-400"}`}
           />
           {renderUsername(post.user)}
           <span>{post.timestamp}</span>
+
+          {hasAnyReplies && (
+            <ThreadToggle
+              symbol={toggleSymbol}
+              label={threadState === "collapsed" ? "Expand replies" : toggleSymbol === "+" ? "Show all replies" : "Collapse replies"}
+              onClick={handleToggle}
+            />
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <UpvoteButton initialVotes={post.upvotes} />
-          {renderReplyButton(isReplying, setIsReplying)}
+
+        {/* Right: upvote + reply + resolve */}
+        <div className="flex items-center gap-1">
+          <UpvoteButton
+            initialVotes={post.upvotes}
+            controlledVotes={post.upvotes}
+            onUpvote={onUpvote}
+          />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-200/60"
+            onClick={() => {
+              setIsReplying((v) => !v);
+              // Opening reply box should at least be in expanded state
+              setThreadState("expanded");
+            }}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Reply
+          </Button>
+
+          {onResolve && !resolved && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 text-stone-500 hover:text-green-600 hover:bg-green-50"
+              onClick={handleResolve}
+              title="Mark as resolved"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       </div>
 
-      {(isReplying || hasReplies) && (
-        <div className="ml-1 pl-4 border-l border-border mt-2 space-y-4">
-          {isReplying && renderReplySection(setIsReplying)}
-
-          {replies && renderReply ? (
-            <>
-              {displayedReplies.map((reply) => (
-                <div key={reply.id}>{renderReply(reply)}</div>
-              ))}
-
-              <div className="flex justify-center gap-4 pt-2">
-                {/* Show More Button */}
-                {((totalReplies > 2 && visibleCount < totalReplies && !isCollapsed) ||
-                  (isCollapsed && totalReplies > 0)) && (
-                  <ShowMoreLess
-                    label="Show more"
-                    onClick={() => {
-                      if (isCollapsed) {
-                        setIsCollapsed(false);
-                        setVisibleCount(2);
-                      } else {
-                        setVisibleCount((prev) => prev + 5);
-                      }
-                    }}
-                  />
-                )}
-
-                {/* Show Less Button */}
-                {!isCollapsed && (totalReplies <= 2 || (totalReplies > 2 && visibleCount > 2)) && (
-                  <ShowMoreLess label="Show less" onClick={() => setIsCollapsed(true)} />
-                )}
-              </div>
-            </>
-          ) : (
-            children
+      {/* Thread */}
+      {showThread && (
+        <div className="mt-1 pl-4 border-l-2 border-stone-300 space-y-1">
+          {isReplying && threadState === "expanded" && (
+            <ReplySection
+              canAnswer={canAnswer}
+              onSubmit={(content, isAnon) => onSubmitAnswer?.(content, isAnon)}
+              onCancel={() => setIsReplying(false)}
+            />
           )}
+
+          {replies && renderReply
+            ? visibleReplies.map((reply) => (
+                <div key={reply.id}>{renderReply(reply)}</div>
+              ))
+            : children}
         </div>
       )}
     </div>

@@ -90,3 +90,22 @@ export function sessionJoinLookupRateLimit(userId: string): string {
 export function sessionJoinRegisterRateLimit(userId: string): string {
   return `session-join-register:${userId}`;
 }
+
+/**
+ * Slide state key — stores the professor's current page index for a session.
+ * Example: "slide-state:{abc123}"
+ * TTL: 24 hours (set by the slide change handler).
+ */
+export function slideState(sessionId: string): string {
+  return `slide-state:{${sessionId}}`;
+}
+
+/**
+ * Answer mode key — stores whether only instructors or everyone can answer questions.
+ * Example: "answer-mode:{abc123}"
+ * Value: "all" | "instructors_only"
+ * TTL: set by the answer mode handler (session-scoped, no persistence needed after session ends).
+ */
+export function answerMode(sessionId: string): string {
+  return `answer-mode:{${sessionId}}`;
+}

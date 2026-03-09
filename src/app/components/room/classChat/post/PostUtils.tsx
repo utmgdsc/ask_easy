@@ -7,7 +7,7 @@ import { ArrowBigUp, GraduationCap } from "lucide-react";
 import { Post, User } from "@/utils/types";
 
 export function renderAvatar(post: Post) {
-  if (post && post.user) {
+  if (post?.user) {
     return (
       <Avatar className="h-8 w-8">
         <AvatarImage src={post.user.pfp} alt={post.user.username} />
@@ -15,20 +15,38 @@ export function renderAvatar(post: Post) {
       </Avatar>
     );
   }
-  return null;
+  return (
+    <Avatar className="h-8 w-8">
+      <AvatarFallback className="text-stone-400 bg-stone-100">?</AvatarFallback>
+    </Avatar>
+  );
 }
 
-export function UpvoteButton({ initialVotes }: { initialVotes: number }) {
-  const [votes, setVotes] = useState(initialVotes);
+interface UpvoteButtonProps {
+  initialVotes: number;
+  /** When provided, clicking emits an upvote and displays the server-controlled count. */
+  controlledVotes?: number;
+  onUpvote?: () => void;
+}
+
+export function UpvoteButton({ initialVotes, controlledVotes, onUpvote }: UpvoteButtonProps) {
+  const [localVotes, setLocalVotes] = useState(initialVotes);
   const [isUpvoted, setIsUpvoted] = useState(false);
-  // TODO: future API Integration
+
+  const displayedVotes = controlledVotes !== undefined ? controlledVotes : localVotes;
+
   const handleUpvote = () => {
-    if (isUpvoted) {
-      setVotes(votes - 1);
+    if (onUpvote) {
+      onUpvote();
+      setIsUpvoted((prev) => !prev);
     } else {
-      setVotes(votes + 1);
+      if (isUpvoted) {
+        setLocalVotes((v) => v - 1);
+      } else {
+        setLocalVotes((v) => v + 1);
+      }
+      setIsUpvoted((prev) => !prev);
     }
-    setIsUpvoted(!isUpvoted);
   };
 
   return (
@@ -41,19 +59,22 @@ export function UpvoteButton({ initialVotes }: { initialVotes: number }) {
       onClick={handleUpvote}
     >
       <ArrowBigUp className={`h-4 w-4 ${isUpvoted ? "fill-current" : ""}`} />
-      <span>{Math.max(0, votes)}</span>
+      <span>{Math.max(0, displayedVotes)}</span>
     </Button>
   );
 }
 
 export function renderRoleIcon(user: User) {
-  if (user.role === "ta" || user.role === "prof") {
+  if (user.role === "TA" || user.role === "PROFESSOR") {
     return <GraduationCap className="h-4 w-4 text-stone-900" />;
   }
   return null;
 }
 
-export function renderUsername(user: User) {
+export function renderUsername(user: User | null) {
+  if (!user) {
+    return <span className="font-semibold text-foreground italic text-stone-400">Anonymous</span>;
+  }
   return (
     <span className="font-semibold flex flex-row items-center gap-1 text-foreground">
       {renderRoleIcon(user)}
@@ -69,26 +90,9 @@ export const bestToTop = (replies: Post[] | undefined) => {
     const isABest = a.type === "bestAnswer";
     const isBBest = b.type === "bestAnswer";
 
-    if (isABest && !isBBest) {
-      return -1;
-    }
-    if (!isABest && isBBest) {
-      return 1;
-    }
-
+    if (isABest && !isBBest) return -1;
+    if (!isABest && isBBest) return 1;
     return 0;
   });
 };
 
-export function ShowMoreLess({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-8 px-2 text-xs text-stone-900/50 hover:text-stone-900 hover:bg-stone-200/50"
-      onClick={onClick}
-    >
-      {label}
-    </Button>
-  );
-}

@@ -56,9 +56,19 @@ async function main() {
     },
   });
 
+  const student2 = await prisma.user.create({
+    data: {
+      utorid: "student002",
+      email: "student2@utoronto.ca",
+      name: "Sam Rivera",
+      role: Role.STUDENT,
+    },
+  });
+
   console.log(`  - Professor: ${professor.name}`);
   console.log(`  - TA: ${ta.name}`);
-  console.log(`  - Student: ${student.name}\n`);
+  console.log(`  - Student 1: ${student.name}`);
+  console.log(`  - Student 2: ${student2.name}\n`);
 
   // ============================================================================
   // CREATE COURSES
@@ -107,11 +117,13 @@ async function main() {
     ],
   });
 
-  // Student enrolled as STUDENT in both courses
+  // Students enrolled as STUDENT in both courses
   await prisma.courseEnrollment.createMany({
     data: [
       { userId: student.id, courseId: csc108.id, role: Role.STUDENT },
       { userId: student.id, courseId: csc148.id, role: Role.STUDENT },
+      { userId: student2.id, courseId: csc108.id, role: Role.STUDENT },
+      { userId: student2.id, courseId: csc148.id, role: Role.STUDENT },
     ],
   });
 

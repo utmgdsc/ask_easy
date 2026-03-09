@@ -1,6 +1,8 @@
 import { type Server, type Socket } from "socket.io";
 
 import { prisma } from "@/lib/prisma";
+import { redisCache } from "@/lib/redis";
+import { answerMode as answerModeKey } from "@/lib/redisKeys";
 import {
   validateAnswerContent,
   checkAnswerRateLimit,
@@ -69,14 +71,30 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Content validation
+      // 4. Answer mode check — if restricted, only TAs and professors may answer
+      const sessionId = questionValidation.question!.sessionId;
+      const mode = await redisCache.get(answerModeKey(sessionId));
+      if (mode === "instructors_only") {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { role: true },
+        });
+        if (user?.role === "STUDENT") {
+          socket.emit("answer:error", {
+            message: "The professor has restricted answers to TAs and professors only.",
+          });
+          return;
+        }
+      }
+
+      // 5. Content validation (renumbered)
       const contentValidation = validateAnswerContent(payload.content);
       if (!contentValidation.valid) {
         socket.emit("answer:error", { message: contentValidation.error });
         return;
       }
 
-      // 5. Rate limit — only increment after validating question exists
+      // 6. Rate limit — only increment after validating question exists
       const isRateLimited = await checkAnswerRateLimit(userId);
       if (isRateLimited) {
         socket.emit("answer:error", {
@@ -86,7 +104,7 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         return;
       }
 
-      // 6. Persist to database
+      // 7. Persist to database
       const answer = await prisma.answer.create({
         data: {
           questionId: payload.questionId,
@@ -105,7 +123,7 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         },
       });
 
-      // 7. Build broadcast payload and emit to the session room
+      // 8. Build broadcast payload and emit to the session room
       const broadcastPayload: AnswerCreatedPayload = {
         id: answer.id,
         questionId: answer.questionId,

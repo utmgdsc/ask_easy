@@ -1,16 +1,17 @@
 "use client";
 
-export type Role = "ta" | "prof" | "student";
+export type Role = "STUDENT" | "TA" | "PROFESSOR";
 
 export interface User {
+  id?: string;
   username: string;
   pfp: string;
   role: Role;
 }
 
 interface BasePost {
-  id: number;
-  user: User;
+  id: string;
+  user: User | null; // null for anonymous posts
   timestamp: string;
   content: string;
   upvotes: number;
@@ -20,6 +21,7 @@ export interface Question extends BasePost {
   type: "question";
   replies: (BestAnswer | Comment)[];
   isResolved: boolean;
+  visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
 }
 
 export interface BestAnswer extends BasePost {

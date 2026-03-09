@@ -30,6 +30,7 @@ interface QuestionBroadcastPayload {
   slideId: string | null;
   createdAt: Date;
   authorId?: string | null;
+  authorName?: string | null;
 }
 
 interface QuestionUpvotePayload {
@@ -81,16 +82,19 @@ export function broadcastQuestion(
  */
 export function handleQuestionCreate(socket: Socket, io: Server): void {
   socket.on("question:create", async (payload: QuestionCreatePayload) => {
+    console.log("[QuestionHandler] question:create received", JSON.stringify(payload));
     try {
       // 1. Auth guard — userId is attached by socket auth middleware
       const userId: string | undefined = socket.data?.userId;
       if (!userId) {
+        console.log("[QuestionHandler] Rejected: no userId");
         socket.emit("question:error", { message: "Authentication required." });
         return;
       }
 
       // 2. Payload shape guard — socket events can arrive with any shape
       if (!payload || typeof payload !== "object") {
+        console.log("[QuestionHandler] Rejected: invalid payload shape");
         socket.emit("question:error", { message: "Invalid request." });
         return;
       }
@@ -98,6 +102,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       // 3. Content validation
       const contentValidation = validateQuestionContent(payload.content);
       if (!contentValidation.valid) {
+        console.log("[QuestionHandler] Rejected: content validation -", contentValidation.error);
         socket.emit("question:error", { message: contentValidation.error });
         return;
       }
@@ -105,6 +110,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       // 4. Visibility validation
       const visibilityValidation = validateVisibility(payload.visibility);
       if (!visibilityValidation.valid) {
+        console.log("[QuestionHandler] Rejected: visibility validation -", visibilityValidation.error);
         socket.emit("question:error", { message: visibilityValidation.error });
         return;
       }
@@ -112,6 +118,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       // 5. Rate limit (first async check — only reached if all sync checks pass)
       const isRateLimited = await checkQuestionRateLimit(userId);
       if (isRateLimited) {
+        console.log("[QuestionHandler] Rejected: rate limited");
         socket.emit("question:error", {
           message:
             "You have reached the question limit. Please wait before asking another question.",
@@ -122,11 +129,12 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       // 6. Session validation
       const sessionValidation = await validateSessionForQuestions(payload.sessionId);
       if (!sessionValidation.valid) {
+        console.log("[QuestionHandler] Rejected: session validation -", sessionValidation.error);
         socket.emit("question:error", { message: sessionValidation.error });
         return;
       }
 
-      // 7. Persist to database
+      // 7. Persist to database (include author for display name in broadcast)
       //    authorId is always stored for audit purposes, but it is stripped
       //    from the broadcast payload in step 8 when isAnonymous is true.
       const question = await prisma.question.create({
@@ -138,6 +146,9 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
           isAnonymous: payload.isAnonymous ?? false,
           slideId: payload.slideId ?? null,
         },
+        include: {
+          author: { select: { id: true, name: true } },
+        },
       });
 
       // 8. Build broadcast payload and emit to the session room
@@ -148,7 +159,9 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         isAnonymous: question.isAnonymous,
         slideId: question.slideId,
         createdAt: question.createdAt,
-        ...(question.isAnonymous ? {} : { authorId: question.authorId }),
+        ...(question.isAnonymous
+          ? {}
+          : { authorId: question.authorId, authorName: question.author?.name ?? null }),
       };
 
       broadcastQuestion(io, question.sessionId, broadcastPayload);
