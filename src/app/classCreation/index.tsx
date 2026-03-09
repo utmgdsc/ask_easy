@@ -3,7 +3,7 @@ import footer from "../components/footer";
 import { User } from "@/utils/types";
 
 export default function createClassPage(user: User) {
-  if (user.role !== "prof") {
+  if (user.role !== "PROFESSOR") {
     return (
       <div>
         {header(user)}

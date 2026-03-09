@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const take = queryParams.limit + 1;
     const orderBy = getQuestionsOrderBy(queryParams.sortBy);
     const include = {
-      author: { select: { id: true, name: true } },
+      author: { select: { id: true, name: true, role: true } },
       _count: { select: { answers: true } },
       answers: { where: { isAccepted: true }, select: { id: true }, take: 1 },
     } as const;

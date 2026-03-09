@@ -19,6 +19,20 @@ export interface QuestionCreatedPayload {
   slideId: string | null;
   createdAt: Date;
   authorId?: string | null;
+  authorName?: string | null;
+}
+
+export interface AnswerModeChangePayload {
+  sessionId: string;
+  mode: "all" | "instructors_only";
+}
+
+export interface AnswerModeChangedPayload {
+  mode: "all" | "instructors_only";
+}
+
+export interface AnswerModeSyncPayload {
+  sessionId: string;
 }
 
 export interface SessionJoinPayload {
@@ -65,6 +79,23 @@ export interface QuestionResolvedPayload {
   status: "RESOLVED";
 }
 
+export interface SlideChangePayload {
+  sessionId: string;
+  pageIndex: number;
+}
+
+export interface SlideChangedPayload {
+  pageIndex: number;
+}
+
+export interface SlideSyncPayload {
+  sessionId: string;
+}
+
+export interface SlideSyncResponsePayload {
+  pageIndex: number;
+}
+
 // ---------------------------------------------------------------------------
 // Event maps
 // ---------------------------------------------------------------------------
@@ -77,6 +108,10 @@ export interface ClientToServerEvents {
   "session:leave": (payload: SessionLeavePayload) => void;
   "question:upvote": (payload: QuestionUpvotePayload) => void;
   "question:resolve": (payload: QuestionResolvePayload) => void;
+  "slide:change": (payload: SlideChangePayload) => void;
+  "slide:sync": (payload: SlideSyncPayload) => void;
+  "answer-mode:change": (payload: AnswerModeChangePayload) => void;
+  "answer-mode:sync": (payload: AnswerModeSyncPayload) => void;
 }
 
 /** Events the **server** can send to the **client**. */
@@ -87,6 +122,10 @@ export interface ServerToClientEvents {
   "answer:error": (payload: { message: string }) => void;
   "question:updated": (payload: QuestionUpdatedPayload) => void;
   "question:resolved": (payload: QuestionResolvedPayload) => void;
+  "slide:changed": (payload: SlideChangedPayload) => void;
+  "slide:sync": (payload: SlideSyncResponsePayload) => void;
+  "slide:error": (payload: { message: string }) => void;
+  "answer-mode:changed": (payload: AnswerModeChangedPayload) => void;
 }
 
 /** Events exchanged between Socket.IO server instances (via Redis adapter). */

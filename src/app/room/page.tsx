@@ -1,11 +1,30 @@
 "use client";
+
+import { useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
+
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import ClassChat from "./classChat";
 import SlideViewer from "./slideViewer";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { createContext, useState } from "react";
+import type { ClientToServerEvents, ServerToClientEvents } from "@/socket/types";
+import type { Role } from "@/utils/types";
+import { RoomContext } from "./RoomContext";
+import { SlideUpdateContext } from "./SlideUpdateContext";
 
-export const SlideUpdateContext = createContext({ isSlidesVisible: true, rerender: () => {} });
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface RoomProps {
+  sessionId?: string;
+  userId?: string;
+  role?: Role;
+}
+
+// ---------------------------------------------------------------------------
+// Layout helpers
+// ---------------------------------------------------------------------------
 
 function chatPanel(isMdSize: boolean) {
   return (
@@ -22,7 +41,8 @@ function chatPanel(isMdSize: boolean) {
 function chatAndSlidePanel(
   isMdSize: boolean,
   resizableWidth: number,
-  setResizableWidth: (width: number) => void
+  setResizableWidth: (width: number) => void,
+  isProfessor: boolean
 ) {
   return (
     <div className="h-screen w-full bg-background font-sans">
@@ -34,7 +54,7 @@ function chatAndSlidePanel(
             setResizableWidth(panelWidth);
           }}
         >
-          <SlideViewer />
+          <SlideViewer isProfessor={isProfessor} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={resizableWidth} minSize={30}>
@@ -45,21 +65,60 @@ function chatAndSlidePanel(
   );
 }
 
-export default function Room() {
+// ---------------------------------------------------------------------------
+// Room
+// ---------------------------------------------------------------------------
+
+export default function Room({
+  sessionId = "placeholder-session",
+  userId = "placeholder-user",
+  role = "STUDENT",
+}: RoomProps) {
   const isMdSize = useMediaQuery("(min-width: 1024px)");
   const [isSlidesVisible, setIsSlidesVisible] = useState(true);
   const [resizableWidth, setResizableWidth] = useState(30);
 
+  // Shared socket — initialised once, shared via RoomContext
+  const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(
+    null
+  );
+  const sessionIdRef = useRef(sessionId);
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
+  useEffect(() => {
+    const s: Socket<ServerToClientEvents, ClientToServerEvents> = io({
+      auth: { userId },
+    });
+
+    s.on("connect", () => {
+      s.emit("session:join", { sessionId: sessionIdRef.current });
+      setSocket(s);
+    });
+
+    return () => {
+      s.emit("session:leave", { sessionId: sessionIdRef.current });
+      s.disconnect();
+      setSocket(null);
+    };
+  }, [userId]);
+
   function rerender() {
     setIsSlidesVisible((prev) => !prev);
   }
+
+  const isProfessor = role === "PROFESSOR";
+
   return (
-    <div className="h-screen w-full bg-background font-sans">
-      <SlideUpdateContext.Provider value={{ isSlidesVisible, rerender }}>
-        {isSlidesVisible
-          ? chatAndSlidePanel(isMdSize, resizableWidth, setResizableWidth)
-          : chatPanel(isMdSize)}
-      </SlideUpdateContext.Provider>
-    </div>
+    <RoomContext.Provider value={{ socket, sessionId, userId, role }}>
+      <div className="h-screen w-full bg-background font-sans">
+        <SlideUpdateContext.Provider value={{ isSlidesVisible, rerender }}>
+          {isSlidesVisible
+            ? chatAndSlidePanel(isMdSize, resizableWidth, setResizableWidth, isProfessor)
+            : chatPanel(isMdSize)}
+        </SlideUpdateContext.Provider>
+      </div>
+    </RoomContext.Provider>
   );
 }

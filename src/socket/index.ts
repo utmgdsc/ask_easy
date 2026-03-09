@@ -10,6 +10,8 @@ import {
   handleQuestionResolve,
 } from "./handlers/questionHandlers";
 import { handleAnswerCreate } from "./handlers/answerHandlers";
+import { handleSlideChange, handleSlideSync } from "./handlers/slideHandlers";
+import { handleAnswerModeChange, handleAnswerModeSync } from "./handlers/sessionHandlers";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -142,6 +144,10 @@ export async function initSocketIO(
     handleQuestionUpvote(socket, io!);
     handleQuestionResolve(socket, io!);
     handleAnswerCreate(socket, io!);
+    handleSlideChange(socket, io!);
+    handleSlideSync(socket);
+    handleAnswerModeChange(socket, io!);
+    handleAnswerModeSync(socket);
 
     socket.on("disconnect", (reason) => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id} (reason: ${reason})`);
