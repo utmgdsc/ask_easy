@@ -175,14 +175,11 @@ export default function QuestionPost({
 
   // Which replies to render in the thread
   const visibleReplies =
-    threadState === "collapsed"
-      ? []
-      : threadState === "default"
-        ? bestAnswers
-        : replyList; // expanded → all
+    threadState === "collapsed" ? [] : threadState === "default" ? bestAnswers : replyList; // expanded → all
 
   const showThread =
-    threadState !== "collapsed" && (visibleReplies.length > 0 || (isReplying && threadState === "expanded"));
+    threadState !== "collapsed" &&
+    (visibleReplies.length > 0 || (isReplying && threadState === "expanded"));
 
   return (
     <div className="flex flex-col gap-2 bg-stone-100 rounded-xl p-4 border border-stone-200">
@@ -202,7 +199,13 @@ export default function QuestionPost({
           {hasAnyReplies && (
             <ThreadToggle
               symbol={toggleSymbol}
-              label={threadState === "collapsed" ? "Expand replies" : toggleSymbol === "+" ? "Show all replies" : "Collapse replies"}
+              label={
+                threadState === "collapsed"
+                  ? "Expand replies"
+                  : toggleSymbol === "+"
+                    ? "Show all replies"
+                    : "Collapse replies"
+              }
               onClick={handleToggle}
             />
           )}
@@ -256,9 +259,7 @@ export default function QuestionPost({
           )}
 
           {replies && renderReply
-            ? visibleReplies.map((reply) => (
-                <div key={reply.id}>{renderReply(reply)}</div>
-              ))
+            ? visibleReplies.map((reply) => <div key={reply.id}>{renderReply(reply)}</div>)
             : children}
         </div>
       )}

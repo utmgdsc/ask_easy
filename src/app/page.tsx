@@ -1,18 +1,15 @@
 "use client";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Room from "./room/page";
 import type { Role } from "@/utils/types";
 
-export default function Home() {
+function RoomPage() {
   const params = useSearchParams();
 
   const roleParam = params.get("role");
   const role: Role =
-    roleParam === "professor"
-      ? "PROFESSOR"
-      : roleParam === "ta"
-        ? "TA"
-        : "STUDENT";
+    roleParam === "professor" ? "PROFESSOR" : roleParam === "ta" ? "TA" : "STUDENT";
 
   return (
     <div className="flex h-screen w-full flex-col bg-background font-sans">
@@ -24,5 +21,13 @@ export default function Home() {
         />
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <RoomPage />
+    </Suspense>
   );
 }

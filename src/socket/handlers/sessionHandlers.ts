@@ -113,8 +113,7 @@ export function handleAnswerModeSync(socket: Socket): void {
 
       // 3. Read current mode from Redis (default to "all")
       const stored = await redisCache.get(answerModeKey(sessionId));
-      const mode: AnswerMode =
-        stored === "all" || stored === "instructors_only" ? stored : "all";
+      const mode: AnswerMode = stored === "all" || stored === "instructors_only" ? stored : "all";
 
       // 4. Reply to requesting socket only
       socket.emit("answer-mode:changed", { mode });

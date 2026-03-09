@@ -66,9 +66,7 @@ export default function ChatInput({
                 error ? "border-red-400 bg-red-50" : ""
               }`}
             />
-            {error && (
-              <p className="text-xs text-red-500 px-1">{error}</p>
-            )}
+            {error && <p className="text-xs text-red-500 px-1">{error}</p>}
             <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none w-fit">
               <input
                 type="checkbox"

@@ -95,4 +95,3 @@ export const bestToTop = (replies: Post[] | undefined) => {
     return 0;
   });
 };
-

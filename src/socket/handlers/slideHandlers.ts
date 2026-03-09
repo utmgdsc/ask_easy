@@ -63,11 +63,7 @@ export function handleSlideChange(socket: Socket, io: Server): void {
         return;
       }
 
-      if (
-        typeof pageIndex !== "number" ||
-        !Number.isInteger(pageIndex) ||
-        pageIndex < 0
-      ) {
+      if (typeof pageIndex !== "number" || !Number.isInteger(pageIndex) || pageIndex < 0) {
         socket.emit("slide:error", {
           message: "pageIndex must be a non-negative integer.",
         });

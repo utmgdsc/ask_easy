@@ -42,7 +42,7 @@ function chatAndSlidePanel(
   isMdSize: boolean,
   resizableWidth: number,
   setResizableWidth: (width: number) => void,
-  isProfessor: boolean,
+  isProfessor: boolean
 ) {
   return (
     <div className="h-screen w-full bg-background font-sans">
@@ -79,12 +79,13 @@ export default function Room({
   const [resizableWidth, setResizableWidth] = useState(30);
 
   // Shared socket — initialised once, shared via RoomContext
-  const [socket, setSocket] = useState<Socket<
-    ServerToClientEvents,
-    ClientToServerEvents
-  > | null>(null);
+  const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(
+    null
+  );
   const sessionIdRef = useRef(sessionId);
-  sessionIdRef.current = sessionId;
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   useEffect(() => {
     const s: Socket<ServerToClientEvents, ClientToServerEvents> = io({
@@ -93,9 +94,8 @@ export default function Room({
 
     s.on("connect", () => {
       s.emit("session:join", { sessionId: sessionIdRef.current });
+      setSocket(s);
     });
-
-    setSocket(s);
 
     return () => {
       s.emit("session:leave", { sessionId: sessionIdRef.current });

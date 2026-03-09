@@ -56,9 +56,23 @@ function apiAnswerToPost(a: APIAnswer): BestAnswer | Comment {
 
   // Professor answers are always treated as best answers
   if (role === "PROFESSOR") {
-    return { id: a.id, type: "bestAnswer", user, timestamp: fmt(a.createdAt), content: a.content, upvotes: 0 };
+    return {
+      id: a.id,
+      type: "bestAnswer",
+      user,
+      timestamp: fmt(a.createdAt),
+      content: a.content,
+      upvotes: 0,
+    };
   }
-  return { id: a.id, type: "comment", user, timestamp: fmt(a.createdAt), content: a.content, upvotes: 0 };
+  return {
+    id: a.id,
+    type: "comment",
+    user,
+    timestamp: fmt(a.createdAt),
+    content: a.content,
+    upvotes: 0,
+  };
 }
 
 function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
@@ -124,7 +138,7 @@ export default function ClassChat() {
                 const aData = await aRes.json();
                 answersMap[q.id] = aData.answers ?? [];
               }
-            }),
+            })
         );
 
         // Reverse so oldest questions appear at top, newest at bottom
@@ -162,7 +176,12 @@ export default function ClassChat() {
       const user =
         payload.isAnonymous || !payload.authorName
           ? null
-          : { id: payload.authorId ?? undefined, username: payload.authorName, pfp: "", role: "STUDENT" as Role };
+          : {
+              id: payload.authorId ?? undefined,
+              username: payload.authorName,
+              pfp: "",
+              role: "STUDENT" as Role,
+            };
 
       const newQuestion: Question = {
         id: payload.id,
@@ -181,13 +200,13 @@ export default function ClassChat() {
 
     const onQuestionUpdated = (payload: { id: string; upvoteCount: number }) => {
       setQuestions((prev) =>
-        prev.map((q) => (q.id === payload.id ? { ...q, upvotes: payload.upvoteCount } : q)),
+        prev.map((q) => (q.id === payload.id ? { ...q, upvotes: payload.upvoteCount } : q))
       );
     };
 
     const onQuestionResolved = (payload: { id: string }) => {
       setQuestions((prev) =>
-        prev.map((q) => (q.id === payload.id ? { ...q, isResolved: true } : q)),
+        prev.map((q) => (q.id === payload.id ? { ...q, isResolved: true } : q))
       );
     };
 
@@ -219,10 +238,8 @@ export default function ClassChat() {
 
       setQuestions((prev) =>
         prev.map((q) =>
-          q.id === payload.questionId
-            ? { ...q, replies: [...q.replies, newReply] }
-            : q,
-        ),
+          q.id === payload.questionId ? { ...q, replies: [...q.replies, newReply] } : q
+        )
       );
     };
 
@@ -280,9 +297,7 @@ export default function ClassChat() {
     if (!socket) return;
     socket.emit("question:resolve", { questionId });
     // Optimistic update
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === questionId ? { ...q, isResolved: true } : q)),
-    );
+    setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: true } : q)));
   };
 
   const handleSubmitAnswer = (questionId: string, content: string, isAnonymous: boolean) => {
@@ -366,7 +381,9 @@ export default function ClassChat() {
                       onUpvote={() => handleUpvote(q.id)}
                       onResolve={isInstructor ? () => handleResolve(q.id) : undefined}
                       canAnswer={canAnswer}
-                      onSubmitAnswer={(content, isAnon) => handleSubmitAnswer(q.id, content, isAnon)}
+                      onSubmitAnswer={(content, isAnon) =>
+                        handleSubmitAnswer(q.id, content, isAnon)
+                      }
                     />
                   ))}
                 </div>

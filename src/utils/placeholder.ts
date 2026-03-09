@@ -43,8 +43,7 @@ export const PLACEHOLDER_POSTS: Post[] = [
     type: "question",
     user: { username: "Lily Thompson", pfp: "", role: "STUDENT" },
     timestamp: "09:25",
-    content:
-      "What is the actual difference between stack and heap memory? They seem similar.",
+    content: "What is the actual difference between stack and heap memory? They seem similar.",
     upvotes: 8,
     isResolved: false,
     replies: [

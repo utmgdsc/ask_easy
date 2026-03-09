@@ -110,7 +110,10 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       // 4. Visibility validation
       const visibilityValidation = validateVisibility(payload.visibility);
       if (!visibilityValidation.valid) {
-        console.log("[QuestionHandler] Rejected: visibility validation -", visibilityValidation.error);
+        console.log(
+          "[QuestionHandler] Rejected: visibility validation -",
+          visibilityValidation.error
+        );
         socket.emit("question:error", { message: visibilityValidation.error });
         return;
       }
