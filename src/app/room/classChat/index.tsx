@@ -122,7 +122,9 @@ export default function ClassChat() {
     async function loadQuestions() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/sessions/${sessionId}/questions`);
+        const res = await fetch(`/api/sessions/${sessionId}/questions`, {
+          headers: { "x-user-id": userId },
+        });
         if (!res.ok) return;
         const data = await res.json();
         const rawQuestions: APIQuestion[] = data.questions ?? [];
