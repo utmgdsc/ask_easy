@@ -44,13 +44,6 @@ export type Course = {
   id: number;
 };
 
-export type Lecture = {
-  id: number;
-  courseId: number;
-  section: string;
-  professor: string;
-};
-
 export interface CSVRow {
   [key: string]: string;
 }

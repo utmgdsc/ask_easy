@@ -1,4 +1,4 @@
-import { Post, Course, User, Lecture } from "./types";
+import { Post, Course, User } from "./types";
 
 export const PLACEHOLDER_POSTS: Post[] = [
   // Resolved Question: Pointers
@@ -141,28 +141,6 @@ export const PLACEHOLDER_COURSES: Course[] = [
     beginDate: "2026-01-14",
     endDate: "2026-04-24",
   },
-];
-
-export const PLACEHOLDER_LECTURES: Lecture[] = [
-  // Physics lectures (courseId: 1)
-  { id: 101, courseId: 1, section: "LEC 0101", professor: "Dr. Emily Carter" },
-  { id: 102, courseId: 1, section: "LEC 0201", professor: "Prof. John Smith" },
-  { id: 103, courseId: 1, section: "LEC 0301", professor: "Dr. Albert Einstein" },
-  // Calculus lectures (courseId: 2)
-  { id: 201, courseId: 2, section: "LEC 0101", professor: "Prof. Michael Nguyen" },
-  { id: 202, courseId: 2, section: "LEC 0201", professor: "Dr. Alan Turing" },
-  { id: 203, courseId: 2, section: "LEC 0301", professor: "Dr. Ada Lovelace" },
-  // ML lectures (courseId: 3)
-  { id: 301, courseId: 3, section: "LEC 0101", professor: "Dr. Sarah Ahmed" },
-  { id: 302, courseId: 3, section: "LEC 0201", professor: "Prof. Geoffrey Hinton" },
-  { id: 303, courseId: 3, section: "LEC 0301", professor: "Dr. Yann LeCun" },
-  // Thermodynamics lectures (courseId: 4)
-  { id: 401, courseId: 4, section: "LEC 0101", professor: "Dr. James Patel" },
-  { id: 402, courseId: 4, section: "LEC 0201", professor: "Prof. Sadi Carnot" },
-  // Data Structures (courseId: 5)
-  { id: 501, courseId: 5, section: "LEC 0101", professor: "Prof. Laura Chen" },
-  { id: 502, courseId: 5, section: "LEC 0201", professor: "Dr. Donald Knuth" },
-  { id: 503, courseId: 5, section: "LEC 0301", professor: "Dr. Grace Hopper" },
 ];
 
 export const PLACEHOLDER_USERS: User[] = [
