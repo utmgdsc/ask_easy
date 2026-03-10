@@ -1,6 +1,5 @@
 import { User } from "@/utils/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link";
 
 function renderAvatar(user: User) {
   return (
@@ -23,14 +22,11 @@ export default function header(user: User) {
     >
       <span className="text-lg font-bold px-2">AskEasy</span>
 
-      <div className=" flex flex-end gap-2 items-center">
+      <div className=" flex flex-end gap-2 ">
         {user.role === "PROFESSOR" && (
-          <Link
-            href="/create-class"
-            className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
-          >
+          <button className="rounded-lg bg-stone-100 hover:bg-stone-300 px-4 py-2 text-sm font-medium text-stone-900 transition-colors">
             Create a Class
-          </Link>
+          </button>
         )}
         {renderAvatar(user)}
       </div>
