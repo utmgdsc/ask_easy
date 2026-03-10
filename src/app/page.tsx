@@ -1,33 +1,30 @@
 "use client";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import Room from "./room/page";
-import type { Role } from "@/utils/types";
+import { User } from "@/utils/types";
+import CourseViewer from "./components/CourseViewer";
+import ProfCourseViewer from "./components/ProfCourseViewer";
+import footer from "./components/footer";
+import header from "./components/header";
 
-function RoomPage() {
-  const params = useSearchParams();
+//sample user
+const placeholder_user: User = {
+  username: "Hi",
+  pfp: "H",
+  role: "STUDENT",
+};
 
-  const roleParam = params.get("role");
-  const role: Role =
-    roleParam === "professor" ? "PROFESSOR" : roleParam === "ta" ? "TA" : "STUDENT";
-
+export default function LandingPage() {
   return (
-    <div className="flex h-screen w-full flex-col bg-background font-sans">
-      <main className="flex-1 overflow-hidden">
-        <Room
-          sessionId={params.get("sessionId") ?? "placeholder-session"}
-          userId={params.get("userId") ?? "placeholder-user"}
-          role={role}
-        />
-      </main>
+    <div className="min-h-screen flex flex-col dot-grid relative">
+      {header(placeholder_user)}
+      <div className="overflow-y-auto flex-1 flex flex-col">
+        <div className="flex-1 p-5 pt-32 pb-10 flex flex-col items-center">
+          <h1 className="text-4xl font-bold py-4 text-center">Classrooms</h1>
+          <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col">
+            {placeholder_user.role === "PROFESSOR" ? <ProfCourseViewer /> : <CourseViewer />}
+          </div>
+        </div>
+        {footer()}
+      </div>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense>
-      <RoomPage />
-    </Suspense>
   );
 }
