@@ -25,7 +25,7 @@ export default function CourseViewer() {
     const courseLectures = PLACEHOLDER_LECTURES.filter((l) => l.courseId === selectedCourseId);
 
     return (
-      <div className="flex-1 p-4 py-10 w-full">
+      <div className="flex-1 p-4 py-10">
         <div className="max-w-6xl mx-auto mb-8">
           <button
             onClick={() => setSelectedCourseId(null)}
@@ -74,7 +74,7 @@ export default function CourseViewer() {
 
   if (validcourses.length > 0) {
     return (
-      <div className="flex-1 p-4 py-10 w-full">
+      <div className="flex-1 p-4 py-10">
         <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto ">
           {validcourses.map((course, index) => (
             <div

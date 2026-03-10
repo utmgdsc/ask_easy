@@ -20,7 +20,7 @@ export default function ProfCourseButtons() {
   }
   if (validcourses.length > 0) {
     return (
-      <div className="flex-1 p-4 py-10 w-full">
+      <div className="flex-1 p-4 py-10">
         <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {validcourses.map((course, index) => (
             <div
@@ -82,7 +82,7 @@ export default function ProfCourseButtons() {
     return (
       <div className="p-4 py-10 w-full rounded-2xl flex items-center justify-center h-120">
         <Link
-          href={"create-class"}
+          href={"create-class"} // not currently configured
           className="
             hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden
             flex flex-col items-center justify-center
