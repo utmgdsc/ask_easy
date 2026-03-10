@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import header from "../components/header";
 import footer from "../components/footer";
 import { User } from "@/utils/types";
@@ -26,7 +25,6 @@ interface ProcessedClassData {
 }
 
 export default function CreateClassPage() {
-  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedClassData | null>(null);
   const [isHovering, setIsHovering] = useState(false);
@@ -161,19 +159,6 @@ export default function CreateClassPage() {
     );
   }
 
-  const submitClassCreation = async () => {
-    // Placeholder function for database insertion
-    const send_class_to_db = async (data: ProcessedClassData) => {
-      console.log("Simulating sending class to DB:", data);
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulating network request
-    };
-
-    if (processedData) {
-      await send_class_to_db(processedData);
-      router.push("/");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans text-stone-800">
       {header(placeholder_user)}
@@ -291,10 +276,7 @@ export default function CreateClassPage() {
                 </div>
               )}
 
-              <button
-                onClick={submitClassCreation}
-                className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 transition-colors duration-200 py-3.5 rounded-lg font-semibold tracking-wide uppercase mt-4 shadow-sm border border-stone-800"
-              >
+              <button className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 transition-colors duration-200 py-3.5 rounded-lg font-semibold tracking-wide uppercase mt-4 shadow-sm border border-stone-800">
                 Confirm & Create Class
               </button>
             </div>
