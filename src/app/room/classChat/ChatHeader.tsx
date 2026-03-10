@@ -46,8 +46,6 @@ function SlideToggle() {
   );
 }
 
-import Link from "next/link";
-
 export default function ChatHeader({
   role,
   answerMode,
@@ -59,12 +57,6 @@ export default function ChatHeader({
     <div className="flex flex-col border-b bg-stone-50 sticky top-0 z-10">
       <header className="pl-2 pr-4 py-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/"
-            className="text-lg font-bold border-r pr-2 border-stone-300 hover:opacity-80 transition-opacity"
-          >
-            AskEasy
-          </Link>
           <SlideToggle />
           <h1 className="text-xl font-bold">CSC209</h1>
         </div>
