@@ -1,30 +1,33 @@
 "use client";
-import { User } from "@/utils/types";
-import renderCourseButtons from "./components/CourseViewer";
-import renderProfCourseButtons from "./components/ProfCourseViewer";
-import footer from "./components/footer";
-import header from "./components/header";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Room from "./room/page";
+import type { Role } from "@/utils/types";
 
-//sample user
-const placeholder_user: User = {
-  username: "Hi",
-  pfp: "H",
-  role: "PROFESSOR",
-};
+function RoomPage() {
+  const params = useSearchParams();
 
-export default function LandingPage() {
+  const roleParam = params.get("role");
+  const role: Role =
+    roleParam === "professor" ? "PROFESSOR" : roleParam === "ta" ? "TA" : "STUDENT";
+
   return (
-    <div className="max-h-screen flex flex-col dot-grid relative">
-      {header(placeholder_user)}
-      <div className="overflow-y-auto">
-        <div className="flex-1 p-5 pt-32 items-center justify-center pb-10">
-          <h1 className="text-4xl font-bold py-4 text-center">Classrooms</h1>
-          {placeholder_user.role === "PROFESSOR"
-            ? renderProfCourseButtons()
-            : renderCourseButtons()}
-        </div>
-        {footer()}
-      </div>
+    <div className="flex h-screen w-full flex-col bg-background font-sans">
+      <main className="flex-1 overflow-hidden">
+        <Room
+          sessionId={params.get("sessionId") ?? "placeholder-session"}
+          userId={params.get("userId") ?? "placeholder-user"}
+          role={role}
+        />
+      </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <RoomPage />
+    </Suspense>
   );
 }
