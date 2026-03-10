@@ -20,7 +20,9 @@ export default function header(user: User) {
      text-2xl font-bold text-left py-2 px-3 flex 
      border-3 border-blue-50"
     >
-      <span className="text-lg font-bold px-2">AskEasy</span>
+      <Link href="/" className="text-lg font-bold px-2 hover:opacity-80 transition-opacity">
+        AskEasy
+      </Link>
 
       <div className=" flex flex-end gap-2 ">
         {user.role === "PROFESSOR" && (
