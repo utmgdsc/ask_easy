@@ -2,18 +2,11 @@ import header from "../components/header";
 import footer from "../components/footer";
 import { User } from "@/utils/types";
 
-export default function createClassPage() {
-  //sample user
-  const placeholder_user: User = {
-    username: "Hi",
-    pfp: "H",
-    role: "STUDENT",
-  }; // For testing
-
-  if (placeholder_user.role !== "PROFESSOR") {
+export default function createClassPage(user: User) {
+  if (user.role !== "PROFESSOR") {
     return (
       <div>
-        {header(placeholder_user)}
+        {header(user)}
         <div>
           You do not have the Authorization to access the page. Contact support if the error is
           unintended
@@ -24,7 +17,7 @@ export default function createClassPage() {
   }
   return (
     <div>
-      {header(placeholder_user)}
+      {header(user)}
       <div>
         You do not have the Authorization to access the page. Contact support if the error is
         unintended
