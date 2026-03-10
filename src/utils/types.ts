@@ -51,6 +51,7 @@ export type Lecture = {
   professor: string;
 };
 
+
 export interface CSVRow {
   [key: string]: string;
 }
