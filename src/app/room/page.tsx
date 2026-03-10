@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { io, type Socket } from "socket.io-client";
+import { useSearchParams } from "next/navigation";
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -69,7 +70,7 @@ function chatAndSlidePanel(
 // Room
 // ---------------------------------------------------------------------------
 
-export default function Room({
+export function RoomContent({
   sessionId = "placeholder-session",
   userId = "placeholder-user",
   role = "STUDENT",
@@ -120,5 +121,33 @@ export default function Room({
         </SlideUpdateContext.Provider>
       </div>
     </RoomContext.Provider>
+  );
+}
+
+function RoomPage() {
+  const params = useSearchParams();
+
+  const roleParam = params.get("role");
+  const role: Role =
+    roleParam === "professor" ? "PROFESSOR" : roleParam === "ta" ? "TA" : "STUDENT";
+
+  return (
+    <div className="flex h-screen w-full flex-col bg-background font-sans">
+      <main className="flex-1 overflow-hidden">
+        <RoomContent
+          sessionId={params.get("sessionId") ?? "placeholder-session"}
+          userId={params.get("userId") ?? "placeholder-user"}
+          role={role}
+        />
+      </main>
+    </div>
+  );
+}
+
+export default function Room() {
+  return (
+    <Suspense>
+      <RoomPage />
+    </Suspense>
   );
 }
