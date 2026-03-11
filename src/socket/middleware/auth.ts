@@ -1,46 +1,64 @@
+import { unsealData } from "iron-session";
 import type { Socket } from "socket.io";
 
+import { SESSION_OPTIONS, type SessionData } from "@/lib/session";
 import type { SocketData } from "../types";
 
 // ---------------------------------------------------------------------------
-// Socket.IO authentication middleware (PLACEHOLDER until shibboleth)
-// ---------------------------------------------------------------------------
+// Socket.IO authentication middleware
 //
-// TODO: Replace this stub with real authentication once NextAuth.js (or
-//       another auth provider) is integrated. The real implementation should:
+// Validates the iron-session cookie that was issued by /api/auth/session
+// (after Shibboleth SSO). The browser sends the cookie automatically on the
+// WebSocket upgrade request because the Socket.IO client is initialised with
+// `withCredentials: true`.
 //
-//   1. Read a JWT / session token from `socket.handshake.auth.token`.
-//   2. Verify it against the auth provider (e.g. NextAuth `getToken()`).
-//   3. Look up the user in the database if needed.
-//   4. Populate `socket.data.userId` (and any other user fields).
-//   5. Call `next()` on success or `next(new Error(...))` on failure.
-//
-// The current stub accepts any connection that provides a `userId` string in
-// the handshake auth object.  This is **NOT** secure and is intended only for
-// development / integration testing while auth is not yet available.
+// Flow:
+//   1. Parse the `cookie` header from the Socket.IO handshake.
+//   2. Find the `ask_easy_session` cookie value.
+//   3. Unseal it with iron-session to recover { userId, utorid, role, … }.
+//   4. Populate socket.data and call next().
 // ---------------------------------------------------------------------------
 
 /**
- * Authenticate an incoming Socket.IO connection.
- *
- * Expects `socket.handshake.auth.userId` to be a non-empty string.
- * Rejects the connection otherwise.
+ * Parses a raw `Cookie` header string into a key→value map.
+ * e.g. "a=1; b=2" → { a: "1", b: "2" }
  */
-export function authMiddleware(
+function parseCookies(header: string | undefined): Record<string, string> {
+  if (!header) return {};
+  return Object.fromEntries(
+    header.split(";").map((part) => {
+      const [key, ...rest] = part.trim().split("=");
+      return [key.trim(), decodeURIComponent(rest.join("=").trim())];
+    })
+  );
+}
+
+export async function authMiddleware(
   socket: Socket<never, never, never, SocketData>,
   next: (err?: Error) => void
-): void {
-  // TODO: Replace with real token validation
-  // const token = socket.handshake.auth?.token;
-  const userId = socket.handshake.auth?.userId as string | undefined;
+): Promise<void> {
+  const cookieHeader = socket.handshake.headers.cookie;
+  const cookies = parseCookies(cookieHeader);
+  const sealedSession = cookies[SESSION_OPTIONS.cookieName as string];
 
-  if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
-    return next(new Error("Authentication required. Provide userId in handshake auth."));
+  if (!sealedSession) {
+    return next(new Error("Authentication required. No session cookie found."));
   }
 
-  // Attach user data to the socket for downstream handlers
-  socket.data.userId = userId;
-  socket.data.connectedAt = new Date();
+  try {
+    const session = await unsealData<SessionData>(sealedSession, {
+      password: SESSION_OPTIONS.password as string,
+    });
 
-  next();
+    if (!session?.userId) {
+      return next(new Error("Authentication required. Invalid session."));
+    }
+
+    socket.data.userId = session.userId;
+    socket.data.connectedAt = new Date();
+
+    next();
+  } catch {
+    next(new Error("Authentication required. Session could not be verified."));
+  }
 }

@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    const userId = getCurrentUserId(request);
+    const userId = await getCurrentUserId();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }

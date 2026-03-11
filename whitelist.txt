@@ -1,0 +1,9 @@
+# Instructor whitelist
+# Format: utorid,ROLE
+# ROLE must be PROFESSOR or TA
+# Lines starting with # are comments and are ignored.
+# Any UTORid NOT in this file gets the STUDENT role on login.
+#
+# Examples (remove the # to activate):
+# smithj,PROFESSOR
+# doejane,TA

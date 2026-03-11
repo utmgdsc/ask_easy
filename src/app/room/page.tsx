@@ -71,12 +71,17 @@ function chatAndSlidePanel(
 
 export default function Room({
   sessionId = "placeholder-session",
-  userId = "placeholder-user",
-  role = "STUDENT",
+  userId: userIdProp,
+  role: roleProp,
 }: RoomProps) {
   const isMdSize = useMediaQuery("(min-width: 1024px)");
   const [isSlidesVisible, setIsSlidesVisible] = useState(true);
   const [resizableWidth, setResizableWidth] = useState(30);
+
+  // Resolved from /api/auth/me (falls back to props for legacy usage)
+  const [userId, setUserId] = useState(userIdProp ?? "");
+  const [role, setRole] = useState<Role>(roleProp ?? "STUDENT");
+  const [authReady, setAuthReady] = useState(!!userIdProp);
 
   // Shared socket — initialised once, shared via RoomContext
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(
@@ -87,9 +92,29 @@ export default function Room({
     sessionIdRef.current = sessionId;
   }, [sessionId]);
 
+  // Fetch the authenticated user if not already provided via props
   useEffect(() => {
+    if (userIdProp) return;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.userId) {
+          setUserId(data.userId);
+          setRole((data.role as Role) ?? "STUDENT");
+        }
+        setAuthReady(true);
+      })
+      .catch(() => setAuthReady(true));
+  }, [userIdProp]);
+
+  // Connect to Socket.IO once auth is ready and userId is known.
+  // withCredentials: true sends the iron-session cookie so the server-side
+  // auth middleware can verify the session without needing a separate token.
+  useEffect(() => {
+    if (!authReady || !userId) return;
+
     const s: Socket<ServerToClientEvents, ClientToServerEvents> = io({
-      auth: { userId },
+      withCredentials: true,
     });
 
     s.on("connect", () => {
@@ -102,7 +127,15 @@ export default function Room({
       s.disconnect();
       setSocket(null);
     };
-  }, [userId]);
+  }, [authReady, userId]);
+
+  if (!authReady) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <span className="text-stone-400 text-sm">Authenticating…</span>
+      </div>
+    );
+  }
 
   function rerender() {
     setIsSlidesVisible((prev) => !prev);
