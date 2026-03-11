@@ -1,9 +1,9 @@
 "use client";
 import { User } from "@/utils/types";
 import CourseViewer from "./components/CourseViewer";
-import ProfCourseViewer from "./components/ProfCourseViewer";
 import footer from "./components/footer";
 import header from "./components/header";
+import ProfCourseViewer from "./classes/ProfCourseViewer";
 
 //sample user
 const placeholder_user: User = {
