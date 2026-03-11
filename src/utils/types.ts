@@ -43,3 +43,27 @@ export type Course = {
   name: string;
   id: number;
 };
+
+export type Lecture = {
+  id: number;
+  courseId: number;
+  section: string;
+  professor: string;
+};
+
+export interface CSVRow {
+  [key: string]: string;
+}
+
+export interface StudentRecord {
+  givenName: string;
+  surname: string;
+  utorid: string;
+  [key: string]: string;
+}
+
+export interface ProcessedClassData {
+  courseCode: string;
+  lectureSection: string;
+  students: StudentRecord[];
+}
