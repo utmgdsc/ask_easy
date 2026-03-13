@@ -84,14 +84,5 @@ export function renderUsername(user: User | null) {
 }
 
 export const bestToTop = (replies: Post[] | undefined) => {
-  if (!replies) return [];
-
-  return [...replies].sort((a, b) => {
-    const isABest = a.type === "bestAnswer";
-    const isBBest = b.type === "bestAnswer";
-
-    if (isABest && !isBBest) return -1;
-    if (!isABest && isBBest) return 1;
-    return 0;
-  });
+  return replies ?? [];
 };

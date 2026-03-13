@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 import {
   validateFileType,
   validateFileSize,
@@ -52,9 +53,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             id: true,
             name: true,
           },
-        },
-        _count: {
-          select: { slides: true },
         },
       },
     });
@@ -111,7 +109,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    // TODO: Add in real authentication for profs once UofT auth is added
+    // Authenticate from session cookie
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+    const userId = user.userId;
 
     // Parse multipart form data
     let formData: FormData;
@@ -128,12 +131,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const file = formData.get("file") as File | null;
     if (!file) {
       return NextResponse.json({ error: "No file provided." }, { status: 400 });
-    }
-
-    // TO-DO: Replace with auth - currently using userId from form data
-    const userId = formData.get("userId") as string | null;
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required." }, { status: 400 });
     }
 
     // 2. Validate MIME type
@@ -197,30 +194,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Create database records in a transaction
     try {
-      const result = await prisma.$transaction(async (tx) => {
-        // Create SlideSet
-        const slideSet = await tx.slideSet.create({
-          data: {
-            sessionId,
-            filename: file.name,
-            storageKey: generatedStorageKey,
-            pageCount,
-            fileSize: file.size,
-            uploadedBy: userId,
-          },
-        });
-
-        // Create individual Slide records for each page
-        const slideData = Array.from({ length: pageCount }, (_, i) => ({
-          slideSetId: slideSet.id,
-          pageNumber: i + 1,
-        }));
-
-        await tx.slide.createMany({
-          data: slideData,
-        });
-
-        return slideSet;
+      const result = await prisma.slideSet.create({
+        data: {
+          sessionId,
+          filename: file.name,
+          storageKey: generatedStorageKey,
+          pageCount,
+          fileSize: file.size,
+          uploadedBy: userId,
+        },
       });
 
       // Return success response

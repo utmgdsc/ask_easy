@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type React from "react";
 
 import { useRoom } from "../RoomContext";
 import PostItem from "./post";
 import ChatHeader from "./ChatHeader";
 import ChatInput from "./ChatInput";
 import FilterTabs from "./FilterTabs";
-import type { Question, BestAnswer, Comment, Role } from "@/utils/types";
+import type { Question, Comment, Role } from "@/utils/types";
 
 // ---------------------------------------------------------------------------
 // API response types (what the REST endpoints return)
@@ -21,9 +22,8 @@ interface APIQuestion {
   isAnonymous: boolean;
   upvoteCount: number;
   answerCount: number;
-  slideId: string | null;
   createdAt: string;
-  author: { id: string; name: string; role: Role } | null;
+  author: { id: string; utorid: string; name: string; role: Role } | null;
 }
 
 interface APIAnswer {
@@ -32,10 +32,11 @@ interface APIAnswer {
   content: string;
   isAnonymous: boolean;
   /** Nested author object returned by the answers service */
-  author: { id: string; name: string; role: Role } | null;
+  author: { id: string; utorid: string; name: string; role: Role } | null;
   /** Top-level role mirror returned alongside author — used for role checks */
   authorRole: Role;
   isAccepted: boolean;
+  upvoteCount: number;
   createdAt: string;
 }
 
@@ -47,31 +48,19 @@ function fmt(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function apiAnswerToPost(a: APIAnswer): BestAnswer | Comment {
-  const role = a.author?.role ?? a.authorRole;
+function apiAnswerToPost(a: APIAnswer): Comment {
   const user =
     a.isAnonymous || !a.author
       ? null
-      : { id: a.author.id, username: a.author.name, pfp: "", role: a.author.role };
+      : { id: a.author.id, utorid: a.author.utorid, username: a.author.name, pfp: "", role: a.author.role };
 
-  // Professor answers are always treated as best answers
-  if (role === "PROFESSOR") {
-    return {
-      id: a.id,
-      type: "bestAnswer",
-      user,
-      timestamp: fmt(a.createdAt),
-      content: a.content,
-      upvotes: 0,
-    };
-  }
   return {
     id: a.id,
     type: "comment",
     user,
     timestamp: fmt(a.createdAt),
     content: a.content,
-    upvotes: 0,
+    upvotes: a.upvoteCount ?? 0,
   };
 }
 
@@ -79,7 +68,7 @@ function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
   const user =
     q.isAnonymous || !q.author
       ? null
-      : { id: q.author.id, username: q.author.name, pfp: "", role: q.author.role };
+      : { id: q.author.id, utorid: q.author.utorid, username: q.author.name, pfp: "", role: q.author.role };
 
   return {
     id: q.id,
@@ -89,7 +78,7 @@ function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
     content: q.content,
     upvotes: q.upvoteCount,
     isResolved: q.status === "RESOLVED",
-    replies: answers.map(apiAnswerToPost),
+    replies: answers.map((a) => apiAnswerToPost(a)),
     visibility: q.visibility,
   };
 }
@@ -98,16 +87,24 @@ function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
 // ClassChat
 // ---------------------------------------------------------------------------
 
-export default function ClassChat() {
+interface ClassChatProps {
+  /** Receives the full chat history (including deleted messages) for session export. */
+  chatHistoryRef?: React.MutableRefObject<Question[]>;
+}
+
+export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   const { socket, sessionId, userId, role } = useRoom();
 
   const [commentView, setCommentView] = useState<"all" | "unresolved" | "resolved">("all");
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answerMode, setAnswerMode] = useState<"all" | "instructors_only">("all");
+  const [answerMode, setAnswerMode] = useState<"all" | "instructors_only">("instructors_only");
   const [isLoading, setIsLoading] = useState(true);
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Separate history that keeps deleted messages (marked as [deleted]) for the
+  // session export. Never removes items — deletions are marked in-place.
+  const historyRef = useRef<Question[]>([]);
 
   // -------------------------------------------------------------------------
   // Initial data fetch
@@ -122,9 +119,7 @@ export default function ClassChat() {
     async function loadQuestions() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/sessions/${sessionId}/questions`, {
-          headers: { "x-user-id": userId },
-        });
+        const res = await fetch(`/api/sessions/${sessionId}/questions`);
         if (!res.ok) return;
         const data = await res.json();
         const rawQuestions: APIQuestion[] = data.questions ?? [];
@@ -135,7 +130,7 @@ export default function ClassChat() {
           rawQuestions
             .filter((q) => q.answerCount > 0)
             .map(async (q) => {
-              const aRes = await fetch(`/api/questions/${q.id}/answers?userId=${userId}`);
+              const aRes = await fetch(`/api/questions/${q.id}/answers`);
               if (aRes.ok) {
                 const aData = await aRes.json();
                 answersMap[q.id] = aData.answers ?? [];
@@ -145,7 +140,9 @@ export default function ClassChat() {
 
         // Reverse so oldest questions appear at top, newest at bottom
         const ordered = [...rawQuestions].reverse();
-        setQuestions(ordered.map((q) => apiQuestionToPost(q, answersMap[q.id] ?? [])));
+        const mapped = ordered.map((q) => apiQuestionToPost(q, answersMap[q.id] ?? []));
+        setQuestions(mapped);
+        historyRef.current = mapped.map((q) => ({ ...q, replies: [...q.replies] }));
       } finally {
         setIsLoading(false);
       }
@@ -170,16 +167,17 @@ export default function ClassChat() {
       content: string;
       visibility: string;
       isAnonymous: boolean;
-      slideId: string | null;
       createdAt: Date;
       authorId?: string | null;
       authorName?: string | null;
+      authorUtorid?: string | null;
     }) => {
       const user =
         payload.isAnonymous || !payload.authorName
           ? null
           : {
               id: payload.authorId ?? undefined,
+              utorid: payload.authorUtorid ?? undefined,
               username: payload.authorName,
               pfp: "",
               role: "STUDENT" as Role,
@@ -198,6 +196,7 @@ export default function ClassChat() {
       };
 
       setQuestions((prev) => [...prev, newQuestion]);
+      historyRef.current = [...historyRef.current, { ...newQuestion, replies: [] }];
     };
 
     const onQuestionUpdated = (payload: { id: string; upvoteCount: number }) => {
@@ -219,6 +218,7 @@ export default function ClassChat() {
       isAnonymous: boolean;
       authorId?: string;
       authorName?: string;
+      authorUtorid?: string;
       authorRole: Role;
       isAccepted: boolean;
       createdAt: Date;
@@ -231,9 +231,10 @@ export default function ClassChat() {
         author:
           payload.isAnonymous || !payload.authorName
             ? null
-            : { id: payload.authorId ?? "", name: payload.authorName, role: payload.authorRole },
+            : { id: payload.authorId ?? "", utorid: payload.authorUtorid ?? "", name: payload.authorName, role: payload.authorRole },
         authorRole: payload.authorRole,
         isAccepted: payload.isAccepted,
+        upvoteCount: 0,
         createdAt: new Date(payload.createdAt).toISOString(),
       };
       const newReply = apiAnswerToPost(apiAnswer);
@@ -241,6 +242,24 @@ export default function ClassChat() {
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === payload.questionId ? { ...q, replies: [...q.replies, newReply] } : q
+        )
+      );
+      historyRef.current = historyRef.current.map((q) =>
+        q.id === payload.questionId ? { ...q, replies: [...q.replies, { ...newReply }] } : q
+      );
+    };
+
+    const onAnswerUpdated = (payload: { id: string; questionId: string; upvoteCount: number }) => {
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === payload.questionId
+            ? {
+                ...q,
+                replies: q.replies.map((r) =>
+                  r.id === payload.id ? { ...r, upvotes: payload.upvoteCount } : r
+                ),
+              }
+            : q
         )
       );
     };
@@ -254,10 +273,44 @@ export default function ClassChat() {
       setQuestionError(payload.message);
     };
 
+    const onQuestionDeleted = (payload: { questionId: string }) => {
+      setQuestions((prev) => prev.filter((q) => q.id !== payload.questionId));
+      // Keep in history but mark content as deleted
+      historyRef.current = historyRef.current.map((q) =>
+        q.id === payload.questionId ? { ...q, content: `${q.content} [deleted]` } : q
+      );
+      if (chatHistoryRef) chatHistoryRef.current = historyRef.current;
+    };
+
+    const onAnswerDeleted = (payload: { answerId: string; questionId: string }) => {
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === payload.questionId
+            ? { ...q, replies: q.replies.filter((r) => r.id !== payload.answerId) }
+            : q
+        )
+      );
+      // Keep in history but mark content as deleted
+      historyRef.current = historyRef.current.map((q) =>
+        q.id === payload.questionId
+          ? {
+              ...q,
+              replies: q.replies.map((r) =>
+                r.id === payload.answerId ? { ...r, content: `${r.content} [deleted]` } : r
+              ),
+            }
+          : q
+      );
+      if (chatHistoryRef) chatHistoryRef.current = historyRef.current;
+    };
+
     socket.on("question:created", onQuestionCreated);
     socket.on("question:updated", onQuestionUpdated);
     socket.on("question:resolved", onQuestionResolved);
+    socket.on("question:deleted", onQuestionDeleted);
     socket.on("answer:created", onAnswerCreated);
+    socket.on("answer:updated", onAnswerUpdated);
+    socket.on("answer:deleted", onAnswerDeleted);
     socket.on("answer-mode:changed", onAnswerModeChanged);
     socket.on("question:error", onQuestionError);
 
@@ -266,11 +319,23 @@ export default function ClassChat() {
       socket.off("question:created", onQuestionCreated);
       socket.off("question:updated", onQuestionUpdated);
       socket.off("question:resolved", onQuestionResolved);
+      socket.off("question:deleted", onQuestionDeleted);
       socket.off("answer:created", onAnswerCreated);
+      socket.off("answer:updated", onAnswerUpdated);
+      socket.off("answer:deleted", onAnswerDeleted);
       socket.off("answer-mode:changed", onAnswerModeChanged);
       socket.off("question:error", onQuestionError);
     };
   }, [socket, sessionId]);
+
+  // Keep chatHistoryRef in sync whenever historyRef is updated via data load
+  // or new questions/answers arriving (deletions update it inline above).
+  useEffect(() => {
+    if (chatHistoryRef) chatHistoryRef.current = historyRef.current;
+  // historyRef is a ref so its identity is stable; we only need to re-run
+  // when the questions state changes (which always follows a history update).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions, chatHistoryRef]);
 
   // Scroll to bottom whenever new questions arrive
   useEffect(() => {
@@ -281,7 +346,7 @@ export default function ClassChat() {
   // Action handlers
   // -------------------------------------------------------------------------
 
-  const canAnswer = role === "TA" || role === "PROFESSOR" || answerMode === "all";
+  const canAnswerGlobal = role === "TA" || role === "PROFESSOR" || answerMode === "all";
   const isInstructor = role === "TA" || role === "PROFESSOR";
 
   const handleSubmitQuestion = (content: string, isAnonymous: boolean) => {
@@ -293,6 +358,11 @@ export default function ClassChat() {
   const handleUpvote = (questionId: string) => {
     if (!socket) return;
     socket.emit("question:upvote", { questionId });
+  };
+
+  const handleAnswerUpvote = (answerId: string) => {
+    if (!socket) return;
+    socket.emit("answer:upvote", { answerId });
   };
 
   const handleResolve = (questionId: string) => {
@@ -313,6 +383,33 @@ export default function ClassChat() {
     socket.emit("answer-mode:change", { sessionId, mode: newMode });
     setAnswerMode(newMode); // Optimistic update
   };
+
+  const handleDeleteQuestion = (questionId: string) => {
+    if (!socket) return;
+    socket.emit("question:delete", { questionId, sessionId });
+  };
+
+  const handleDeleteAnswer = (answerId: string) => {
+    if (!socket) return;
+    socket.emit("answer:delete", { answerId, sessionId });
+  };
+
+  /**
+   * Returns true when the current user may delete the given post.
+   * - PROFESSOR: always (including anonymous posts)
+   * - TA: only named STUDENT posts, or their own named posts.
+   *       Anonymous posts are excluded because the client cannot verify the
+   *       author's role, and the author could be a professor or another TA.
+   * - STUDENT: never
+   */
+  function canDelete(post: { user: { id?: string; role: Role } | null }): boolean {
+    if (role === "PROFESSOR") return true;
+    if (role === "TA") {
+      if (!post.user) return false; // anonymous — author role unknown, hide button
+      return post.user.role === "STUDENT" || post.user.id === userId;
+    }
+    return false;
+  }
 
   // -------------------------------------------------------------------------
   // Search filter
@@ -382,9 +479,14 @@ export default function ClassChat() {
                       commentView={commentView}
                       onUpvote={() => handleUpvote(q.id)}
                       onResolve={isInstructor ? () => handleResolve(q.id) : undefined}
-                      canAnswer={canAnswer}
+                      canAnswer={canAnswerGlobal || q.user?.id === userId}
                       onSubmitAnswer={(content, isAnon) =>
                         handleSubmitAnswer(q.id, content, isAnon)
+                      }
+                      onAnswerUpvote={handleAnswerUpvote}
+                      onDeleteQuestion={canDelete(q) ? () => handleDeleteQuestion(q.id) : undefined}
+                      onDeleteAnswer={(reply) =>
+                        canDelete(reply) ? () => handleDeleteAnswer(reply.id) : undefined
                       }
                     />
                   ))}

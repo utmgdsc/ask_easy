@@ -8,9 +8,10 @@ import {
   handleQuestionCreate,
   handleQuestionUpvote,
   handleQuestionResolve,
+  handleQuestionDelete,
 } from "./handlers/questionHandlers";
-import { handleAnswerCreate } from "./handlers/answerHandlers";
-import { handleSlideChange, handleSlideSync } from "./handlers/slideHandlers";
+import { handleAnswerCreate, handleAnswerUpvote, handleAnswerDelete } from "./handlers/answerHandlers";
+import { handleSlideChange, handleSlideSync, handleSlidesUploaded } from "./handlers/slideHandlers";
 import { handleAnswerModeChange, handleAnswerModeSync } from "./handlers/sessionHandlers";
 import type {
   ClientToServerEvents,
@@ -121,21 +122,48 @@ export async function initSocketIO(
   // Connection handler
   // -----------------------------------------------------------------------
 
+  async function broadcastViewerCount(sessionId: string) {
+    const sockets = await io!.in(`session:${sessionId}`).fetchSockets();
+    const count = sockets.filter((s) => s.data.role !== "PROFESSOR").length;
+    io!.to(`session:${sessionId}`).emit("viewer:count", { count });
+  }
+
   io.on("connection", (socket) => {
     console.log(`[Socket.IO] Client connected: ${socket.id} (user: ${socket.data.userId})`);
 
     // Session room management
-    socket.on("session:join", (payload) => {
+    socket.on("session:join", async (payload) => {
       if (payload?.sessionId && typeof payload.sessionId === "string") {
+        if (socket.data.currentSessionId && socket.data.currentSessionId !== payload.sessionId) {
+          socket.leave(`session:${socket.data.currentSessionId}`);
+          await broadcastViewerCount(socket.data.currentSessionId);
+        }
+
         socket.join(`session:${payload.sessionId}`);
+        socket.data.currentSessionId = payload.sessionId;
         console.log(`[Socket.IO] ${socket.id} joined session:${payload.sessionId}`);
+
+        await broadcastViewerCount(payload.sessionId);
       }
     });
 
-    socket.on("session:leave", (payload) => {
+    socket.on("viewer:sync", async (payload) => {
+      if (payload?.sessionId && typeof payload.sessionId === "string") {
+        const sockets = await io!.in(`session:${payload.sessionId}`).fetchSockets();
+        const count = sockets.filter((s) => s.data.role !== "PROFESSOR").length;
+        socket.emit("viewer:count", { count });
+      }
+    });
+
+    socket.on("session:leave", async (payload) => {
       if (payload?.sessionId && typeof payload.sessionId === "string") {
         socket.leave(`session:${payload.sessionId}`);
+        if (socket.data.currentSessionId === payload.sessionId) {
+          socket.data.currentSessionId = undefined;
+        }
         console.log(`[Socket.IO] ${socket.id} left session:${payload.sessionId}`);
+
+        await broadcastViewerCount(payload.sessionId);
       }
     });
 
@@ -143,14 +171,22 @@ export async function initSocketIO(
     handleQuestionCreate(socket, io!);
     handleQuestionUpvote(socket, io!);
     handleQuestionResolve(socket, io!);
+    handleQuestionDelete(socket, io!);
     handleAnswerCreate(socket, io!);
+    handleAnswerUpvote(socket, io!);
+    handleAnswerDelete(socket, io!);
     handleSlideChange(socket, io!);
     handleSlideSync(socket);
+    handleSlidesUploaded(socket, io!);
     handleAnswerModeChange(socket, io!);
     handleAnswerModeSync(socket);
 
-    socket.on("disconnect", (reason) => {
+    socket.on("disconnect", async (reason) => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id} (reason: ${reason})`);
+      const sessionId = socket.data.currentSessionId;
+      if (sessionId) {
+        await broadcastViewerCount(sessionId);
+      }
     });
   });
 

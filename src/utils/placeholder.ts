@@ -13,7 +13,7 @@ export const PLACEHOLDER_POSTS: Post[] = [
     replies: [
       {
         id: "2",
-        type: "bestAnswer",
+        type: "comment",
         user: { username: "Snape Malfoy", pfp: "", role: "PROFESSOR" },
         timestamp: "09:18",
         content:
@@ -78,7 +78,7 @@ export const PLACEHOLDER_POSTS: Post[] = [
     replies: [
       {
         id: "9",
-        type: "bestAnswer",
+        type: "comment",
         user: { username: "Snape Malfoy", pfp: "", role: "PROFESSOR" },
         timestamp: "10:10",
         content:

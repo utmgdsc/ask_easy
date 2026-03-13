@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -8,82 +9,137 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import ClassChat from "./classChat";
 import SlideViewer from "./slideViewer";
 import type { ClientToServerEvents, ServerToClientEvents } from "@/socket/types";
-import type { Role } from "@/utils/types";
+import type { Question, Role } from "@/utils/types";
 import { RoomContext } from "./RoomContext";
 import { SlideUpdateContext } from "./SlideUpdateContext";
 
 // ---------------------------------------------------------------------------
-// Props
+// Chat history export
 // ---------------------------------------------------------------------------
 
-interface RoomProps {
-  sessionId?: string;
-  userId?: string;
-  role?: Role;
+function generateAndDownloadTxt(questions: Question[], sessionTitle: string): void {
+  const sep = "─".repeat(44);
+  const lines: string[] = [
+    `=== ${sessionTitle} ===`,
+    new Date().toLocaleString(),
+    "",
+  ];
+
+  function label(user: { username: string; utorid?: string } | null): string {
+    if (!user) return "Anonymous";
+    return user.utorid ? `${user.username} - ${user.utorid}` : user.username;
+  }
+
+  if (questions.length === 0) {
+    lines.push("No questions were asked during this session.");
+  } else {
+    for (const q of questions) {
+      lines.push(sep);
+      lines.push(`${q.timestamp} — ${label(q.user)}`);
+      lines.push(`Q: ${q.content}`);
+      if (q.replies.length > 0) {
+        lines.push("");
+        for (const r of q.replies) {
+          lines.push(`  ${r.timestamp} — ${label(r.user)}`);
+          lines.push(`  A: ${r.content}`);
+        }
+      }
+      lines.push("");
+    }
+    lines.push(sep);
+  }
+
+  const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${sessionTitle.replace(/[^a-z0-9]/gi, "_")}_chat.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ---------------------------------------------------------------------------
-// Layout helpers
+// End-session modal
 // ---------------------------------------------------------------------------
 
-function chatPanel(isMdSize: boolean) {
+interface EndSessionModalProps {
+  sessionTitle: string;
+  ending: boolean;
+  onDownloadAndEnd: () => void;
+  onEndWithout: () => void;
+  onCancel: () => void;
+}
+
+function EndSessionModal({
+  sessionTitle,
+  ending,
+  onDownloadAndEnd,
+  onEndWithout,
+  onCancel,
+}: EndSessionModalProps) {
   return (
-    <div className="h-screen w-full bg-background font-sans">
-      <ResizablePanelGroup direction={isMdSize ? "horizontal" : "vertical"}>
-        <ResizablePanel minSize={30}>
-          <ClassChat />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div className="px-6 py-5 border-b">
+          <h2 className="text-lg font-bold text-stone-900">End Session</h2>
+          <p className="text-sm text-stone-500 mt-1">
+            Would you like to download the chat history for{" "}
+            <span className="font-medium text-stone-700">{sessionTitle}</span> before ending?
+          </p>
+        </div>
+        <div className="px-6 py-4 flex flex-col gap-2">
+          <button
+            onClick={onDownloadAndEnd}
+            disabled={ending}
+            className="w-full px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {ending ? "Ending…" : "Download chat history & end"}
+          </button>
+          <button
+            onClick={onEndWithout}
+            disabled={ending}
+            className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            End without downloading
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={ending}
+            className="w-full px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function chatAndSlidePanel(
-  isMdSize: boolean,
-  resizableWidth: number,
-  setResizableWidth: (width: number) => void,
-  isProfessor: boolean
-) {
-  return (
-    <div className="h-screen w-full bg-background font-sans">
-      <ResizablePanelGroup direction={isMdSize ? "horizontal" : "vertical"}>
-        <ResizablePanel
-          defaultSize={100 - resizableWidth}
-          minSize={0}
-          onResize={(panelWidth) => {
-            setResizableWidth(panelWidth);
-          }}
-        >
-          <SlideViewer isProfessor={isProfessor} />
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={resizableWidth} minSize={30}>
-          <ClassChat />
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
-// Room
+// Inner room — uses useSearchParams, must be wrapped in Suspense
 // ---------------------------------------------------------------------------
 
-export default function Room({
-  sessionId = "placeholder-session",
-  userId: userIdProp,
-  role: roleProp,
-}: RoomProps) {
+function RoomInner() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const sessionId = searchParams.get("sessionId") ?? "";
+  const titleParam = searchParams.get("title") ?? "";
+
   const isMdSize = useMediaQuery("(min-width: 1024px)");
   const [isSlidesVisible, setIsSlidesVisible] = useState(true);
   const [resizableWidth, setResizableWidth] = useState(30);
 
-  // Resolved from /api/auth/me (falls back to props for legacy usage)
-  const [userId, setUserId] = useState(userIdProp ?? "");
-  const [role, setRole] = useState<Role>(roleProp ?? "STUDENT");
-  const [authReady, setAuthReady] = useState(!!userIdProp);
+  const [userId, setUserId] = useState("");
+  const [role, setRole] = useState<Role>("STUDENT");
+  const sessionTitle = decodeURIComponent(titleParam);
+  const [authReady, setAuthReady] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
+  const [endingSession, setEndingSession] = useState(false);
+  const chatHistoryRef = useRef<Question[]>([]);
 
-  // Shared socket — initialised once, shared via RoomContext
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(
     null
   );
@@ -92,24 +148,67 @@ export default function Room({
     sessionIdRef.current = sessionId;
   }, [sessionId]);
 
-  // Fetch the authenticated user if not already provided via props
+  // Redirect as soon as sessionEnded is set — by socket event or polling
   useEffect(() => {
-    if (userIdProp) return;
+    if (sessionEnded) {
+      router.push("/");
+    }
+  }, [sessionEnded, router]);
+
+  // Poll session status every 8 seconds as a fallback for missed socket events
+  useEffect(() => {
+    if (!sessionId || !authReady) return;
+
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "ENDED") setSessionEnded(true);
+        }
+      } catch { /* network error — ignore, will retry */ }
+    };
+
+    const interval = setInterval(check, 8000);
+    return () => clearInterval(interval);
+  }, [sessionId, authReady]);
+
+  // Fetch the authenticated user then resolve effective role for TAs
+  useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+      .then(async (data) => {
         if (data?.userId) {
           setUserId(data.userId);
-          setRole((data.role as Role) ?? "STUDENT");
+
+          // Professors are identified globally; TAs are per-course so we must
+          // ask the session-specific endpoint to resolve TA vs STUDENT.
+          if (data.role === "PROFESSOR") {
+            setRole("PROFESSOR");
+          } else if (sessionId) {
+            try {
+              const roleRes = await fetch(`/api/sessions/${sessionId}/my-role`);
+              if (roleRes.ok) {
+                const roleData = await roleRes.json();
+                setRole((roleData.role as Role) ?? "STUDENT");
+              } else {
+                setRole((data.role as Role) ?? "STUDENT");
+              }
+            } catch {
+              setRole((data.role as Role) ?? "STUDENT");
+            }
+          } else {
+            setRole((data.role as Role) ?? "STUDENT");
+          }
         }
         setAuthReady(true);
       })
       .catch(() => setAuthReady(true));
-  }, [userIdProp]);
+  }, [sessionId]);
 
-  // Connect to Socket.IO once auth is ready and userId is known.
+  // Connect to Socket.IO once auth is ready.
   // withCredentials: true sends the iron-session cookie so the server-side
-  // auth middleware can verify the session without needing a separate token.
+  // auth middleware can verify the session without a separate token.
   useEffect(() => {
     if (!authReady || !userId) return;
 
@@ -118,12 +217,20 @@ export default function Room({
     });
 
     s.on("connect", () => {
-      s.emit("session:join", { sessionId: sessionIdRef.current });
+      if (sessionIdRef.current) {
+        s.emit("session:join", { sessionId: sessionIdRef.current });
+      }
       setSocket(s);
     });
 
+    s.on("session:ended", () => {
+      setSessionEnded(true);
+    });
+
     return () => {
-      s.emit("session:leave", { sessionId: sessionIdRef.current });
+      if (sessionIdRef.current) {
+        s.emit("session:leave", { sessionId: sessionIdRef.current });
+      }
       s.disconnect();
       setSocket(null);
     };
@@ -137,6 +244,43 @@ export default function Room({
     );
   }
 
+  if (!sessionId) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <span className="text-stone-400 text-sm">No session specified.</span>
+      </div>
+    );
+  }
+
+  if (sessionEnded) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center gap-3 bg-background">
+        <span className="text-xl font-semibold text-foreground">Lecture has ended</span>
+        <span className="text-sm text-stone-400">Redirecting you back…</span>
+      </div>
+    );
+  }
+
+  const handleEndSession = async () => {
+    setEndingSession(true);
+    try {
+      await fetch(`/api/sessions/${sessionId}`, { method: "PATCH" });
+      router.push("/");
+    } catch {
+      setEndingSession(false);
+      setShowEndModal(false);
+    }
+  };
+
+  const handleDownloadAndEnd = () => {
+    generateAndDownloadTxt(chatHistoryRef.current, sessionTitle);
+    handleEndSession();
+  };
+
+  const handleEndWithout = () => {
+    handleEndSession();
+  };
+
   function rerender() {
     setIsSlidesVisible((prev) => !prev);
   }
@@ -144,14 +288,67 @@ export default function Room({
   const isProfessor = role === "PROFESSOR";
 
   return (
-    <RoomContext.Provider value={{ socket, sessionId, userId, role }}>
+    <RoomContext.Provider value={{ socket, sessionId, userId, role, sessionTitle }}>
       <div className="h-screen w-full bg-background font-sans">
         <SlideUpdateContext.Provider value={{ isSlidesVisible, rerender }}>
-          {isSlidesVisible
-            ? chatAndSlidePanel(isMdSize, resizableWidth, setResizableWidth, isProfessor)
-            : chatPanel(isMdSize)}
+          {isSlidesVisible ? (
+            <div className="h-screen w-full bg-background font-sans">
+              <ResizablePanelGroup direction={isMdSize ? "horizontal" : "vertical"}>
+                <ResizablePanel
+                  defaultSize={100 - resizableWidth}
+                  minSize={0}
+                  onResize={(panelWidth) => setResizableWidth(panelWidth)}
+                >
+                  <SlideViewer
+                    isProfessor={isProfessor}
+                    onEndLecture={isProfessor ? () => setShowEndModal(true) : undefined}
+                  />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={resizableWidth} minSize={30}>
+                  <ClassChat chatHistoryRef={chatHistoryRef} />
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </div>
+          ) : (
+            <div className="h-screen w-full bg-background font-sans">
+              <ResizablePanelGroup direction={isMdSize ? "horizontal" : "vertical"}>
+                <ResizablePanel minSize={30}>
+                  <ClassChat chatHistoryRef={chatHistoryRef} />
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </div>
+          )}
         </SlideUpdateContext.Provider>
       </div>
+
+      {showEndModal && (
+        <EndSessionModal
+          sessionTitle={sessionTitle}
+          ending={endingSession}
+          onDownloadAndEnd={handleDownloadAndEnd}
+          onEndWithout={handleEndWithout}
+          onCancel={() => setShowEndModal(false)}
+        />
+      )}
     </RoomContext.Provider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Room — exported page component, wraps RoomInner in Suspense
+// ---------------------------------------------------------------------------
+
+export default function Room() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-full flex items-center justify-center bg-background">
+          <span className="text-stone-400 text-sm">Loading…</span>
+        </div>
+      }
+    >
+      <RoomInner />
+    </Suspense>
   );
 }

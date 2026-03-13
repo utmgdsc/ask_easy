@@ -55,6 +55,7 @@ export async function authMiddleware(
     }
 
     socket.data.userId = session.userId;
+    socket.data.role = session.role;
     socket.data.connectedAt = new Date();
 
     next();

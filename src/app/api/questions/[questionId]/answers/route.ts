@@ -7,6 +7,7 @@ import {
   validateQuestionForAnswers,
 } from "@/lib/answerValidation";
 import { getQuestionAnswers } from "@/services/answerService";
+import { getCurrentUser } from "@/lib/auth";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,7 +19,6 @@ interface RouteParams {
 
 interface AnswerCreateBody {
   content: string;
-  authorId: string;
   isAnonymous?: boolean;
 }
 
@@ -30,7 +30,6 @@ interface AnswerCreateBody {
  * Retrieves answers for a given question with cursor-based pagination.
  *
  * Query params:
- *   - userId  (required) — the requesting user, used for access control
  *   - cursor  (optional) — answer id to paginate from
  *   - limit   (optional) — page size (default 20, max 50)
  *
@@ -40,19 +39,18 @@ interface AnswerCreateBody {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { questionId } = await params;
-    const { searchParams } = new URL(request.url);
 
-    // TODO: replace with auth session once NextAuth.js is integrated
-    const userId = searchParams.get("userId");
-    if (!userId) {
-      return NextResponse.json({ error: "userId query parameter is required." }, { status: 400 });
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
     const cursor = searchParams.get("cursor") ?? undefined;
     const limitParam = searchParams.get("limit");
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-    const result = await getQuestionAnswers(questionId, userId, { cursor, limit });
+    const result = await getQuestionAnswers(questionId, user.userId, { cursor, limit });
 
     if (!result.ok) {
       return NextResponse.json({ error: result.error.message }, { status: result.error.status });
@@ -77,33 +75,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *
  * Request body:
  *   - content:     string  (required, 1-1000 characters)
- *   - authorId:    string  (required)
  *   - isAnonymous: boolean (optional, default false)
  *
  * Validations:
- *   1. Author ID provided
+ *   1. Authenticated user from session cookie
  *   2. Question exists and belongs to an active session
  *   3. Content length bounds
  *   4. Rate limit (15 answers per 60 seconds per user)
- *
- * Note: Question validation before rate limit prevents exhausting rate limit
- * quota on invalid requests (e.g., non-existent questions).
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { questionId } = await params;
+
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
 
     let body: AnswerCreateBody;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-    }
-
-    // TODO: check with auth to make sure that authorId being sent matches with the auth id
-
-    if (!body.authorId || typeof body.authorId !== "string") {
-      return NextResponse.json({ error: "Author ID is required." }, { status: 400 });
     }
 
     const questionValidation = await validateQuestionForAnswers(questionId);
@@ -117,7 +110,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: contentValidation.error }, { status: 400 });
     }
 
-    const isRateLimited = await checkAnswerRateLimit(body.authorId);
+    const isRateLimited = await checkAnswerRateLimit(user.userId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before submitting another answer." },
@@ -128,7 +121,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const answer = await prisma.answer.create({
       data: {
         questionId,
-        authorId: body.authorId,
+        authorId: user.userId,
         content: body.content.trim(),
         isAnonymous: body.isAnonymous ?? false,
       },
