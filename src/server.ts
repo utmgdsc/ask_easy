@@ -1,4 +1,5 @@
-import { createServer } from "node:http";
+import "dotenv/config"; // must be first — loads .env before any other module runs
+import { createServer, type IncomingMessage } from "node:http";
 import next from "next";
 
 import { initSocketIO } from "./socket";
@@ -12,6 +13,40 @@ const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = parseInt(process.env.PORT || "3000", 10);
 
 // ---------------------------------------------------------------------------
+// Security: strip Shibboleth attribute headers from external connections
+//
+// In production, Apache + mod_shib runs on the same host and forwards these
+// headers to Next.js over localhost. We strip them from any connection that
+// does NOT come from 127.0.0.1 / ::1, preventing clients from spoofing their
+// identity by injecting headers manually.
+// ---------------------------------------------------------------------------
+
+const SHIB_HEADERS = [
+  "utorid",
+  "mail",
+  "email",
+  "cn",
+  "displayname",
+  "givenname",
+  "sn",
+  "edupersonaffiliation",
+  "edupersonscopedaffiliation",
+  "edupersonprincipalname",
+];
+
+function stripShibHeaders(req: IncomingMessage): void {
+  const remoteAddr = req.socket?.remoteAddress ?? "";
+  const isLocalhost =
+    remoteAddr === "127.0.0.1" || remoteAddr === "::1" || remoteAddr === "::ffff:127.0.0.1";
+
+  if (!isLocalhost) {
+    for (const header of SHIB_HEADERS) {
+      delete req.headers[header];
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------------
 
@@ -21,8 +56,12 @@ async function main(): Promise<void> {
   const handle = app.getRequestHandler();
   await app.prepare();
 
-  // 2. Create an HTTP server that delegates to Next.js
-  const httpServer = createServer(handle);
+  // 2. Create an HTTP server that strips Shibboleth headers on external
+  //    connections, then delegates to Next.js
+  const httpServer = createServer((req, res) => {
+    stripShibHeaders(req);
+    handle(req, res);
+  });
 
   // 3. Attach Socket.IO (+ Redis adapter) to the same HTTP server
   await initSocketIO(httpServer);

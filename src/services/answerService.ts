@@ -19,6 +19,7 @@ export interface GetAnswersOptions {
 
 export interface AnswerAuthor {
   id: string;
+  utorid: string;
   name: string;
   role: Role;
 }
@@ -31,6 +32,7 @@ export interface AnswerResponse {
   authorRole: Role;
   isAccepted: boolean;
   isAnonymous: boolean;
+  upvoteCount: number;
   createdAt: Date;
 }
 
@@ -87,8 +89,9 @@ function redactAuthorIfAnonymous(
     content: string;
     isAnonymous: boolean;
     isAccepted: boolean;
+    upvoteCount: number;
     createdAt: Date;
-    author: { id: string; name: string; role: Role };
+    author: { id: string; utorid: string; name: string; role: Role };
   },
   viewerCanReveal: boolean
 ): AnswerResponse {
@@ -102,12 +105,14 @@ function redactAuthorIfAnonymous(
       ? null
       : {
           id: answer.author.id,
+          utorid: answer.author.utorid,
           name: answer.author.name,
           role: answer.author.role,
         },
     authorRole: answer.author.role,
     isAccepted: answer.isAccepted,
     isAnonymous: answer.isAnonymous,
+    upvoteCount: answer.upvoteCount,
     createdAt: answer.createdAt,
   };
 }
@@ -190,9 +195,16 @@ export async function getQuestionAnswers(
     orderBy: [{ isAccepted: "desc" }, { createdAt: "asc" }, { id: "asc" }],
     take,
     ...cursorClause,
-    include: {
+    select: {
+      id: true,
+      questionId: true,
+      content: true,
+      isAnonymous: true,
+      isAccepted: true,
+      upvoteCount: true,
+      createdAt: true,
       author: {
-        select: { id: true, name: true, role: true },
+        select: { id: true, utorid: true, name: true, role: true },
       },
     },
   });
@@ -237,9 +249,16 @@ export async function getAnswerById(
 ): Promise<ServiceResult<GetAnswerByIdResult>> {
   const answer = await prisma.answer.findUnique({
     where: { id: answerId },
-    include: {
+    select: {
+      id: true,
+      questionId: true,
+      content: true,
+      isAnonymous: true,
+      isAccepted: true,
+      upvoteCount: true,
+      createdAt: true,
       author: {
-        select: { id: true, name: true, role: true },
+        select: { id: true, utorid: true, name: true, role: true },
       },
       question: {
         select: {

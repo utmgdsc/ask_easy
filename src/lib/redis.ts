@@ -2,47 +2,34 @@ import Redis from "ioredis";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
-/**
- * Redis client for general caching (DB 0)
- */
-export const redisCache = new Redis(REDIS_URL, {
-  db: 0,
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
+const sharedOptions = {
+  retryStrategy: (times: number) => Math.min(times * 50, 2000),
+  reconnectOnError: (err: Error) => {
+    // Do not reconnect on auth errors — it would loop forever
+    if (err.message.includes("NOAUTH") || err.message.includes("ERR invalid password")) {
+      return false;
+    }
+    return true;
   },
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
   lazyConnect: true,
-});
+};
+
+/**
+ * Redis client for general caching (DB 0)
+ */
+export const redisCache = new Redis(REDIS_URL, { ...sharedOptions, db: 0 });
 
 /**
  * Redis client for pub/sub operations (DB 1)
  */
-export const redisPubSub = new Redis(REDIS_URL, {
-  db: 1,
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true,
-});
+export const redisPubSub = new Redis(REDIS_URL, { ...sharedOptions, db: 1 });
 
 /**
  * Redis client for rate limiting (DB 2)
  */
-export const redisRateLimit = new Redis(REDIS_URL, {
-  db: 2,
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true,
-});
+export const redisRateLimit = new Redis(REDIS_URL, { ...sharedOptions, db: 2 });
 
 // Error handlers - log but don't crash
 redisCache.on("error", (error) => {

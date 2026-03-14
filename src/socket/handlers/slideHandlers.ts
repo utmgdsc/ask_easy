@@ -3,6 +3,7 @@ import { type Server, type Socket } from "socket.io";
 import { prisma } from "@/lib/prisma";
 import { redisCache } from "@/lib/redis";
 import { slideState } from "@/lib/redisKeys";
+import type { SlidesUploadedPayload } from "../types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -108,6 +109,68 @@ export function handleSlideChange(socket: Socket, io: Server): void {
       console.error("[SlideHandler] Failed to process slide:change:", error);
       socket.emit("slide:error", {
         message: "An error occurred while updating the slide position.",
+      });
+    }
+  });
+}
+
+/**
+ * Registers the `slides:uploaded` event listener on the given socket.
+ *
+ * Called by the professor's client after a successful PDF upload so that
+ * all participants in the session room are notified and can load the new slides.
+ *
+ * Guard order:
+ *   1. Auth          — socket.data.userId must exist
+ *   2. Payload shape — sessionId and slideSetId must be strings
+ *   3. Role check    — user must have role === "PROFESSOR"
+ *   4. Broadcast     — emit slides:available to session:{sessionId}
+ */
+export function handleSlidesUploaded(socket: Socket, io: Server): void {
+  socket.on("slides:uploaded", async (payload: SlidesUploadedPayload) => {
+    try {
+      // 1. Auth guard
+      const userId: string | undefined = socket.data?.userId;
+      if (!userId) {
+        socket.emit("slide:error", { message: "Authentication required." });
+        return;
+      }
+
+      // 2. Payload shape guard
+      if (!payload || typeof payload !== "object") {
+        socket.emit("slide:error", { message: "Invalid request." });
+        return;
+      }
+
+      const { sessionId, slideSetId } = payload;
+
+      if (!sessionId || typeof sessionId !== "string") {
+        socket.emit("slide:error", { message: "Session ID is required." });
+        return;
+      }
+
+      if (!slideSetId || typeof slideSetId !== "string") {
+        socket.emit("slide:error", { message: "Slide set ID is required." });
+        return;
+      }
+
+      // 3. Role check — only professors may broadcast slide availability
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+
+      if (!user || user.role !== "PROFESSOR") {
+        socket.emit("slide:error", { message: "Only professors can broadcast slide updates." });
+        return;
+      }
+
+      // 4. Broadcast to all participants in the session room
+      io.to(`session:${sessionId}`).emit("slides:available", { slideSetId });
+    } catch (error) {
+      console.error("[SlideHandler] Failed to process slides:uploaded:", error);
+      socket.emit("slide:error", {
+        message: "An error occurred while broadcasting slide availability.",
       });
     }
   });

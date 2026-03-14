@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  validateSessionJoinRequest,
   checkSessionJoinLookupRateLimit,
   checkSessionJoinRegisterRateLimit,
 } from "@/lib/sessionJoinValidation";
 import { lookupSessionByCode, joinSession } from "@/lib/sessionJoin";
+import { getCurrentUser } from "@/lib/auth";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,12 +22,9 @@ interface RouteParams {
 /**
  * Looks up a session by join code (case-insensitive).
  *
- * Query parameters:
- *   - userId: string (required for rate limiting)
- *
  * Returns:
  *   - 200: Session found
- *   - 400: Missing userId
+ *   - 401: Not authenticated
  *   - 404: Session not found
  *   - 429: Rate limit exceeded
  *   - 500: Server error
@@ -36,18 +33,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { code } = await params;
 
-    // Get userId from query params for rate limiting
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    // TODO: Replace userId from query with authenticated user from Shibboleth
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required." }, { status: 400 });
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
     // Check rate limit (30 lookups per minute)
-    const isRateLimited = await checkSessionJoinLookupRateLimit(userId);
+    const isRateLimited = await checkSessionJoinLookupRateLimit(user.userId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before looking up another session." },
@@ -79,42 +71,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 /**
  * Joins a session by creating a CourseEnrollment for the session's course.
  *
- * Request body:
- *   - userId: string (required)
- *
  * Returns:
  *   - 201: Successfully joined
- *   - 400: Invalid request body
+ *   - 401: Not authenticated
  *   - 404: Session not found
  *   - 409: Already enrolled in course
  *   - 410: Session has ended
  *   - 429: Rate limit exceeded
  *   - 500: Server error
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
     const { code } = await params;
 
-    // Parse request body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
-
-    // Validate request body
-    const validation = validateSessionJoinRequest(body);
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
-    }
-
-    const { userId } = body as { userId: string };
-
-    // TODO: Replace userId from body with authenticated user from Shibboleth
 
     // Check rate limit (10 registrations per minute)
-    const isRateLimited = await checkSessionJoinRegisterRateLimit(userId);
+    const isRateLimited = await checkSessionJoinRegisterRateLimit(user.userId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before joining another session." },
@@ -123,7 +99,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Join session
-    const result = await joinSession(code, userId);
+    const result = await joinSession(code, user.userId);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: result.statusCode || 500 });

@@ -8,6 +8,7 @@ export interface RoomContextValue {
   sessionId: string;
   userId: string;
   role: Role;
+  sessionTitle: string;
 }
 
 export const RoomContext = createContext<RoomContextValue>({
@@ -15,6 +16,7 @@ export const RoomContext = createContext<RoomContextValue>({
   sessionId: "",
   userId: "",
   role: "STUDENT",
+  sessionTitle: "",
 });
 
 export function useRoom() {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { readFile, fileExists } from "@/lib/storage";
+import { getCurrentUser } from "@/lib/auth";
+import { readFile } from "@/lib/storage";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -19,52 +20,64 @@ interface RouteParams {
  * Downloads/streams a PDF file for viewing.
  *
  * Returns the PDF file with appropriate headers for browser viewing.
- *
- * Validations:
- *   1. Session exists
- *   2. SlideSet exists and belongs to the session
- *   3. File exists in storage
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId, slideSetId } = await params;
 
-    // TODO: Add in real authentication once UofT auth is added
-
-    // 1. Validate session exists
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+    // 1. Authenticate
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    // 2. Validate SlideSet exists and belongs to this session
+    // 2. Single query: fetch slideSet + verify it belongs to the session +
+    //    confirm the user is enrolled in the session's course.
     const slideSet = await prisma.slideSet.findUnique({
       where: { id: slideSetId },
+      select: {
+        storageKey: true,
+        filename: true,
+        session: {
+          select: {
+            id: true,
+            course: {
+              select: {
+                enrollments: {
+                  where: { userId: user.userId },
+                  select: { role: true },
+                  take: 1,
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!slideSet) {
       return NextResponse.json({ error: "Slide set not found." }, { status: 404 });
     }
 
-    if (slideSet.sessionId !== sessionId) {
+    if (slideSet.session.id !== sessionId) {
       return NextResponse.json(
         { error: "Slide set does not belong to this session." },
         { status: 404 }
       );
     }
 
-    // 3. Check if file exists in storage
-    const exists = await fileExists(slideSet.storageKey);
-    if (!exists) {
+    if (slideSet.session.course.enrollments.length === 0) {
+      return NextResponse.json({ error: "You are not enrolled in this course." }, { status: 403 });
+    }
+
+    // 3. Read and return the file
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = await readFile(slideSet.storageKey);
+    } catch {
       console.error(`[Slides API] File not found in storage: ${slideSet.storageKey}`);
       return NextResponse.json({ error: "File not found in storage." }, { status: 404 });
     }
-
-    // 4. Read and return the file
-    const fileBuffer = await readFile(slideSet.storageKey);
 
     // Return the PDF with appropriate headers
     // Convert Buffer to Uint8Array for NextResponse compatibility

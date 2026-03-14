@@ -19,7 +19,6 @@ interface QuestionCreatePayload {
   sessionId: string;
   visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
   isAnonymous?: boolean;
-  slideId?: string;
 }
 
 interface QuestionBroadcastPayload {
@@ -27,10 +26,10 @@ interface QuestionBroadcastPayload {
   content: string;
   visibility: string;
   isAnonymous: boolean;
-  slideId: string | null;
   createdAt: Date;
   authorId?: string | null;
   authorName?: string | null;
+  authorUtorid?: string | null;
 }
 
 interface QuestionUpvotePayload {
@@ -39,6 +38,11 @@ interface QuestionUpvotePayload {
 
 interface QuestionResolvePayload {
   questionId: string;
+}
+
+interface QuestionDeletePayload {
+  questionId: string;
+  sessionId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +141,22 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         return;
       }
 
+      // 6a. Enrollment check — any non-PROFESSOR must be enrolled in the session's course
+      const sessionForEnrollment = await prisma.session.findUnique({
+        where: { id: payload.sessionId },
+        select: { courseId: true },
+      });
+      if (sessionForEnrollment) {
+        const enrollment = await prisma.courseEnrollment.findUnique({
+          where: { userId_courseId: { userId, courseId: sessionForEnrollment.courseId } },
+          select: { role: true },
+        });
+        if (!enrollment && socket.data.role !== "PROFESSOR") {
+          socket.emit("question:error", { message: "You are not enrolled in this session." });
+          return;
+        }
+      }
+
       // 7. Persist to database (include author for display name in broadcast)
       //    authorId is always stored for audit purposes, but it is stripped
       //    from the broadcast payload in step 8 when isAnonymous is true.
@@ -147,10 +167,9 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
           content: payload.content.trim(),
           visibility: payload.visibility ?? "PUBLIC",
           isAnonymous: payload.isAnonymous ?? false,
-          slideId: payload.slideId ?? null,
         },
         include: {
-          author: { select: { id: true, name: true } },
+          author: { select: { id: true, name: true, utorid: true } },
         },
       });
 
@@ -160,11 +179,14 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         content: question.content,
         visibility: question.visibility,
         isAnonymous: question.isAnonymous,
-        slideId: question.slideId,
         createdAt: question.createdAt,
         ...(question.isAnonymous
           ? {}
-          : { authorId: question.authorId, authorName: question.author?.name ?? null }),
+          : {
+              authorId: question.authorId,
+              authorName: question.author?.name ?? null,
+              authorUtorid: question.author?.utorid ?? null,
+            }),
       };
 
       broadcastQuestion(io, question.sessionId, broadcastPayload);
@@ -222,7 +244,25 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Toggle upvote in a transaction
+      // 4. Enrollment check — fetch question with session/courseId and verify membership
+      const questionForEnrollment = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: { session: { select: { courseId: true } } },
+      });
+      if (questionForEnrollment) {
+        const enrollment = await prisma.courseEnrollment.findUnique({
+          where: {
+            userId_courseId: { userId, courseId: questionForEnrollment.session.courseId },
+          },
+          select: { role: true },
+        });
+        if (!enrollment && socket.data.role !== "PROFESSOR") {
+          socket.emit("question:error", { message: "You are not enrolled in this session." });
+          return;
+        }
+      }
+
+      // 5. Toggle upvote in a transaction
       const existingUpvote = await prisma.questionUpvote.findUnique({
         where: { questionId_userId: { questionId, userId } },
       });
@@ -277,15 +317,15 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
 /**
  * Checks whether a user has permission to resolve a question.
  *
- * - TA / PROFESSOR can resolve any question.
+ * - TA / PROFESSOR (per-course CourseEnrollment role) can resolve any question.
  * - STUDENT can only resolve their own question.
  */
 function checkResolvePermission(
   userId: string,
   questionAuthorId: string | null,
-  userRole: "STUDENT" | "TA" | "PROFESSOR"
+  enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"
 ): boolean {
-  if (userRole === "TA" || userRole === "PROFESSOR") {
+  if (enrollmentRole === "TA" || enrollmentRole === "PROFESSOR") {
     return true;
   }
   return questionAuthorId === userId;
@@ -334,10 +374,17 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Fetch question
+      // 4. Fetch question with its course (for enrollment lookup)
       const question = await prisma.question.findUnique({
         where: { id: questionId },
-        select: { id: true, sessionId: true, authorId: true, status: true, visibility: true },
+        select: {
+          id: true,
+          sessionId: true,
+          authorId: true,
+          status: true,
+          visibility: true,
+          session: { select: { courseId: true } },
+        },
       });
 
       if (!question) {
@@ -350,18 +397,18 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
         return;
       }
 
-      // 5. Permission check — fetch user role from DB
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
+      // 5. Permission check — resolve role via CourseEnrollment so TA status is
+      //    correctly detected (User.role is always STUDENT for TAs).
+      const enrollment = await prisma.courseEnrollment.findUnique({
+        where: {
+          userId_courseId: { userId, courseId: question.session.courseId },
+        },
         select: { role: true },
       });
 
-      if (!user) {
-        socket.emit("question:error", { message: "User not found." });
-        return;
-      }
+      const requesterRole = enrollment?.role ?? "STUDENT";
 
-      if (!checkResolvePermission(userId, question.authorId, user.role)) {
+      if (!checkResolvePermission(userId, question.authorId, requesterRole)) {
         socket.emit("question:error", {
           message: "You do not have permission to resolve this question.",
         });
@@ -388,6 +435,118 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
       console.error("[QuestionHandler] Failed to resolve question:", error);
       socket.emit("question:error", {
         message: "An error occurred while resolving the question.",
+      });
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Deleting
+// ---------------------------------------------------------------------------
+
+/**
+ * Registers the `question:delete` event listener on the given socket.
+ *
+ * Permission rules:
+ *   - PROFESSOR     → may delete any question
+ *   - TA            → may delete any STUDENT's question, or their own
+ *   - STUDENT       → never allowed
+ *
+ * Roles are resolved via CourseEnrollment so that per-course TA status is
+ * correctly detected regardless of the user's global User.role.
+ */
+export function handleQuestionDelete(socket: Socket, io: Server): void {
+  socket.on("question:delete", async (payload: QuestionDeletePayload) => {
+    try {
+      // 1. Auth guard
+      const userId: string | undefined = socket.data?.userId;
+      if (!userId) {
+        socket.emit("question:error", { message: "Authentication required." });
+        return;
+      }
+
+      // 2. Payload shape guard
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        typeof payload.questionId !== "string" ||
+        typeof payload.sessionId !== "string"
+      ) {
+        socket.emit("question:error", { message: "Invalid request." });
+        return;
+      }
+
+      const { questionId, sessionId } = payload;
+
+      // 3. Fetch question + its session (for courseId)
+      const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: {
+          id: true,
+          authorId: true,
+          sessionId: true,
+          visibility: true,
+          session: { select: { courseId: true } },
+        },
+      });
+
+      if (!question || question.sessionId !== sessionId) {
+        socket.emit("question:error", { message: "Question not found." });
+        return;
+      }
+
+      const courseId = question.session.courseId;
+
+      // 4. Resolve the requester's per-course role
+      const requesterEnrollment = await prisma.courseEnrollment.findUnique({
+        where: { userId_courseId: { userId, courseId } },
+        select: { role: true },
+      });
+
+      const requesterRole = requesterEnrollment?.role ?? "STUDENT";
+
+      // 5. Permission check
+      if (requesterRole === "STUDENT") {
+        socket.emit("question:error", {
+          message: "You do not have permission to delete this question.",
+        });
+        return;
+      }
+
+      if (requesterRole === "TA") {
+        // TAs may only delete their own messages or those by STUDENT authors
+        const isOwn = question.authorId === userId;
+        if (!isOwn) {
+          const authorEnrollment = question.authorId
+            ? await prisma.courseEnrollment.findUnique({
+                where: { userId_courseId: { userId: question.authorId, courseId } },
+                select: { role: true },
+              })
+            : null;
+          const authorRole = authorEnrollment?.role ?? "STUDENT";
+          if (authorRole !== "STUDENT") {
+            socket.emit("question:error", {
+              message: "You do not have permission to delete this question.",
+            });
+            return;
+          }
+        }
+      }
+
+      // 6. Delete (cascades answers + upvotes via schema)
+      await prisma.question.delete({ where: { id: questionId } });
+
+      // 7. Broadcast to the appropriate room
+      const targetRoom =
+        question.visibility === "INSTRUCTOR_ONLY"
+          ? `session:${sessionId}:instructors`
+          : `session:${sessionId}`;
+
+      io.to(targetRoom).emit("question:deleted", { questionId });
+    } catch (error) {
+      console.error("[QuestionHandler] Failed to delete question:", error);
+      socket.emit("question:error", {
+        message: "An error occurred while deleting the question.",
       });
     }
   });

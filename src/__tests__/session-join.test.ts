@@ -19,7 +19,6 @@ beforeEach(async () => {
   await prisma.questionUpvote.deleteMany();
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
-  await prisma.slide.deleteMany();
   await prisma.slideSet.deleteMany();
   await prisma.session.deleteMany();
   await prisma.courseEnrollment.deleteMany();

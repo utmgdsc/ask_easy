@@ -1,8 +1,7 @@
 "use client";
 
-import { Post } from "@/utils/types";
+import { Comment, Post } from "@/utils/types";
 import QuestionPost from "./QuestionPost";
-import BestAnswerPost from "./BestAnswerPost";
 import CommentPost from "./CommentPost";
 import { bestToTop } from "./PostUtils";
 
@@ -13,6 +12,16 @@ interface PostItemProps {
   onUpvote?: () => void;
   onResolve?: () => void;
   onSubmitAnswer?: (content: string, isAnonymous: boolean) => void;
+  onAnswerUpvote?: (answerId: string) => void;
+  /** Called when the professor/TA wants to delete this question. */
+  onDeleteQuestion?: () => void;
+  /**
+   * Given a reply (Comment), returns a delete callback if the current user
+   * may delete it, or undefined if they may not.
+   */
+  onDeleteAnswer?: (reply: Comment) => (() => void) | undefined;
+  /** Used internally when PostItem renders a comment — the pre-bound delete fn. */
+  onDelete?: () => void;
 }
 
 export default function PostItem({
@@ -22,6 +31,10 @@ export default function PostItem({
   onUpvote,
   onResolve,
   onSubmitAnswer,
+  onAnswerUpvote,
+  onDeleteQuestion,
+  onDeleteAnswer,
+  onDelete,
 }: PostItemProps) {
   switch (post.type) {
     case "question": {
@@ -35,14 +48,26 @@ export default function PostItem({
           onUpvote={onUpvote}
           onResolve={onResolve}
           onSubmitAnswer={onSubmitAnswer}
-          renderReply={(reply) => <PostItem key={reply.id} post={reply} />}
+          onDelete={onDeleteQuestion}
+          renderReply={(reply) => (
+            <PostItem
+              key={reply.id}
+              post={reply}
+              onAnswerUpvote={onAnswerUpvote}
+              onDelete={onDeleteAnswer ? onDeleteAnswer(reply as Comment) : undefined}
+            />
+          )}
         />
       );
     }
-    case "bestAnswer":
-      return <BestAnswerPost post={post} />;
     case "comment":
-      return <CommentPost post={post} />;
+      return (
+        <CommentPost
+          post={post}
+          onUpvote={onAnswerUpvote ? () => onAnswerUpvote(post.id) : undefined}
+          onDelete={onDelete}
+        />
+      );
     default:
       return null;
   }

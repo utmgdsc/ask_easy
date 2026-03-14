@@ -4,6 +4,7 @@ export type Role = "STUDENT" | "TA" | "PROFESSOR";
 
 export interface User {
   id?: string;
+  utorid?: string;
   username: string;
   pfp: string;
   courses?: string[];
@@ -21,20 +22,16 @@ interface BasePost {
 
 export interface Question extends BasePost {
   type: "question";
-  replies: (BestAnswer | Comment)[];
+  replies: Comment[];
   isResolved: boolean;
   visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
-}
-
-export interface BestAnswer extends BasePost {
-  type: "bestAnswer";
 }
 
 export interface Comment extends BasePost {
   type: "comment";
 }
 
-export type Post = Question | BestAnswer | Comment;
+export type Post = Question | Comment;
 
 export type Course = {
   professor: string;

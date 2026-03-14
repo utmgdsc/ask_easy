@@ -1,27 +1,57 @@
-import { NextRequest } from "next/server";
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
 
-/**
- * Placeholder auth: returns the current user id from the request.
- * Used until Shibboleth/UofT auth is integrated.
- *
- * Dev-only: reads from header `x-user-id` or `Authorization: Bearer <userId>`.
- * Returns null if missing → callers should return 401.
- *
- * TODO: Replace with real auth (e.g. getServerSession, Shibboleth) when available.
- */
-export function getCurrentUserId(request: NextRequest): string | null {
-  const headerUserId = request.headers.get("x-user-id");
-  if (headerUserId && headerUserId.trim().length > 0) {
-    return headerUserId.trim();
+import { getSessionOptions, type SessionData } from "@/lib/session";
+
+// ---------------------------------------------------------------------------
+// Authenticated user shape returned to route handlers
+// ---------------------------------------------------------------------------
+
+export interface AuthUser {
+  userId: string;
+  utorid: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+// ---------------------------------------------------------------------------
+// getCurrentUser
+//
+// Reads the iron-session cookie (set by /api/auth/session after Shibboleth
+// authentication) and returns the user, or null if the session is missing or
+// invalid.
+//
+// Usage in App Router route handlers:
+//
+//   const user = await getCurrentUser();
+//   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+// ---------------------------------------------------------------------------
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const session = await getIronSession<SessionData>(await cookies(), getSessionOptions());
+
+  if (!session.userId) {
+    return null;
   }
 
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7).trim();
-    if (token.length > 0) {
-      return token;
-    }
-  }
+  return {
+    userId: session.userId,
+    utorid: session.utorid,
+    name: session.name,
+    email: session.email,
+    role: session.role,
+  };
+}
 
-  return null;
+// ---------------------------------------------------------------------------
+// getCurrentUserId
+//
+// Convenience wrapper — returns only the userId string.
+// Kept for compatibility with existing route handlers.
+// ---------------------------------------------------------------------------
+
+export async function getCurrentUserId(): Promise<string | null> {
+  const user = await getCurrentUser();
+  return user?.userId ?? null;
 }
