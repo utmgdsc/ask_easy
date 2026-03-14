@@ -1,7 +1,7 @@
 import { unsealData } from "iron-session";
 import type { Socket } from "socket.io";
 
-import { SESSION_OPTIONS, type SessionData } from "@/lib/session";
+import { getSessionOptions, type SessionData } from "@/lib/session";
 import type { SocketData } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -39,7 +39,8 @@ export async function authMiddleware(
 ): Promise<void> {
   const cookieHeader = socket.handshake.headers.cookie;
   const cookies = parseCookies(cookieHeader);
-  const sealedSession = cookies[SESSION_OPTIONS.cookieName as string];
+  const opts = getSessionOptions();
+  const sealedSession = cookies[opts.cookieName as string];
 
   if (!sealedSession) {
     return next(new Error("Authentication required. No session cookie found."));
@@ -47,7 +48,7 @@ export async function authMiddleware(
 
   try {
     const session = await unsealData<SessionData>(sealedSession, {
-      password: SESSION_OPTIONS.password as string,
+      password: opts.password as string,
     });
 
     if (!session?.userId) {

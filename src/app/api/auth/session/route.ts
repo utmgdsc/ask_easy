@@ -3,7 +3,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
-import { SESSION_OPTIONS, type SessionData } from "@/lib/session";
+import { getSessionOptions, type SessionData } from "@/lib/session";
 import { getRoleFromWhitelist } from "@/lib/whitelist";
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
   // ------------------------------------------------------------------
   // 3. Write the iron-session cookie
   // ------------------------------------------------------------------
-  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), getSessionOptions());
   session.userId = user.id;
   session.utorid = user.utorid;
   session.name = user.name;

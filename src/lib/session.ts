@@ -13,23 +13,23 @@ export interface SessionData {
 }
 
 // ---------------------------------------------------------------------------
-// iron-session configuration
+// iron-session configuration (lazy so build can run without SESSION_SECRET)
 // ---------------------------------------------------------------------------
 
-if (!process.env.SESSION_SECRET) {
-  throw new Error(
-    "SESSION_SECRET environment variable is not set. " + "Generate one with: openssl rand -hex 32"
-  );
+export function getSessionOptions(): SessionOptions {
+  if (!process.env.SESSION_SECRET) {
+    throw new Error(
+      "SESSION_SECRET environment variable is not set. Generate one with: openssl rand -hex 32"
+    );
+  }
+  return {
+    password: process.env.SESSION_SECRET,
+    cookieName: "ask_easy_session",
+    cookieOptions: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+    },
+  };
 }
-
-export const SESSION_OPTIONS: SessionOptions = {
-  password: process.env.SESSION_SECRET,
-  cookieName: "ask_easy_session",
-  cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax",
-    // 7-day session lifetime
-    maxAge: 60 * 60 * 24 * 7,
-  },
-};

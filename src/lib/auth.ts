@@ -1,7 +1,7 @@
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 
-import { SESSION_OPTIONS, type SessionData } from "@/lib/session";
+import { getSessionOptions, type SessionData } from "@/lib/session";
 
 // ---------------------------------------------------------------------------
 // Authenticated user shape returned to route handlers
@@ -29,7 +29,7 @@ export interface AuthUser {
 // ---------------------------------------------------------------------------
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), getSessionOptions());
 
   if (!session.userId) {
     return null;
