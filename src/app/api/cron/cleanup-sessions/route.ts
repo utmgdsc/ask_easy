@@ -11,18 +11,18 @@ import { performSessionEnd, SESSION_INACTIVITY_MS } from "@/lib/sessionService";
  * (e.g. every 15 minutes) by an external cron service or Vercel Cron Jobs so
  * that stale sessions are cleaned up even when no clients are polling.
  *
- * Protect this endpoint in production by setting CRON_SECRET in env and
- * forwarding it as the Authorization header:
+ * Requires CRON_SECRET to be set in the environment. Pass it as a Bearer token:
  *   Authorization: Bearer <CRON_SECRET>
  */
 export async function GET(req: Request) {
-  // Optional bearer-token guard — skip check if CRON_SECRET is not configured.
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+  if (!cronSecret) {
+    console.error("[Cron] CRON_SECRET is not configured.");
+    return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
+  }
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   try {

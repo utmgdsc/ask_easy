@@ -141,6 +141,22 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         return;
       }
 
+      // 6a. Enrollment check — any non-PROFESSOR must be enrolled in the session's course
+      const sessionForEnrollment = await prisma.session.findUnique({
+        where: { id: payload.sessionId },
+        select: { courseId: true },
+      });
+      if (sessionForEnrollment) {
+        const enrollment = await prisma.courseEnrollment.findUnique({
+          where: { userId_courseId: { userId, courseId: sessionForEnrollment.courseId } },
+          select: { role: true },
+        });
+        if (!enrollment && socket.data.role !== "PROFESSOR") {
+          socket.emit("question:error", { message: "You are not enrolled in this session." });
+          return;
+        }
+      }
+
       // 7. Persist to database (include author for display name in broadcast)
       //    authorId is always stored for audit purposes, but it is stripped
       //    from the broadcast payload in step 8 when isAnonymous is true.
@@ -228,7 +244,25 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Toggle upvote in a transaction
+      // 4. Enrollment check — fetch question with session/courseId and verify membership
+      const questionForEnrollment = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: { session: { select: { courseId: true } } },
+      });
+      if (questionForEnrollment) {
+        const enrollment = await prisma.courseEnrollment.findUnique({
+          where: {
+            userId_courseId: { userId, courseId: questionForEnrollment.session.courseId },
+          },
+          select: { role: true },
+        });
+        if (!enrollment && socket.data.role !== "PROFESSOR") {
+          socket.emit("question:error", { message: "You are not enrolled in this session." });
+          return;
+        }
+      }
+
+      // 5. Toggle upvote in a transaction
       const existingUpvote = await prisma.questionUpvote.findUnique({
         where: { questionId_userId: { questionId, userId } },
       });
@@ -283,15 +317,15 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
 /**
  * Checks whether a user has permission to resolve a question.
  *
- * - TA / PROFESSOR can resolve any question.
+ * - TA / PROFESSOR (per-course CourseEnrollment role) can resolve any question.
  * - STUDENT can only resolve their own question.
  */
 function checkResolvePermission(
   userId: string,
   questionAuthorId: string | null,
-  userRole: "STUDENT" | "TA" | "PROFESSOR"
+  enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"
 ): boolean {
-  if (userRole === "TA" || userRole === "PROFESSOR") {
+  if (enrollmentRole === "TA" || enrollmentRole === "PROFESSOR") {
     return true;
   }
   return questionAuthorId === userId;
@@ -340,10 +374,17 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Fetch question
+      // 4. Fetch question with its course (for enrollment lookup)
       const question = await prisma.question.findUnique({
         where: { id: questionId },
-        select: { id: true, sessionId: true, authorId: true, status: true, visibility: true },
+        select: {
+          id: true,
+          sessionId: true,
+          authorId: true,
+          status: true,
+          visibility: true,
+          session: { select: { courseId: true } },
+        },
       });
 
       if (!question) {
@@ -356,18 +397,18 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
         return;
       }
 
-      // 5. Permission check — fetch user role from DB
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
+      // 5. Permission check — resolve role via CourseEnrollment so TA status is
+      //    correctly detected (User.role is always STUDENT for TAs).
+      const enrollment = await prisma.courseEnrollment.findUnique({
+        where: {
+          userId_courseId: { userId, courseId: question.session.courseId },
+        },
         select: { role: true },
       });
 
-      if (!user) {
-        socket.emit("question:error", { message: "User not found." });
-        return;
-      }
+      const requesterRole = enrollment?.role ?? "STUDENT";
 
-      if (!checkResolvePermission(userId, question.authorId, user.role)) {
+      if (!checkResolvePermission(userId, question.authorId, requesterRole)) {
         socket.emit("question:error", {
           message: "You do not have permission to resolve this question.",
         });

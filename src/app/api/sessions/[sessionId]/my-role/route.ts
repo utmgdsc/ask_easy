@@ -30,12 +30,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    // Professors are identified by their global role (set from whitelist at login)
-    if (user.role === "PROFESSOR") {
-      return NextResponse.json({ role: "PROFESSOR" });
-    }
-
-    // For everyone else, check the CourseEnrollment for this session's course
+    // Resolve role via CourseEnrollment for this specific session's course.
+    // This ensures a professor not enrolled in the session's course is not
+    // granted PROFESSOR privileges for it.
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
       select: { courseId: true },

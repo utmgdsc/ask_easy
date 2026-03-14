@@ -8,6 +8,8 @@ import {
 } from "@/lib/answerValidation";
 import { getQuestionAnswers } from "@/services/answerService";
 import { getCurrentUser } from "@/lib/auth";
+import { redisCache } from "@/lib/redis";
+import { answerMode as answerModeKey } from "@/lib/redisKeys";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -103,6 +105,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!questionValidation.valid) {
       const statusCode = questionValidation.error === "Question not found." ? 404 : 403;
       return NextResponse.json({ error: questionValidation.error }, { status: statusCode });
+    }
+
+    const sessionId = questionValidation.question!.sessionId;
+
+    // Enrollment check — verify the user is enrolled in the session's course
+    const sessionRecord = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { courseId: true },
+    });
+    if (sessionRecord) {
+      const enrollment = await prisma.courseEnrollment.findUnique({
+        where: { userId_courseId: { userId: user.userId, courseId: sessionRecord.courseId } },
+        select: { role: true },
+      });
+      if (!enrollment && user.role !== "PROFESSOR") {
+        return NextResponse.json(
+          { error: "You are not enrolled in this session." },
+          { status: 403 }
+        );
+      }
+
+      // Answer mode check — mirror the socket-layer restriction
+      const mode = await redisCache.get(answerModeKey(sessionId));
+      if (mode === "instructors_only") {
+        const isQuestionAuthor = questionValidation.question!.authorId === user.userId;
+        if (!isQuestionAuthor) {
+          const effectiveRole = enrollment?.role ?? "STUDENT";
+          if (effectiveRole === "STUDENT") {
+            return NextResponse.json(
+              { error: "The professor has restricted answers to TAs and professors only." },
+              { status: 403 }
+            );
+          }
+        }
+      }
     }
 
     const contentValidation = validateAnswerContent(body.content);

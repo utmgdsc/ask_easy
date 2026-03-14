@@ -184,26 +184,33 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     const authorId = authUser.userId;
 
-    // 2. Validate content using shared validation
+    // 2. Verify the user is enrolled in the session's course
+    const membership = await getSessionMembership(sessionId, authorId);
+    if (!membership.valid) {
+      const statusCode = membership.statusCode ?? 403;
+      return NextResponse.json({ error: membership.error ?? "Forbidden." }, { status: statusCode });
+    }
+
+    // 4. Validate content using shared validation
     const contentValidation = validateQuestionContent(body.content);
     if (!contentValidation.valid) {
       return NextResponse.json({ error: contentValidation.error }, { status: 400 });
     }
 
-    // 3. Validate visibility using shared validation
+    // 5. Validate visibility using shared validation
     const visibilityValidation = validateVisibility(body.visibility);
     if (!visibilityValidation.valid) {
       return NextResponse.json({ error: visibilityValidation.error }, { status: 400 });
     }
 
-    // 4. Validate session using shared validation
+    // 6. Validate session using shared validation (submissions enabled check)
     const sessionValidation = await validateSessionForQuestions(sessionId);
     if (!sessionValidation.valid) {
       const statusCode = sessionValidation.error === "Session not found." ? 404 : 403;
       return NextResponse.json({ error: sessionValidation.error }, { status: statusCode });
     }
 
-    // 5. Check rate limit using shared validation
+    // 7. Check rate limit using shared validation
     const isRateLimited = await checkQuestionRateLimit(authorId);
     if (isRateLimited) {
       return NextResponse.json(
@@ -212,7 +219,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 6. Create the question and record activity on the session atomically
+    // 8. Create the question and record activity on the session atomically
     const [question] = await prisma.$transaction([
       prisma.question.create({
         data: {

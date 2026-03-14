@@ -19,9 +19,13 @@ export async function incrementRateLimit(key: string, windowSeconds: number): Pr
 
     return count;
   } catch (error) {
-    console.error("[RateLimit] Failed to increment rate limit:", error);
-    // On error, allow the request (fail open)
-    return 0;
+    console.error(
+      "[RateLimit] Redis error — failing closed to protect against unbounded requests:",
+      error
+    );
+    // Fail closed: return a value that will always exceed any limit so requests
+    // are blocked when Redis is unavailable rather than allowed through.
+    return Number.MAX_SAFE_INTEGER;
   }
 }
 
@@ -41,8 +45,7 @@ export async function checkRateLimit(
     const count = await incrementRateLimit(key, windowSeconds);
     return count > limit;
   } catch (error) {
-    console.error("[RateLimit] Failed to check rate limit:", error);
-    // On error, allow the request (fail open)
-    return false;
+    console.error("[RateLimit] Redis error — failing closed:", error);
+    return true;
   }
 }

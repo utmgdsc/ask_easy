@@ -40,8 +40,10 @@ export async function middleware(request: NextRequest) {
     try {
       const sessionSecret = process.env.SESSION_SECRET;
       if (!sessionSecret) {
-        // Misconfiguration — let the request through so the app can surface the error
-        return NextResponse.next();
+        console.error("[Middleware] SESSION_SECRET is not configured — authentication is broken.");
+        return new NextResponse("Server misconfiguration: SESSION_SECRET is not set.", {
+          status: 500,
+        });
       }
 
       const session = await unsealData<SessionData>(cookieValue, {

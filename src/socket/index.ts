@@ -3,6 +3,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 
+import { prisma } from "@/lib/prisma";
 import { authMiddleware } from "./middleware/auth";
 import {
   handleQuestionCreate,
@@ -138,6 +139,37 @@ export async function initSocketIO(
     // Session room management
     socket.on("session:join", async (payload) => {
       if (payload?.sessionId && typeof payload.sessionId === "string") {
+        const userId = socket.data.userId;
+
+        // Verify the session exists and the user is enrolled (or is a global PROFESSOR).
+        const sessionRecord = await prisma.session.findUnique({
+          where: { id: payload.sessionId },
+          select: { courseId: true },
+        });
+
+        if (!sessionRecord) {
+          socket.emit("question:error", { message: "Session not found." });
+          return;
+        }
+
+        let enrollment: { role: string } | null = null;
+        if (userId) {
+          enrollment = await prisma.courseEnrollment.findUnique({
+            where: {
+              userId_courseId: {
+                userId,
+                courseId: sessionRecord.courseId,
+              },
+            },
+            select: { role: true },
+          });
+        }
+
+        if (!enrollment && socket.data.role !== "PROFESSOR") {
+          socket.emit("question:error", { message: "You are not enrolled in this session." });
+          return;
+        }
+
         if (socket.data.currentSessionId && socket.data.currentSessionId !== payload.sessionId) {
           socket.leave(`session:${socket.data.currentSessionId}`);
           await broadcastViewerCount(socket.data.currentSessionId);
@@ -146,6 +178,16 @@ export async function initSocketIO(
         socket.join(`session:${payload.sessionId}`);
         socket.data.currentSessionId = payload.sessionId;
         console.log(`[Socket.IO] ${socket.id} joined session:${payload.sessionId}`);
+
+        // Join the instructor room if the user is a TA or PROFESSOR in this course,
+        // so that INSTRUCTOR_ONLY questions are delivered to them in real-time.
+        if (
+          enrollment?.role === "PROFESSOR" ||
+          enrollment?.role === "TA" ||
+          socket.data.role === "PROFESSOR"
+        ) {
+          socket.join(`session:${payload.sessionId}:instructors`);
+        }
 
         await broadcastViewerCount(payload.sessionId);
       }

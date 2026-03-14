@@ -109,7 +109,9 @@ export async function GET(request: NextRequest) {
   // ------------------------------------------------------------------
   const redirectTo = request.nextUrl.searchParams.get("redirect") ?? "/";
   // Guard against open redirects — only allow relative paths on this origin.
-  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
+  // Reject protocol-relative URLs like //evil.com which start with "/" but redirect off-site.
+  const safeRedirect =
+    redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
 
   return NextResponse.redirect(new URL(safeRedirect, request.url));
 }

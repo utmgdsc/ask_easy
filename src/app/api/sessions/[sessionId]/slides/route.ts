@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getSessionMembership } from "@/lib/sessionService";
 import {
   validateFileType,
   validateFileSize,
   validatePdfContent,
   validateSessionForUpload,
   validateUserIsProfessor,
-  checkSlideUploadRateLimit,
 } from "@/lib/slideValidation";
 import { extractPageCount } from "@/lib/pdf";
 import { uploadFile, deleteFile, generateSlideStorageKey } from "@/lib/storage";
@@ -34,13 +34,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    // Validate session exists
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-    });
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
 
-    if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+    const membership = await getSessionMembership(sessionId, user.userId);
+    if (!membership.valid) {
+      const statusCode = membership.statusCode ?? 403;
+      return NextResponse.json({ error: membership.error ?? "Forbidden." }, { status: statusCode });
     }
 
     // Fetch slide sets with uploader info
@@ -98,8 +100,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *   3. File size within bounds (1KB - 50MB)
  *   4. PDF content is valid (magic bytes + parseable)
  *   5. User is professor for the session's course
- *   6. Rate limit (5 uploads per 5 minutes per user)
- *   7. Session exists and is not ended
+ *   6. Session exists and is not ended
  *
  * Creates SlideSet and individual Slide records for each page.
  */
@@ -165,16 +166,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: roleValidation.error }, { status: statusCode });
     }
 
-    // 6. Check rate limit
-    const isRateLimited = await checkSlideUploadRateLimit(userId);
-    if (isRateLimited) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please wait before uploading another file." },
-        { status: 429 }
-      );
-    }
-
-    // 7. Validate session
+    // 6. Validate session
     const sessionValidation = await validateSessionForUpload(sessionId);
     if (!sessionValidation.valid) {
       const statusCode = sessionValidation.error === "Session not found." ? 404 : 403;

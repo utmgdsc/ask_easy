@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { validateSessionTitle, checkSessionCreateRateLimit } from "@/lib/sessionValidation";
+import { validateSessionTitle } from "@/lib/sessionValidation";
 import { createSession } from "@/lib/sessionService";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -12,8 +12,19 @@ import { getCurrentUser } from "@/lib/auth";
  */
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
     const sessions = await prisma.session.findMany({
-      where: { status: "ACTIVE" },
+      where: {
+        status: "ACTIVE",
+        course:
+          user.role === "PROFESSOR"
+            ? { createdById: user.userId }
+            : { enrollments: { some: { userId: user.userId } } },
+      },
       select: {
         id: true,
         title: true,
@@ -51,7 +62,6 @@ export async function GET() {
  * - 401: Not authenticated
  * - 403: User is not a professor in the course
  * - 404: Course not found
- * - 429: Rate limit exceeded
  * - 500: Server error
  */
 export async function POST(request: NextRequest) {
@@ -86,15 +96,6 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = user.userId;
-
-    // Check rate limit (10 sessions per hour)
-    const isRateLimited = await checkSessionCreateRateLimit(userId);
-    if (isRateLimited) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. You can create up to 10 sessions per hour." },
-        { status: 429 }
-      );
-    }
 
     // Create session (includes professor role validation)
     const result = await createSession({ courseId, title: (title as string).trim(), userId });

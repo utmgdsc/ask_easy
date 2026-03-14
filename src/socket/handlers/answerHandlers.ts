@@ -81,18 +81,33 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Answer mode check — if restricted, only TAs, professors, and the
-      //    question's own author may answer (so a student can follow up in their thread)
+      // 3a. Enrollment check — verify the user is enrolled in the session's course
       const sessionId = questionValidation.question!.sessionId;
+      const sessionRecord = await prisma.session.findUnique({
+        where: { id: sessionId },
+        select: { courseId: true },
+      });
+      const answerEnrollment = sessionRecord
+        ? await prisma.courseEnrollment.findUnique({
+            where: { userId_courseId: { userId, courseId: sessionRecord.courseId } },
+            select: { role: true },
+          })
+        : null;
+      if (!answerEnrollment && socket.data.role !== "PROFESSOR") {
+        socket.emit("answer:error", { message: "You are not enrolled in this session." });
+        return;
+      }
+
+      // 4. Answer mode check — if restricted, only TAs, professors, and the
+      //    question's own author may answer (so a student can follow up in their thread).
+      //    Role is resolved via CourseEnrollment so TAs are correctly detected
+      //    (User.role is always STUDENT for TAs globally).
       const mode = await redisCache.get(answerModeKey(sessionId));
       if (mode === "instructors_only") {
         const isQuestionAuthor = questionValidation.question!.authorId === userId;
         if (!isQuestionAuthor) {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { role: true },
-          });
-          if (user?.role === "STUDENT") {
+          const effectiveRole = answerEnrollment?.role ?? "STUDENT";
+          if (effectiveRole === "STUDENT") {
             socket.emit("answer:error", {
               message: "The professor has restricted answers to TAs and professors only.",
             });
@@ -207,7 +222,7 @@ export function handleAnswerUpvote(socket: Socket, io: Server): void {
         return;
       }
 
-      // 4. Fetch answer with question + session context
+      // 4. Fetch answer with question + session context (including courseId for enrollment check)
       const answer = await prisma.answer.findUnique({
         where: { id: answerId },
         select: {
@@ -215,13 +230,28 @@ export function handleAnswerUpvote(socket: Socket, io: Server): void {
           questionId: true,
           upvoteCount: true,
           question: {
-            select: { sessionId: true },
+            select: {
+              sessionId: true,
+              session: { select: { courseId: true } },
+            },
           },
         },
       });
 
       if (!answer) {
         socket.emit("answer:error", { message: "Answer not found." });
+        return;
+      }
+
+      // 4a. Enrollment check
+      const upvoteEnrollment = await prisma.courseEnrollment.findUnique({
+        where: {
+          userId_courseId: { userId, courseId: answer.question.session.courseId },
+        },
+        select: { role: true },
+      });
+      if (!upvoteEnrollment && socket.data.role !== "PROFESSOR") {
+        socket.emit("answer:error", { message: "You are not enrolled in this session." });
         return;
       }
 
