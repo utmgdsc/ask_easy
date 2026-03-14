@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import {
-  checkAndAutoEnd,
-  getSessionMembership,
-  performSessionEnd,
-} from "@/lib/sessionService";
+import { checkAndAutoEnd, getSessionMembership, performSessionEnd } from "@/lib/sessionService";
 
 interface RouteParams {
   params: Promise<{ sessionId: string }>;
@@ -68,7 +64,10 @@ export async function PATCH(_req: Request, { params }: RouteParams) {
 
     const membership = await getSessionMembership(sessionId, user.userId);
     if (!membership.valid || membership.role !== "PROFESSOR") {
-      return NextResponse.json({ error: "Only the professor can end this session." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Only the professor can end this session." },
+        { status: 403 }
+      );
     }
 
     const session = await prisma.session.findUnique({ where: { id: sessionId } });

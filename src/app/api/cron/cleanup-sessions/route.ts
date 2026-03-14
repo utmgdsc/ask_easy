@@ -40,9 +40,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ ended: 0 });
     }
 
-    const results = await Promise.allSettled(
-      staleSessions.map((s) => performSessionEnd(s.id))
-    );
+    const results = await Promise.allSettled(staleSessions.map((s) => performSessionEnd(s.id)));
 
     const succeeded = results.filter((r) => r.status === "fulfilled").length;
     const failed = results.filter((r) => r.status === "rejected").length;

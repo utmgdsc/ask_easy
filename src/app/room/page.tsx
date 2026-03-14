@@ -19,11 +19,7 @@ import { SlideUpdateContext } from "./SlideUpdateContext";
 
 function generateAndDownloadTxt(questions: Question[], sessionTitle: string): void {
   const sep = "─".repeat(44);
-  const lines: string[] = [
-    `=== ${sessionTitle} ===`,
-    new Date().toLocaleString(),
-    "",
-  ];
+  const lines: string[] = [`=== ${sessionTitle} ===`, new Date().toLocaleString(), ""];
 
   function label(user: { username: string; utorid?: string } | null): string {
     if (!user) return "Anonymous";
@@ -166,7 +162,9 @@ function RoomInner() {
           const data = await res.json();
           if (data.status === "ENDED") setSessionEnded(true);
         }
-      } catch { /* network error — ignore, will retry */ }
+      } catch {
+        /* network error — ignore, will retry */
+      }
     };
 
     const interval = setInterval(check, 8000);

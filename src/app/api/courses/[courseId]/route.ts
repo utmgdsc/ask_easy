@@ -57,17 +57,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const { code, semester } = (body as Record<string, unknown>) ?? {};
 
-    if (
-      code !== undefined &&
-      (typeof code !== "string" || code.trim().length === 0)
-    ) {
+    if (code !== undefined && (typeof code !== "string" || code.trim().length === 0)) {
       return NextResponse.json({ error: "Course code cannot be empty." }, { status: 400 });
     }
 
-    if (
-      semester !== undefined &&
-      (typeof semester !== "string" || semester.trim().length === 0)
-    ) {
+    if (semester !== undefined && (typeof semester !== "string" || semester.trim().length === 0)) {
       return NextResponse.json({ error: "Semester cannot be empty." }, { status: 400 });
     }
 

@@ -165,8 +165,7 @@ export default function QuestionPost({
   // Which replies to render in the thread
   const visibleReplies = threadState === "collapsed" ? [] : replyList;
 
-  const showThread =
-    threadState !== "collapsed" && (visibleReplies.length > 0 || isReplying);
+  const showThread = threadState !== "collapsed" && (visibleReplies.length > 0 || isReplying);
 
   return (
     <div className="flex flex-col gap-2 bg-stone-100 rounded-xl p-4 border border-stone-200">
@@ -207,7 +206,10 @@ export default function QuestionPost({
                 variant="ghost"
                 size="sm"
                 className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white hover:text-white"
-                onClick={() => { onDelete!(); setConfirmingDelete(false); }}
+                onClick={() => {
+                  onDelete!();
+                  setConfirmingDelete(false);
+                }}
               >
                 Delete
               </Button>

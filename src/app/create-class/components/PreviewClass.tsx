@@ -119,7 +119,8 @@ export default function PreviewClass({
           Add TAs <span className="text-stone-400 font-normal normal-case">(optional)</span>
         </label>
         <p className="text-xs text-stone-500">
-          Enter UTORids separated by commas, spaces, or new lines. TAs can see all questions and answer in restricted mode.
+          Enter UTORids separated by commas, spaces, or new lines. TAs can see all questions and
+          answer in restricted mode.
         </p>
         <textarea
           value={tasInput}

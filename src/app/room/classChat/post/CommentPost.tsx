@@ -52,12 +52,15 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
             />
           )}
 
-          {onDelete && (
-            confirmingDelete ? (
+          {onDelete &&
+            (confirmingDelete ? (
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-stone-500">Delete this answer?</span>
                 <button
-                  onClick={() => { onDelete(); setConfirmingDelete(false); }}
+                  onClick={() => {
+                    onDelete();
+                    setConfirmingDelete(false);
+                  }}
                   className="px-2 py-0.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors"
                 >
                   Delete
@@ -77,8 +80,7 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
-            )
-          )}
+            ))}
         </div>
       </div>
     </div>

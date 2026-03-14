@@ -52,7 +52,13 @@ function apiAnswerToPost(a: APIAnswer): Comment {
   const user =
     a.isAnonymous || !a.author
       ? null
-      : { id: a.author.id, utorid: a.author.utorid, username: a.author.name, pfp: "", role: a.author.role };
+      : {
+          id: a.author.id,
+          utorid: a.author.utorid,
+          username: a.author.name,
+          pfp: "",
+          role: a.author.role,
+        };
 
   return {
     id: a.id,
@@ -68,7 +74,13 @@ function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
   const user =
     q.isAnonymous || !q.author
       ? null
-      : { id: q.author.id, utorid: q.author.utorid, username: q.author.name, pfp: "", role: q.author.role };
+      : {
+          id: q.author.id,
+          utorid: q.author.utorid,
+          username: q.author.name,
+          pfp: "",
+          role: q.author.role,
+        };
 
   return {
     id: q.id,
@@ -231,7 +243,12 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
         author:
           payload.isAnonymous || !payload.authorName
             ? null
-            : { id: payload.authorId ?? "", utorid: payload.authorUtorid ?? "", name: payload.authorName, role: payload.authorRole },
+            : {
+                id: payload.authorId ?? "",
+                utorid: payload.authorUtorid ?? "",
+                name: payload.authorName,
+                role: payload.authorRole,
+              },
         authorRole: payload.authorRole,
         isAccepted: payload.isAccepted,
         upvoteCount: 0,
@@ -332,9 +349,8 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   // or new questions/answers arriving (deletions update it inline above).
   useEffect(() => {
     if (chatHistoryRef) chatHistoryRef.current = historyRef.current;
-  // historyRef is a ref so its identity is stable; we only need to re-run
-  // when the questions state changes (which always follows a history update).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // historyRef is a ref so its identity is stable; we only need to re-run
+    // when the questions state changes (which always follows a history update).
   }, [questions, chatHistoryRef]);
 
   // Scroll to bottom whenever new questions arrive

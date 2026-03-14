@@ -96,7 +96,12 @@ export default function ProfCourseButtons() {
 
   function handleOpenManage(e: React.MouseEvent, course: Course) {
     e.stopPropagation();
-    setManagingCourse({ id: course.id, code: course.code, name: course.name, semester: course.semester });
+    setManagingCourse({
+      id: course.id,
+      code: course.code,
+      name: course.name,
+      semester: course.semester,
+    });
   }
 
   function handleRenamed(courseId: string, code: string, semester: string) {

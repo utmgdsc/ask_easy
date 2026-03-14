@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, UserPlus, GraduationCap, Pencil, Trash2, Search, UserMinus, Upload, RefreshCw } from "lucide-react";
+import {
+  X,
+  UserPlus,
+  GraduationCap,
+  Pencil,
+  Trash2,
+  Search,
+  UserMinus,
+  Upload,
+  RefreshCw,
+} from "lucide-react";
 import { parseAndProcessCSV } from "@/utils/create-class";
 
 // ---------------------------------------------------------------------------
@@ -66,9 +76,7 @@ function RosterTable({
 }: RosterTableProps) {
   const q = search.trim().toLowerCase();
   const filtered = q
-    ? entries.filter(
-        (e) => e.name.toLowerCase().includes(q) || e.utorid.toLowerCase().includes(q)
-      )
+    ? entries.filter((e) => e.name.toLowerCase().includes(q) || e.utorid.toLowerCase().includes(q))
     : entries;
 
   if (loading) {
@@ -118,9 +126,15 @@ function RosterTable({
             <table className="w-full text-xs text-left">
               <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">Given Name</th>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">Surname</th>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">UTORid</th>
+                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
+                    Given Name
+                  </th>
+                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
+                    Surname
+                  </th>
+                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
+                    UTORid
+                  </th>
                   <th className="px-3 py-2 w-8" />
                 </tr>
               </thead>
@@ -266,7 +280,7 @@ export default function ManageClassModal({
 
   useEffect(() => {
     fetchRoster();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course.id]);
 
   // Recompute the CSV diff whenever either the parsed UTORids or the loaded
@@ -280,7 +294,6 @@ export default function ManageClassModal({
     const toRemove = [...currentSet].filter((u) => !newSet.has(u));
     const unchanged = [...currentSet].filter((u) => newSet.has(u)).length;
     setCsvPreview({ utorids: csvParsedUtorids, toAdd, toRemove, unchanged });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [csvParsedUtorids, rosterStudents, rosterLoading]);
 
   // ---- Handlers ----
@@ -550,7 +563,8 @@ export default function ManageClassModal({
               <div className="border-t border-stone-100 pt-4 flex flex-col gap-3">
                 <p className="text-sm font-medium text-stone-700">Sync Roster from CSV</p>
                 <p className="text-xs text-stone-500">
-                  Upload your updated class list CSV. Students added to the file will be enrolled; students removed from the file will be unenrolled. TAs are not affected.
+                  Upload your updated class list CSV. Students added to the file will be enrolled;
+                  students removed from the file will be unenrolled. TAs are not affected.
                 </p>
 
                 {/* File picker */}
@@ -580,19 +594,24 @@ export default function ManageClassModal({
                     <p className="font-medium text-stone-700 mb-0.5">Preview changes</p>
                     {csvPreview.toAdd.length > 0 && (
                       <p className="text-green-700">
-                        + {csvPreview.toAdd.length} student{csvPreview.toAdd.length !== 1 ? "s" : ""} to enroll
+                        + {csvPreview.toAdd.length} student
+                        {csvPreview.toAdd.length !== 1 ? "s" : ""} to enroll
                       </p>
                     )}
                     {csvPreview.toRemove.length > 0 && (
                       <p className="text-red-600">
-                        − {csvPreview.toRemove.length} student{csvPreview.toRemove.length !== 1 ? "s" : ""} to remove
+                        − {csvPreview.toRemove.length} student
+                        {csvPreview.toRemove.length !== 1 ? "s" : ""} to remove
                       </p>
                     )}
                     <p className="text-stone-500">
-                      {csvPreview.unchanged} student{csvPreview.unchanged !== 1 ? "s" : ""} unchanged
+                      {csvPreview.unchanged} student{csvPreview.unchanged !== 1 ? "s" : ""}{" "}
+                      unchanged
                     </p>
                     {csvPreview.toAdd.length === 0 && csvPreview.toRemove.length === 0 && (
-                      <p className="text-stone-400 italic">No changes — roster is already up to date.</p>
+                      <p className="text-stone-400 italic">
+                        No changes — roster is already up to date.
+                      </p>
                     )}
                   </div>
                 )}
@@ -648,7 +667,9 @@ export default function ManageClassModal({
                       <p className="text-green-700">Added: {addResult.added.join(", ")}</p>
                     )}
                     {addResult.alreadyEnrolled.length > 0 && (
-                      <p className="text-stone-500">Already enrolled: {addResult.alreadyEnrolled.join(", ")}</p>
+                      <p className="text-stone-500">
+                        Already enrolled: {addResult.alreadyEnrolled.join(", ")}
+                      </p>
                     )}
                     {addResult.invalid.length > 0 && (
                       <p className="text-red-600">Invalid: {addResult.invalid.join(", ")}</p>
@@ -683,7 +704,8 @@ export default function ManageClassModal({
               <div className="border-t border-stone-100 pt-4 flex flex-col gap-3">
                 <p className="text-sm font-medium text-stone-700">Add TAs</p>
                 <p className="text-xs text-stone-500">
-                  Enter one or more UTORids — separated by commas, spaces, or new lines. TAs can see all questions and answer in restricted mode.
+                  Enter one or more UTORids — separated by commas, spaces, or new lines. TAs can see
+                  all questions and answer in restricted mode.
                 </p>
                 <textarea
                   value={taUtoridsInput}
@@ -703,7 +725,9 @@ export default function ManageClassModal({
                       <p className="text-green-700">Added: {taAddResult.added.join(", ")}</p>
                     )}
                     {taAddResult.alreadyEnrolled.length > 0 && (
-                      <p className="text-stone-500">Already enrolled: {taAddResult.alreadyEnrolled.join(", ")}</p>
+                      <p className="text-stone-500">
+                        Already enrolled: {taAddResult.alreadyEnrolled.join(", ")}
+                      </p>
                     )}
                     {taAddResult.invalid.length > 0 && (
                       <p className="text-red-600">Invalid: {taAddResult.invalid.join(", ")}</p>

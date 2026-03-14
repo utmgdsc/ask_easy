@@ -10,7 +10,11 @@ import {
   handleQuestionResolve,
   handleQuestionDelete,
 } from "./handlers/questionHandlers";
-import { handleAnswerCreate, handleAnswerUpvote, handleAnswerDelete } from "./handlers/answerHandlers";
+import {
+  handleAnswerCreate,
+  handleAnswerUpvote,
+  handleAnswerDelete,
+} from "./handlers/answerHandlers";
 import { handleSlideChange, handleSlideSync, handleSlidesUploaded } from "./handlers/slideHandlers";
 import { handleAnswerModeChange, handleAnswerModeSync } from "./handlers/sessionHandlers";
 import type {

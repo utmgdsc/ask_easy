@@ -116,15 +116,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { utorids, role: roleParam } = (body as Record<string, unknown>) ?? {};
 
     if (!Array.isArray(utorids) || utorids.length === 0) {
-      return NextResponse.json(
-        { error: "utorids must be a non-empty array." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "utorids must be a non-empty array." }, { status: 400 });
     }
 
     // Only STUDENT and TA are valid enrollment roles for this endpoint
-    const enrollmentRole: "STUDENT" | "TA" =
-      roleParam === "TA" ? "TA" : "STUDENT";
+    const enrollmentRole: "STUDENT" | "TA" = roleParam === "TA" ? "TA" : "STUDENT";
 
     const added: string[] = [];
     const alreadyEnrolled: string[] = [];
