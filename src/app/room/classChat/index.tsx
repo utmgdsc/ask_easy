@@ -343,7 +343,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       socket.off("answer-mode:changed", onAnswerModeChanged);
       socket.off("question:error", onQuestionError);
     };
-  }, [socket, sessionId]);
+  }, [socket, sessionId, chatHistoryRef]);
 
   // Keep chatHistoryRef in sync whenever historyRef is updated via data load
   // or new questions/answers arriving (deletions update it inline above).

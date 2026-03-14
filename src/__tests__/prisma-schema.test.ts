@@ -648,7 +648,7 @@ describe("Relationships", () => {
       data: { courseId: course.id, createdById: prof.id, title: "L1", joinCode: "X1" },
     });
 
-    const slideSet = await prisma.slideSet.create({
+    await prisma.slideSet.create({
       data: {
         sessionId: session.id,
         filename: "test.pdf",
