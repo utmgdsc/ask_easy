@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User } from "@/utils/types";
 import CourseViewer from "./components/CourseViewer";
 import footer from "./components/footer";
