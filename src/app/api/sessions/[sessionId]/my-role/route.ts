@@ -49,9 +49,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
       select: { role: true },
     });
 
-    const role = enrollment?.role ?? "STUDENT";
+    if (!enrollment) {
+      return NextResponse.json({ error: "Not enrolled in this session." }, { status: 403 });
+    }
 
-    return NextResponse.json({ role });
+    return NextResponse.json({ role: enrollment.role });
   } catch (error) {
     console.error("[Sessions API] Failed to resolve user role:", error);
     return NextResponse.json({ error: "An error occurred." }, { status: 500 });

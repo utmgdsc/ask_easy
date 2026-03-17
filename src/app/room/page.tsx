@@ -189,6 +189,9 @@ function RoomInner() {
               if (roleRes.ok) {
                 const roleData = await roleRes.json();
                 setRole((roleData.role as Role) ?? "STUDENT");
+              } else if (roleRes.status === 403 || roleRes.status === 404) {
+                router.replace("/");
+                return;
               } else {
                 setRole((data.role as Role) ?? "STUDENT");
               }
