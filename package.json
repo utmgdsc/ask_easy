@@ -5,7 +5,7 @@
   "scripts": {
     "prisma:generate": "prisma generate",
     "typecheck": "tsc --noEmit",
-    "dev": "NODE_ENV=development tsx watch src/server.ts",
+    "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "build": "next build",
     "start": "tsx src/server.ts",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 3",
@@ -54,6 +54,7 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "ioredis": "^5.9.2",
     "iron-session": "^8.0.4",
     "lucide-react": "^0.562.0",
@@ -66,8 +67,7 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.0",
-    "tsx": "^4.21.0",
-    "dotenv": "^17.2.3"
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@prisma/config": "6.8.2",
@@ -78,6 +78,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "eslint-config-prettier": "^10.1.8",

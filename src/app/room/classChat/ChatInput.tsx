@@ -45,7 +45,8 @@ export default function ChatInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSubmit();
     }
   };
@@ -57,7 +58,7 @@ export default function ChatInput({
         <div className="flex items-end gap-4 pointer-events-auto">
           <div className="flex flex-col gap-1.5 flex-1">
             <Textarea
-              placeholder="Ask a question... (⌘+Enter to post)"
+              placeholder="Ask a question... (Shift+Enter for new line)"
               value={content}
               onChange={handleChange}
               onKeyDown={handleKeyDown}

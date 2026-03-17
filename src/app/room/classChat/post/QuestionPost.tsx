@@ -45,7 +45,10 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+          }
         }}
       />
       <div className="flex items-center justify-between">

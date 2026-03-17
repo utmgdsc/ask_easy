@@ -25,12 +25,12 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               scriptSrc,
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob:",
               // Allow WebSocket connections to the same host (Socket.IO)
               "connect-src 'self' ws: wss: https://cdn.jsdelivr.net",
               "worker-src 'self' blob:",
-              "font-src 'self'",
+              "font-src 'self' https://fonts.gstatic.com",
               "frame-ancestors 'none'",
             ].join("; "),
           },
