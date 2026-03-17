@@ -5,14 +5,14 @@ interface PreviewClassProps {
   file: File;
   processedData: ProcessedClassData | null;
   onClear: () => void;
-  onSubmit: () => void;
+  onAddTAs: () => void;
 }
 
 export default function PreviewClass({
   file,
   processedData,
   onClear,
-  onSubmit,
+  onAddTAs,
 }: PreviewClassProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -88,10 +88,10 @@ export default function PreviewClass({
       )}
 
       <button
-        onClick={onSubmit}
+        onClick={onAddTAs}
         className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 transition-colors duration-200 py-3.5 rounded-lg font-semibold tracking-wide uppercase mt-4 shadow-sm border border-stone-800"
       >
-        Confirm & Create Class
+        Add TAs
       </button>
     </div>
   );

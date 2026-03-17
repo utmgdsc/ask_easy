@@ -5,17 +5,22 @@ import { useRouter } from "next/navigation";
 import header from "../components/header";
 import footer from "../components/footer";
 import { User } from "@/utils/types";
-import { ProcessedClassData, CSVRow, StudentRecord } from "@/utils/types";
+import { ProcessedClassData } from "@/utils/types";
 
 import NoPermissions from "./components/NoPermissions";
 import Upload from "./components/Upload";
 import PreviewClass from "./components/PreviewClass";
+import AddTAs from "./components/AddTAs";
 import { parseAndProcessCSV } from "@/utils/create-class";
+
+type Step = "upload" | "preview" | "addTAs";
 
 export default function CreateClassPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedClassData | null>(null);
+  const [step, setStep] = useState<Step>("upload");
+  const [tas, setTas] = useState<string[]>([]);
 
   //sample user
   const placeholder_user: User = {
@@ -29,6 +34,7 @@ export default function CreateClassPage() {
     try {
       const processed = await parseAndProcessCSV(selectedFile);
       setProcessedData(processed);
+      setStep("preview");
     } catch (error) {
       console.error(error);
     }
@@ -37,6 +43,16 @@ export default function CreateClassPage() {
   const clearFile = () => {
     setFile(null);
     setProcessedData(null);
+    setTas([]);
+    setStep("upload");
+  };
+
+  const handleAddTA = (utorid: string) => {
+    setTas((prev) => [...prev, utorid]);
+  };
+
+  const handleRemoveTA = (utorid: string) => {
+    setTas((prev) => prev.filter((id) => id !== utorid));
   };
 
   const submitClassCreation = async () => {
@@ -46,7 +62,7 @@ export default function CreateClassPage() {
     };
 
     if (processedData) {
-      await send_class_to_db(processedData);
+      await send_class_to_db({ ...processedData, tas });
       router.push("/");
     }
   };
@@ -54,6 +70,31 @@ export default function CreateClassPage() {
   if (placeholder_user.role !== "PROFESSOR") {
     return <NoPermissions user={placeholder_user} />;
   }
+
+  const renderStep = () => {
+    switch (step) {
+      case "upload":
+        return <Upload onFileSelect={handleFileSelect} />;
+      case "preview":
+        return (
+          <PreviewClass
+            file={file!}
+            processedData={processedData}
+            onClear={clearFile}
+            onAddTAs={() => setStep("addTAs")}
+          />
+        );
+      case "addTAs":
+        return (
+          <AddTAs
+            tas={tas}
+            onAddTA={handleAddTA}
+            onRemoveTA={handleRemoveTA}
+            onSubmit={submitClassCreation}
+          />
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans text-stone-800">
@@ -64,16 +105,7 @@ export default function CreateClassPage() {
             Create Class
           </h1>
 
-          {!file ? (
-            <Upload onFileSelect={handleFileSelect} />
-          ) : (
-            <PreviewClass
-              file={file}
-              processedData={processedData}
-              onClear={clearFile}
-              onSubmit={submitClassCreation}
-            />
-          )}
+          {renderStep()}
         </div>
       </div>
       {footer()}

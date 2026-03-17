@@ -9,7 +9,7 @@ import ProfCourseViewer from "./classes/ProfCourseViewer";
 const placeholder_user: User = {
   username: "Hi",
   pfp: "H",
-  role: "STUDENT",
+  role: "PROFESSOR",
 };
 
 export default function LandingPage() {

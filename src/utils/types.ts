@@ -66,4 +66,5 @@ export interface ProcessedClassData {
   courseCode: string;
   lectureSection: string;
   students: StudentRecord[];
+  tas: string[];
 }

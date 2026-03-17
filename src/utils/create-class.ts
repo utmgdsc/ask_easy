@@ -28,6 +28,7 @@ export const processRawData = (rawData: CSVRow[]): ProcessedClassData => {
     lectureSection: extractedLectureSection,
     students:
       students.length > 0 ? students : [{ givenName: "ERROR", surname: "ERROR", utorid: "ERROR" }],
+    tas: [],
   };
 };
 
