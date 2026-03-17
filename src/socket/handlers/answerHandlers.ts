@@ -93,7 +93,7 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
             select: { role: true },
           })
         : null;
-      if (!answerEnrollment && socket.data.role !== "PROFESSOR") {
+      if (!answerEnrollment) {
         socket.emit("answer:error", { message: "You are not enrolled in this session." });
         return;
       }
@@ -250,7 +250,7 @@ export function handleAnswerUpvote(socket: Socket, io: Server): void {
         },
         select: { role: true },
       });
-      if (!upvoteEnrollment && socket.data.role !== "PROFESSOR") {
+      if (!upvoteEnrollment) {
         socket.emit("answer:error", { message: "You are not enrolled in this session." });
         return;
       }

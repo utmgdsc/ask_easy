@@ -50,6 +50,93 @@ export interface SessionCreateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Socket authorization errors (thrown by requireSocket* helpers)
+// ---------------------------------------------------------------------------
+
+export class NotEnrolledError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly sessionId: string
+  ) {
+    super("You are not enrolled in this session.");
+    this.name = "NotEnrolledError";
+  }
+}
+
+export class NotInstructorError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly sessionId: string,
+    public readonly actualRole: Role
+  ) {
+    super("Only professors can perform this action.");
+    this.name = "NotInstructorError";
+  }
+}
+
+export class SessionNotFoundError extends Error {
+  constructor(public readonly sessionId: string) {
+    super("Session not found.");
+    this.name = "SessionNotFoundError";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Socket authorization helpers (throw on failure — see Design Principles)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves a user's enrollment for a session's course.
+ * Throws `SessionNotFoundError` if the session doesn't exist.
+ * Throws `NotEnrolledError` if the user is not enrolled.
+ *
+ * @returns The user's enrollment role and the session's courseId
+ */
+export async function requireSocketEnrollment(
+  userId: string,
+  sessionId: string
+): Promise<{ role: Role; courseId: string }> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { courseId: true },
+  });
+
+  if (!session) {
+    throw new SessionNotFoundError(sessionId);
+  }
+
+  const enrollment = await prisma.courseEnrollment.findUnique({
+    where: { userId_courseId: { userId, courseId: session.courseId } },
+    select: { role: true },
+  });
+
+  if (!enrollment) {
+    throw new NotEnrolledError(userId, sessionId);
+  }
+
+  return { role: enrollment.role, courseId: session.courseId };
+}
+
+/**
+ * Requires that the user is a PROFESSOR in the session's course.
+ * Throws `SessionNotFoundError`, `NotEnrolledError`, or `NotInstructorError`.
+ *
+ * @returns The session's courseId
+ */
+export async function requireSocketInstructor(
+  userId: string,
+  sessionId: string
+): Promise<{ courseId: string }> {
+  const { role, courseId } = await requireSocketEnrollment(userId, sessionId);
+
+  if (role !== "PROFESSOR") {
+    throw new NotInstructorError(userId, sessionId, role);
+  }
+
+  return { courseId };
+}
+
+// ---------------------------------------------------------------------------
 // Service Functions
 // ---------------------------------------------------------------------------
 

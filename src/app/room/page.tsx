@@ -179,11 +179,10 @@ function RoomInner() {
         if (data?.userId) {
           setUserId(data.userId);
 
-          // Professors are identified globally; TAs are per-course so we must
-          // ask the session-specific endpoint to resolve TA vs STUDENT.
-          if (data.role === "PROFESSOR") {
-            setRole("PROFESSOR");
-          } else if (sessionId) {
+          // Always resolve role via the session-specific endpoint to ensure
+          // per-course authorization (CourseEnrollment). Never trust the global
+          // cookie role for session-scoped access.
+          if (sessionId) {
             try {
               const roleRes = await fetch(`/api/sessions/${sessionId}/my-role`);
               if (roleRes.ok) {
@@ -193,13 +192,13 @@ function RoomInner() {
                 router.replace("/");
                 return;
               } else {
-                setRole((data.role as Role) ?? "STUDENT");
+                setRole("STUDENT");
               }
             } catch {
-              setRole((data.role as Role) ?? "STUDENT");
+              setRole("STUDENT");
             }
           } else {
-            setRole((data.role as Role) ?? "STUDENT");
+            setRole("STUDENT");
           }
         }
         setAuthReady(true);

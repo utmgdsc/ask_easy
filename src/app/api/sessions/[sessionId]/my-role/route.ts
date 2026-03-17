@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface RouteParams {
   params: Promise<{ sessionId: string }>;
 }
@@ -14,12 +16,13 @@ interface RouteParams {
 /**
  * Returns the authenticated user's effective role for the session.
  *
- * - PROFESSOR: user has global role PROFESSOR (set by whitelist at login)
- * - TA:        user has CourseEnrollment.role === "TA" for the session's course
- * - STUDENT:   everyone else
+ * Role is resolved via CourseEnrollment for the session's course — never
+ * from the global User.role. This ensures a professor not enrolled in
+ * a course is not granted PROFESSOR privileges for it.
  *
- * This allows the room to distinguish TAs (who are assigned per-course)
- * from regular students without touching the global User.role.
+ * Response format:
+ *   - Success: { role, enrolled: true }
+ *   - Failure: { error, enrolled: false } with 403 status
  */
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
@@ -50,10 +53,13 @@ export async function GET(_request: Request, { params }: RouteParams) {
     });
 
     if (!enrollment) {
-      return NextResponse.json({ error: "Not enrolled in this session." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Not enrolled in this session.", enrolled: false },
+        { status: 403 }
+      );
     }
 
-    return NextResponse.json({ role: enrollment.role });
+    return NextResponse.json({ role: enrollment.role, enrolled: true });
   } catch (error) {
     console.error("[Sessions API] Failed to resolve user role:", error);
     return NextResponse.json({ error: "An error occurred." }, { status: 500 });

@@ -151,7 +151,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
           where: { userId_courseId: { userId, courseId: sessionForEnrollment.courseId } },
           select: { role: true },
         });
-        if (!enrollment && socket.data.role !== "PROFESSOR") {
+        if (!enrollment) {
           socket.emit("question:error", { message: "You are not enrolled in this session." });
           return;
         }
@@ -256,7 +256,7 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
           },
           select: { role: true },
         });
-        if (!enrollment && socket.data.role !== "PROFESSOR") {
+        if (!enrollment) {
           socket.emit("question:error", { message: "You are not enrolled in this session." });
           return;
         }

@@ -1,8 +1,14 @@
 import { type Server, type Socket } from "socket.io";
 
-import { prisma } from "@/lib/prisma";
 import { redisCache } from "@/lib/redis";
 import { slideState } from "@/lib/redisKeys";
+import {
+  requireSocketEnrollment,
+  requireSocketInstructor,
+  NotEnrolledError,
+  NotInstructorError,
+  SessionNotFoundError,
+} from "@/lib/sessionService";
 import type { SlidesUploadedPayload } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -31,15 +37,15 @@ interface SlideSyncPayload {
 /**
  * Registers the `slide:change` event listener on the given socket.
  *
- * Only professors may change the shared slide position for a session.
+ * Only professors (per-course CourseEnrollment) may change the shared slide
+ * position for a session.
  *
  * Guard order (cheap-before-expensive):
  *   1. Auth          — socket.data.userId must exist
  *   2. Payload shape — sessionId must be a string, pageIndex a non-negative integer
- *   3. Role check    — user must have role === "PROFESSOR" (DB lookup)
- *   4. Session check — session must exist in the DB
- *   5. Persist       — current page index written to Redis (24 h TTL)
- *   6. Broadcast     — emit slide:changed to session:{sessionId} (all participants)
+ *   3. Enrollment    — user must be a PROFESSOR in the session's course (CourseEnrollment)
+ *   4. Persist       — current page index written to Redis (24 h TTL)
+ *   5. Broadcast     — emit slide:changed to session:{sessionId} (all participants)
  */
 export function handleSlideChange(socket: Socket, io: Server): void {
   socket.on("slide:change", async (payload: SlideChangePayload) => {
@@ -71,45 +77,41 @@ export function handleSlideChange(socket: Socket, io: Server): void {
         return;
       }
 
-      // 3. Role check — only professors may broadcast slide changes
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { role: true },
-      });
+      // 3. Enrollment + role check — only professors in this course may change slides
+      await requireSocketInstructor(userId, sessionId);
 
-      if (!user) {
-        socket.emit("slide:error", { message: "User not found." });
-        return;
-      }
+      // 4. Persist current page to Redis with a 24-hour TTL
+      await redisCache.set(slideState(sessionId), pageIndex, "EX", SLIDE_STATE_TTL_SECONDS);
 
-      if (user.role !== "PROFESSOR") {
+      // 5. Broadcast to all participants in the session room
+      io.to(`session:${sessionId}`).emit("slide:changed", { pageIndex });
+    } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        socket.emit("slide:error", { message: "Session not found." });
+      } else if (error instanceof NotEnrolledError) {
+        console.warn("[Security]", {
+          userId: socket.data?.userId,
+          sessionId: payload?.sessionId,
+          action: "slide:change",
+          reason: "not enrolled",
+        });
+        socket.emit("slide:error", { message: "You are not enrolled in this session." });
+      } else if (error instanceof NotInstructorError) {
+        console.warn("[Security]", {
+          userId: socket.data?.userId,
+          sessionId: payload?.sessionId,
+          action: "slide:change",
+          reason: "not professor",
+        });
         socket.emit("slide:error", {
           message: "Only professors can change the shared slide position.",
         });
-        return;
+      } else {
+        console.error("[SlideHandler] Failed to process slide:change:", error);
+        socket.emit("slide:error", {
+          message: "An error occurred while updating the slide position.",
+        });
       }
-
-      // 4. Session existence check
-      const session = await prisma.session.findUnique({
-        where: { id: sessionId },
-        select: { id: true },
-      });
-
-      if (!session) {
-        socket.emit("slide:error", { message: "Session not found." });
-        return;
-      }
-
-      // 5. Persist current page to Redis with a 24-hour TTL
-      await redisCache.set(slideState(sessionId), pageIndex, "EX", SLIDE_STATE_TTL_SECONDS);
-
-      // 6. Broadcast to all participants in the session room
-      io.to(`session:${sessionId}`).emit("slide:changed", { pageIndex });
-    } catch (error) {
-      console.error("[SlideHandler] Failed to process slide:change:", error);
-      socket.emit("slide:error", {
-        message: "An error occurred while updating the slide position.",
-      });
     }
   });
 }
@@ -123,7 +125,7 @@ export function handleSlideChange(socket: Socket, io: Server): void {
  * Guard order:
  *   1. Auth          — socket.data.userId must exist
  *   2. Payload shape — sessionId and slideSetId must be strings
- *   3. Role check    — user must have role === "PROFESSOR"
+ *   3. Enrollment    — user must be a PROFESSOR in the session's course (CourseEnrollment)
  *   4. Broadcast     — emit slides:available to session:{sessionId}
  */
 export function handleSlidesUploaded(socket: Socket, io: Server): void {
@@ -154,24 +156,36 @@ export function handleSlidesUploaded(socket: Socket, io: Server): void {
         return;
       }
 
-      // 3. Role check — only professors may broadcast slide availability
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { role: true },
-      });
-
-      if (!user || user.role !== "PROFESSOR") {
-        socket.emit("slide:error", { message: "Only professors can broadcast slide updates." });
-        return;
-      }
+      // 3. Enrollment + role check — only professors in this course
+      await requireSocketInstructor(userId, sessionId);
 
       // 4. Broadcast to all participants in the session room
       io.to(`session:${sessionId}`).emit("slides:available", { slideSetId });
     } catch (error) {
-      console.error("[SlideHandler] Failed to process slides:uploaded:", error);
-      socket.emit("slide:error", {
-        message: "An error occurred while broadcasting slide availability.",
-      });
+      if (error instanceof SessionNotFoundError) {
+        socket.emit("slide:error", { message: "Session not found." });
+      } else if (error instanceof NotEnrolledError) {
+        console.warn("[Security]", {
+          userId: socket.data?.userId,
+          sessionId: payload?.sessionId,
+          action: "slides:uploaded",
+          reason: "not enrolled",
+        });
+        socket.emit("slide:error", { message: "You are not enrolled in this session." });
+      } else if (error instanceof NotInstructorError) {
+        console.warn("[Security]", {
+          userId: socket.data?.userId,
+          sessionId: payload?.sessionId,
+          action: "slides:uploaded",
+          reason: "not professor",
+        });
+        socket.emit("slide:error", { message: "Only professors can broadcast slide updates." });
+      } else {
+        console.error("[SlideHandler] Failed to process slides:uploaded:", error);
+        socket.emit("slide:error", {
+          message: "An error occurred while broadcasting slide availability.",
+        });
+      }
     }
   });
 }
@@ -185,8 +199,9 @@ export function handleSlidesUploaded(socket: Socket, io: Server): void {
  * Guard order:
  *   1. Auth          — socket.data.userId must exist
  *   2. Payload shape — sessionId must be a string
- *   3. Redis lookup  — read persisted page index (defaults to 0 if not set)
- *   4. Reply         — emit slide:sync back to the requesting socket only
+ *   3. Enrollment    — user must be enrolled in the session's course
+ *   4. Redis lookup  — read persisted page index (defaults to 0 if not set)
+ *   5. Reply         — emit slide:sync back to the requesting socket only
  */
 export function handleSlideSync(socket: Socket): void {
   socket.on("slide:sync", async (payload: SlideSyncPayload) => {
@@ -211,17 +226,24 @@ export function handleSlideSync(socket: Socket): void {
         return;
       }
 
-      // 3. Read current page index from Redis
+      // 3. Enrollment check — must be enrolled in the session's course
+      await requireSocketEnrollment(userId, sessionId);
+
+      // 4. Read current page index from Redis
       const stored = await redisCache.get(slideState(sessionId));
       const pageIndex = stored !== null ? parseInt(stored, 10) : 0;
 
-      // 4. Reply only to the requesting socket
+      // 5. Reply only to the requesting socket
       socket.emit("slide:sync", { pageIndex });
     } catch (error) {
-      console.error("[SlideHandler] Failed to process slide:sync:", error);
-      socket.emit("slide:error", {
-        message: "An error occurred while syncing the slide position.",
-      });
+      if (error instanceof NotEnrolledError || error instanceof SessionNotFoundError) {
+        socket.emit("slide:error", { message: "You are not enrolled in this session." });
+      } else {
+        console.error("[SlideHandler] Failed to process slide:sync:", error);
+        socket.emit("slide:error", {
+          message: "An error occurred while syncing the slide position.",
+        });
+      }
     }
   });
 }

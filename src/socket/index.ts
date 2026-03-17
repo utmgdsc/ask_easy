@@ -141,7 +141,7 @@ export async function initSocketIO(
       if (payload?.sessionId && typeof payload.sessionId === "string") {
         const userId = socket.data.userId;
 
-        // Verify the session exists and the user is enrolled (or is a global PROFESSOR).
+        // Verify the session exists and the user is enrolled in the course.
         const sessionRecord = await prisma.session.findUnique({
           where: { id: payload.sessionId },
           select: { courseId: true },
@@ -165,7 +165,13 @@ export async function initSocketIO(
           });
         }
 
-        if (!enrollment && socket.data.role !== "PROFESSOR") {
+        if (!enrollment) {
+          console.warn("[Security]", {
+            userId,
+            sessionId: payload.sessionId,
+            action: "session:join",
+            reason: "not enrolled",
+          });
           socket.emit("question:error", { message: "You are not enrolled in this session." });
           return;
         }
@@ -181,11 +187,7 @@ export async function initSocketIO(
 
         // Join the instructor room if the user is a TA or PROFESSOR in this course,
         // so that INSTRUCTOR_ONLY questions are delivered to them in real-time.
-        if (
-          enrollment?.role === "PROFESSOR" ||
-          enrollment?.role === "TA" ||
-          socket.data.role === "PROFESSOR"
-        ) {
+        if (enrollment.role === "PROFESSOR" || enrollment.role === "TA") {
           socket.join(`session:${payload.sessionId}:instructors`);
         }
 
@@ -195,8 +197,24 @@ export async function initSocketIO(
 
     socket.on("viewer:sync", async (payload) => {
       if (payload?.sessionId && typeof payload.sessionId === "string") {
+        const userId = socket.data.userId;
+        if (!userId) return;
+
+        // Enrollment check — must be enrolled in the session's course
+        const syncSession = await prisma.session.findUnique({
+          where: { id: payload.sessionId },
+          select: { courseId: true },
+        });
+        if (!syncSession) return;
+
+        const syncEnrollment = await prisma.courseEnrollment.findUnique({
+          where: { userId_courseId: { userId, courseId: syncSession.courseId } },
+          select: { role: true },
+        });
+        if (!syncEnrollment) return;
+
         const sockets = await io!.in(`session:${payload.sessionId}`).fetchSockets();
-        const count = sockets.filter((s) => s.data.role !== "PROFESSOR").length;
+        const count = sockets.length;
         socket.emit("viewer:count", { count });
       }
     });

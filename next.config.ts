@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+
+// In production, remove 'unsafe-eval' to strengthen XSS protection.
+// In development, Next.js HMR requires 'unsafe-eval'.
+const scriptSrc = isProd
+  ? "script-src 'self' 'unsafe-inline' blob:"
+  : "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["socket.io", "ioredis", "@socket.io/redis-adapter"],
@@ -16,9 +24,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // Next.js inline scripts and eval are needed for hydration in development;
-              // tighten this to a nonce-based policy if a CDN/reverse proxy is added.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               // Allow WebSocket connections to the same host (Socket.IO)
