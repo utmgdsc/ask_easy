@@ -48,11 +48,11 @@ export default function ProfCourseButtons() {
                       Go Live
                     </Link>
                     <Link
-                      href={`/manage-class/`}
+                      href={`/edit-class?course=${encodeURIComponent(course.name)}`}
                       className="rounded-lg bg-stone-100 hover:bg-stone-300 px-4 py-2 text-md font-medium text-stone-900 transition-colors"
                       onClick={(e) => e.stopPropagation()} // Prevent card click when clicking button
                     >
-                      Delete Class
+                      Edit Class
                     </Link>
                   </div>
                 </div>
