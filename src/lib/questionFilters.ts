@@ -18,7 +18,6 @@ export interface QuestionsQueryParams {
   limit: number;
   cursor: string | null;
   search: string | null;
-  slideId: string | null;
   status: "OPEN" | "ANSWERED" | "RESOLVED" | null;
   sortBy: "newest" | "votes";
   includeTotal: boolean;
@@ -69,12 +68,6 @@ export function parseQuestionsQueryParams(searchParams: URLSearchParams): Questi
       ? searchParam.trim()
       : null;
 
-  const slideIdParam = searchParams.get("slideId");
-  const slideId =
-    slideIdParam !== null && typeof slideIdParam === "string" && slideIdParam.trim().length > 0
-      ? slideIdParam.trim()
-      : null;
-
   const statusParam = searchParams.get("status");
   const status =
     statusParam !== null && VALID_STATUSES.has(statusParam)
@@ -97,7 +90,6 @@ export function parseQuestionsQueryParams(searchParams: URLSearchParams): Questi
     limit,
     cursor,
     search,
-    slideId,
     status,
     sortBy,
     includeTotal,
@@ -112,13 +104,13 @@ export function parseQuestionsQueryParams(searchParams: URLSearchParams): Questi
 
 /**
  * Builds the Prisma where object for listing questions.
- * Applies sessionId, visibility (from role), and optional status, slideId, search.
+ * Applies sessionId, visibility (from role), and optional status and search.
  * Returns a plain object compatible with prisma.question.findMany({ where }).
  */
 export function buildQuestionsWhere(
   sessionId: string,
   role: Role,
-  params: Pick<QuestionsQueryParams, "search" | "slideId" | "status">
+  params: Pick<QuestionsQueryParams, "search" | "status">
 ): Record<string, any> {
   const visibilityValues = getAllowedVisibilityForRole(role);
 
@@ -129,10 +121,6 @@ export function buildQuestionsWhere(
 
   if (params.status !== null) {
     where.status = params.status;
-  }
-
-  if (params.slideId !== null) {
-    where.slideId = params.slideId;
   }
 
   if (params.search !== null && params.search.length > 0) {

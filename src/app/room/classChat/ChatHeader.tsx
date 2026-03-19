@@ -48,6 +48,8 @@ function SlideToggle() {
 
 import Link from "next/link";
 
+import { useRoom } from "../RoomContext";
+
 export default function ChatHeader({
   role,
   answerMode,
@@ -55,6 +57,8 @@ export default function ChatHeader({
   searchQuery,
   onSearchChange,
 }: ChatHeaderProps) {
+  const { sessionTitle } = useRoom();
+
   return (
     <div className="flex flex-col border-b bg-stone-50 sticky top-0 z-10">
       <header className="pl-2 pr-4 py-2 flex items-center justify-between gap-2">
@@ -66,7 +70,7 @@ export default function ChatHeader({
             AskEasy
           </Link>
           <SlideToggle />
-          <h1 className="text-xl font-bold">CSC209</h1>
+          {sessionTitle && <h1 className="text-xl font-bold">{sessionTitle}</h1>}
         </div>
 
         {/* Search input */}

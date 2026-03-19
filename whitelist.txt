@@ -1,0 +1,10 @@
+# Instructor whitelist
+# Format: one UTORid per line
+# UTORids listed here are assigned the PROFESSOR role on login.
+# Everyone else defaults to STUDENT.
+# TAs are assigned per-course by professors via the UI.
+# Lines starting with # are comments and are ignored.
+#
+# ---- TEST ACCOUNTS ----
+testprof
+# testprof2

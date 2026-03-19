@@ -1,8 +1,14 @@
 import { type Server, type Socket } from "socket.io";
 
-import { prisma } from "@/lib/prisma";
 import { redisCache } from "@/lib/redis";
 import { answerMode as answerModeKey } from "@/lib/redisKeys";
+import {
+  requireSocketEnrollment,
+  requireSocketInstructor,
+  NotEnrolledError,
+  NotInstructorError,
+  SessionNotFoundError,
+} from "@/lib/sessionService";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -32,15 +38,14 @@ interface AnswerModeSyncPayload {
 /**
  * Registers the `answer-mode:change` event listener on the given socket.
  *
- * Only professors may change the answer mode for a session.
+ * Only professors (per-course CourseEnrollment) may change the answer mode.
  *
  * Guard order:
  *   1. Auth          — socket.data.userId must exist
  *   2. Payload shape — sessionId string, mode must be "all" or "instructors_only"
- *   3. Role check    — user must have role === "PROFESSOR" (DB lookup)
- *   4. Session check — session must exist in the DB
- *   5. Persist       — mode written to Redis (24 h TTL)
- *   6. Broadcast     — emit answer-mode:changed to session:{sessionId}
+ *   3. Enrollment    — user must be a PROFESSOR in the session's course (CourseEnrollment)
+ *   4. Persist       — mode written to Redis (24 h TTL)
+ *   5. Broadcast     — emit answer-mode:changed to session:{sessionId}
  */
 export function handleAnswerModeChange(socket: Socket, io: Server): void {
   socket.on("answer-mode:change", async (payload: AnswerModeChangePayload) => {
@@ -59,29 +64,25 @@ export function handleAnswerModeChange(socket: Socket, io: Server): void {
       if (!sessionId || typeof sessionId !== "string") return;
       if (mode !== "all" && mode !== "instructors_only") return;
 
-      // 3. Role check — only professors may change the answer mode
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { role: true },
-      });
+      // 3. Enrollment + role check — only professors in this course
+      await requireSocketInstructor(userId, sessionId);
 
-      if (!user || user.role !== "PROFESSOR") return;
-
-      // 4. Session existence check
-      const session = await prisma.session.findUnique({
-        where: { id: sessionId },
-        select: { id: true },
-      });
-
-      if (!session) return;
-
-      // 5. Persist to Redis
+      // 4. Persist to Redis
       await redisCache.set(answerModeKey(sessionId), mode, "EX", ANSWER_MODE_TTL_SECONDS);
 
-      // 6. Broadcast to all participants
+      // 5. Broadcast to all participants
       io.to(`session:${sessionId}`).emit("answer-mode:changed", { mode });
     } catch (error) {
-      console.error("[SessionHandler] Failed to process answer-mode:change:", error);
+      if (error instanceof NotEnrolledError || error instanceof NotInstructorError) {
+        console.warn("[Security]", {
+          userId: socket.data?.userId,
+          sessionId: payload?.sessionId,
+          action: "answer-mode:change",
+          reason: error.name,
+        });
+      } else if (!(error instanceof SessionNotFoundError)) {
+        console.error("[SessionHandler] Failed to process answer-mode:change:", error);
+      }
     }
   });
 }
@@ -95,8 +96,9 @@ export function handleAnswerModeChange(socket: Socket, io: Server): void {
  * Guard order:
  *   1. Auth          — socket.data.userId must exist
  *   2. Payload shape — sessionId string
- *   3. Redis lookup  — read persisted mode (defaults to "all" if not set)
- *   4. Reply         — emit answer-mode:changed back to the requesting socket only
+ *   3. Enrollment    — user must be enrolled in the session's course
+ *   4. Redis lookup  — read persisted mode (defaults to "instructors_only" if not set)
+ *   5. Reply         — emit answer-mode:changed back to the requesting socket only
  */
 export function handleAnswerModeSync(socket: Socket): void {
   socket.on("answer-mode:sync", async (payload: AnswerModeSyncPayload) => {
@@ -111,14 +113,20 @@ export function handleAnswerModeSync(socket: Socket): void {
       const { sessionId } = payload;
       if (!sessionId || typeof sessionId !== "string") return;
 
-      // 3. Read current mode from Redis (default to "all")
-      const stored = await redisCache.get(answerModeKey(sessionId));
-      const mode: AnswerMode = stored === "all" || stored === "instructors_only" ? stored : "all";
+      // 3. Enrollment check — must be enrolled in the session's course
+      await requireSocketEnrollment(userId, sessionId);
 
-      // 4. Reply to requesting socket only
+      // 4. Read current mode from Redis (default to "instructors_only")
+      const stored = await redisCache.get(answerModeKey(sessionId));
+      const mode: AnswerMode =
+        stored === "all" || stored === "instructors_only" ? stored : "instructors_only";
+
+      // 5. Reply to requesting socket only
       socket.emit("answer-mode:changed", { mode });
     } catch (error) {
-      console.error("[SessionHandler] Failed to process answer-mode:sync:", error);
+      if (!(error instanceof NotEnrolledError) && !(error instanceof SessionNotFoundError)) {
+        console.error("[SessionHandler] Failed to process answer-mode:sync:", error);
+      }
     }
   });
 }

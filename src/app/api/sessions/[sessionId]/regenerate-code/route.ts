@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { codeRegenRateLimit } from "@/lib/redisKeys";
 import { regenerateSessionCode } from "@/lib/sessionCode";
+import { getCurrentUser } from "@/lib/auth";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -19,10 +20,6 @@ interface RouteParams {
   params: Promise<{ sessionId: string }>;
 }
 
-interface RegenerateCodeBody {
-  userId: string;
-}
-
 // ---------------------------------------------------------------------------
 // Route Handler
 // ---------------------------------------------------------------------------
@@ -32,39 +29,25 @@ interface RegenerateCodeBody {
  *
  * Regenerates the join code for a session.
  * Only the session creator (professor) can regenerate the code.
- * Does NOT affect already-registered students.
- *
- * Request body:
- * - userId: string (required) - The user requesting regeneration
  *
  * Returns:
  * - 200: Code regenerated successfully with new code
- * - 400: Invalid request body
+ * - 401: Not authenticated
  * - 403: User is not the session creator
  * - 404: Session not found
  * - 429: Rate limit exceeded
  * - 500: Server error
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    // Parse request body
-    let body: RegenerateCodeBody;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    // Validate userId
-    if (!body.userId || typeof body.userId !== "string") {
-      return NextResponse.json({ error: "User ID is required." }, { status: 400 });
-    }
-
-    const { userId } = body;
-
-    // TODO: Replace userId from body with authenticated user from Shibboleth
+    const { userId } = user;
 
     // Check rate limit (5 regenerations per hour)
     const isRateLimited = await checkRateLimit(

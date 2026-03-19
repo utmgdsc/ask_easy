@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUser, getCurrentUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   buildQuestionsWhere,
@@ -25,10 +25,8 @@ interface RouteParams {
 
 interface QuestionCreateBody {
   content: string;
-  authorId: string; // Required for REST API (no socket auth)
   visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
   isAnonymous?: boolean;
-  slideId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,7 +43,6 @@ interface QuestionCreateBody {
  *   - limit: number (default 20, max 50)
  *   - cursor: id of last question from previous page
  *   - search: partial case-insensitive match on content
- *   - slideId: filter by slide
  *   - status: OPEN | ANSWERED | RESOLVED
  *   - sortBy: newest | votes (default newest)
  *   - includeTotal: true to include total matching count
@@ -54,7 +51,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { sessionId } = await params;
 
-    const userId = getCurrentUserId(request);
+    const userId = await getCurrentUserId();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
@@ -70,7 +67,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const queryParams = parseQuestionsQueryParams(searchParams);
     const where = buildQuestionsWhere(sessionId, role, {
       search: queryParams.search,
-      slideId: queryParams.slideId,
       status: queryParams.status,
     });
 
@@ -82,7 +78,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const take = queryParams.limit + 1;
     const orderBy = getQuestionsOrderBy(queryParams.sortBy);
     const include = {
-      author: { select: { id: true, name: true, role: true } },
+      author: { select: { id: true, name: true, role: true, utorid: true } },
       _count: { select: { answers: true } },
       answers: { where: { isAccepted: true }, select: { id: true }, take: 1 },
     } as const;
@@ -120,7 +116,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       answerCount: q._count.answers,
       hasAcceptedAnswer: q.answers.length > 0,
       acceptedAnswerId: q.answers[0]?.id ?? null,
-      slideId: q.slideId,
       createdAt: q.createdAt,
       author: q.isAnonymous && !canRevealAnonymous ? null : q.author,
     }));
@@ -163,7 +158,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *   - authorId: string (required)
  *   - visibility: "PUBLIC" | "INSTRUCTOR_ONLY" (optional, defaults to PUBLIC)
  *   - isAnonymous: boolean (optional, defaults to false)
- *   - slideId: string (optional)
  *
  * Validations:
  *   1. Content length bounds
@@ -183,34 +177,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    // TO-DO: check with auth to make sure that authorId being sent matches with the auth id, prevent custom body requests
+    // Get authenticated user — authorId comes from the session, not the request body
+    const authUser = await getCurrentUser();
+    if (!authUser) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+    const authorId = authUser.userId;
 
-    // 1. Validate authorId is provided
-    if (!body.authorId || typeof body.authorId !== "string") {
-      return NextResponse.json({ error: "Author ID is required." }, { status: 400 });
+    // 2. Verify the user is enrolled in the session's course
+    const membership = await getSessionMembership(sessionId, authorId);
+    if (!membership.valid) {
+      const statusCode = membership.statusCode ?? 403;
+      return NextResponse.json({ error: membership.error ?? "Forbidden." }, { status: statusCode });
     }
 
-    // 2. Validate content using shared validation
+    // 4. Validate content using shared validation
     const contentValidation = validateQuestionContent(body.content);
     if (!contentValidation.valid) {
       return NextResponse.json({ error: contentValidation.error }, { status: 400 });
     }
 
-    // 3. Validate visibility using shared validation
+    // 5. Validate visibility using shared validation
     const visibilityValidation = validateVisibility(body.visibility);
     if (!visibilityValidation.valid) {
       return NextResponse.json({ error: visibilityValidation.error }, { status: 400 });
     }
 
-    // 4. Validate session using shared validation
+    // 6. Validate session using shared validation (submissions enabled check)
     const sessionValidation = await validateSessionForQuestions(sessionId);
     if (!sessionValidation.valid) {
       const statusCode = sessionValidation.error === "Session not found." ? 404 : 403;
       return NextResponse.json({ error: sessionValidation.error }, { status: statusCode });
     }
 
-    // 5. Check rate limit using shared validation
-    const isRateLimited = await checkQuestionRateLimit(body.authorId);
+    // 7. Check rate limit using shared validation
+    const isRateLimited = await checkQuestionRateLimit(authorId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before asking another question." },
@@ -218,25 +219,30 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 6. Create the question
-    const question = await prisma.question.create({
-      data: {
-        sessionId,
-        authorId: body.authorId,
-        content: body.content.trim(),
-        visibility: body.visibility ?? "PUBLIC",
-        isAnonymous: body.isAnonymous ?? false,
-        slideId: body.slideId ?? null,
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
+    // 8. Create the question and record activity on the session atomically
+    const [question] = await prisma.$transaction([
+      prisma.question.create({
+        data: {
+          sessionId,
+          authorId,
+          content: body.content.trim(),
+          visibility: body.visibility ?? "PUBLIC",
+          isAnonymous: body.isAnonymous ?? false,
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.session.update({
+        where: { id: sessionId },
+        data: { lastActivityAt: new Date() },
+      }),
+    ]);
 
     // 7. Return the created question (respecting anonymity)
     return NextResponse.json(
@@ -247,7 +253,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         status: question.status,
         isAnonymous: question.isAnonymous,
         upvoteCount: question.upvoteCount,
-        slideId: question.slideId,
         createdAt: question.createdAt,
         author: question.isAnonymous ? null : question.author,
       },

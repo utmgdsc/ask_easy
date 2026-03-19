@@ -26,6 +26,7 @@ export interface QuestionValidationResult {
   question?: {
     id: string;
     sessionId: string;
+    authorId: string | null;
   };
 }
 
@@ -82,6 +83,7 @@ export async function validateQuestionForAnswers(
     select: {
       id: true,
       sessionId: true,
+      authorId: true,
       session: {
         select: {
           id: true,
@@ -107,6 +109,7 @@ export async function validateQuestionForAnswers(
     question: {
       id: question.id,
       sessionId: question.sessionId,
+      authorId: question.authorId,
     },
   };
 }

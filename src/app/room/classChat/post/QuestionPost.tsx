@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, CheckCircle2 } from "lucide-react";
+import { MessageCircle, CheckCircle2, Trash2 } from "lucide-react";
 import { Question, Post } from "@/utils/types";
 import { UpvoteButton, renderUsername } from "./PostUtils";
 
@@ -45,7 +45,10 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+          }
         }}
       />
       <div className="flex items-center justify-between">
@@ -115,6 +118,7 @@ export default function QuestionPost({
   canAnswer = true,
   onUpvote,
   onResolve,
+  onDelete,
   onSubmitAnswer,
   children,
 }: {
@@ -125,12 +129,14 @@ export default function QuestionPost({
   canAnswer?: boolean;
   onUpvote?: () => void;
   onResolve?: () => void;
+  onDelete?: () => void;
   onSubmitAnswer?: (content: string, isAnonymous: boolean) => void;
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [resolved, setResolved] = useState(post.isResolved);
   const [threadState, setThreadState] = useState<ThreadState>("default");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Keep resolved in sync if parent state updates
   if (post.isResolved && !resolved) setResolved(true);
@@ -139,31 +145,17 @@ export default function QuestionPost({
   if (commentView === "resolved" && !resolved) return null;
 
   const replyList = replies ?? [];
-  const bestAnswers = replyList.filter((r) => r.type === "bestAnswer");
-  const otherReplies = replyList.filter((r) => r.type !== "bestAnswer");
   const hasAnyReplies = replyList.length > 0 || !!children || isReplying;
 
   // What the +/- button should show:
-  //  collapsed  → "+" (click → default)
-  //  default, has other replies → "+" (click → expanded)
-  //  default, no other replies  → "−" (click → collapsed)
-  //  expanded   → "−" (click → collapsed)
-  const toggleSymbol: "+" | "−" =
-    threadState === "collapsed" || (threadState === "default" && otherReplies.length > 0)
-      ? "+"
-      : "−";
+  //  collapsed        → "+" (click → default/show all)
+  //  default/expanded → "−" (click → collapsed)
+  const toggleSymbol: "+" | "−" = threadState === "collapsed" ? "+" : "−";
 
   const handleToggle = () => {
     if (threadState === "collapsed") {
       setThreadState("expanded");
-    } else if (threadState === "default") {
-      if (otherReplies.length > 0 || isReplying) {
-        setThreadState("expanded");
-      } else {
-        setThreadState("collapsed");
-      }
     } else {
-      // expanded → collapsed
       setThreadState("collapsed");
     }
   };
@@ -174,12 +166,9 @@ export default function QuestionPost({
   };
 
   // Which replies to render in the thread
-  const visibleReplies =
-    threadState === "collapsed" ? [] : threadState === "default" ? bestAnswers : replyList; // expanded → all
+  const visibleReplies = threadState === "collapsed" ? [] : replyList;
 
-  const showThread =
-    threadState !== "collapsed" &&
-    (visibleReplies.length > 0 || (isReplying && threadState === "expanded"));
+  const showThread = threadState !== "collapsed" && (visibleReplies.length > 0 || isReplying);
 
   return (
     <div className="flex flex-col gap-2 bg-stone-100 rounded-xl p-4 border border-stone-200">
@@ -211,38 +200,76 @@ export default function QuestionPost({
           )}
         </div>
 
-        {/* Right: upvote + reply + resolve */}
+        {/* Right: upvote + reply + resolve  —or—  inline delete confirmation */}
         <div className="flex items-center gap-1">
-          <UpvoteButton
-            initialVotes={post.upvotes}
-            controlledVotes={post.upvotes}
-            onUpvote={onUpvote}
-          />
+          {confirmingDelete ? (
+            <>
+              <span className="text-xs text-stone-500 mr-1">Delete question and all replies?</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white hover:text-white"
+                onClick={() => {
+                  onDelete!();
+                  setConfirmingDelete(false);
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-stone-600 hover:bg-stone-200"
+                onClick={() => setConfirmingDelete(false)}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <UpvoteButton
+                initialVotes={post.upvotes}
+                controlledVotes={post.upvotes}
+                onUpvote={onUpvote}
+              />
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-200/60"
-            onClick={() => {
-              setIsReplying((v) => !v);
-              // Opening reply box should at least be in expanded state
-              setThreadState("expanded");
-            }}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            Reply
-          </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-200/60"
+                onClick={() => {
+                  setIsReplying((v) => !v);
+                  if (threadState === "collapsed") setThreadState("expanded");
+                }}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                Reply
+              </Button>
 
-          {onResolve && !resolved && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 text-stone-500 hover:text-green-600 hover:bg-green-50"
-              onClick={handleResolve}
-              title="Mark as resolved"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-            </Button>
+              {onResolve && !resolved && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1 text-stone-500 hover:text-green-600 hover:bg-green-50"
+                  onClick={handleResolve}
+                  title="Mark as resolved"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => setConfirmingDelete(true)}
+                  title="Delete question"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -250,7 +277,7 @@ export default function QuestionPost({
       {/* Thread */}
       {showThread && (
         <div className="mt-1 pl-4 border-l-2 border-stone-300 space-y-1">
-          {isReplying && threadState === "expanded" && (
+          {isReplying && (
             <ReplySection
               canAnswer={canAnswer}
               onSubmit={(content, isAnon) => onSubmitAnswer?.(content, isAnon)}

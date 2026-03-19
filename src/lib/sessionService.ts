@@ -1,6 +1,15 @@
 import type { Role } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { generateUniqueSessionCode } from "@/lib/sessionCode";
+import { deleteFile } from "@/lib/storage";
+import { getIO } from "@/socket";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Sessions with no activity for this long are automatically ended. */
+export const SESSION_INACTIVITY_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,6 +47,93 @@ export interface SessionCreateResult {
     createdById: string;
     createdAt: Date;
   };
+}
+
+// ---------------------------------------------------------------------------
+// Socket authorization errors (thrown by requireSocket* helpers)
+// ---------------------------------------------------------------------------
+
+export class NotEnrolledError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly sessionId: string
+  ) {
+    super("You are not enrolled in this session.");
+    this.name = "NotEnrolledError";
+  }
+}
+
+export class NotInstructorError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly sessionId: string,
+    public readonly actualRole: Role
+  ) {
+    super("Only professors can perform this action.");
+    this.name = "NotInstructorError";
+  }
+}
+
+export class SessionNotFoundError extends Error {
+  constructor(public readonly sessionId: string) {
+    super("Session not found.");
+    this.name = "SessionNotFoundError";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Socket authorization helpers (throw on failure — see Design Principles)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves a user's enrollment for a session's course.
+ * Throws `SessionNotFoundError` if the session doesn't exist.
+ * Throws `NotEnrolledError` if the user is not enrolled.
+ *
+ * @returns The user's enrollment role and the session's courseId
+ */
+export async function requireSocketEnrollment(
+  userId: string,
+  sessionId: string
+): Promise<{ role: Role; courseId: string }> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { courseId: true },
+  });
+
+  if (!session) {
+    throw new SessionNotFoundError(sessionId);
+  }
+
+  const enrollment = await prisma.courseEnrollment.findUnique({
+    where: { userId_courseId: { userId, courseId: session.courseId } },
+    select: { role: true },
+  });
+
+  if (!enrollment) {
+    throw new NotEnrolledError(userId, sessionId);
+  }
+
+  return { role: enrollment.role, courseId: session.courseId };
+}
+
+/**
+ * Requires that the user is a PROFESSOR in the session's course.
+ * Throws `SessionNotFoundError`, `NotEnrolledError`, or `NotInstructorError`.
+ *
+ * @returns The session's courseId
+ */
+export async function requireSocketInstructor(
+  userId: string,
+  sessionId: string
+): Promise<{ courseId: string }> {
+  const { role, courseId } = await requireSocketEnrollment(userId, sessionId);
+
+  if (role !== "PROFESSOR") {
+    throw new NotInstructorError(userId, sessionId, role);
+  }
+
+  return { courseId };
 }
 
 // ---------------------------------------------------------------------------
@@ -172,15 +268,16 @@ export async function createSession(data: SessionCreateInput): Promise<SessionCr
   // Generate unique join code (cryptographically secure)
   const joinCode = await generateUniqueSessionCode();
 
-  // Create session with SCHEDULED status
+  // Create session as ACTIVE immediately so students can join right away
   const session = await prisma.session.create({
     data: {
       courseId,
       createdById: userId,
       title: title.trim(),
       joinCode,
-      status: "SCHEDULED",
-      isSubmissionsEnabled: false,
+      status: "ACTIVE",
+      isSubmissionsEnabled: true,
+      startTime: new Date(),
     },
     select: {
       id: true,
@@ -197,4 +294,81 @@ export async function createSession(data: SessionCreateInput): Promise<SessionCr
     success: true,
     session,
   };
+}
+
+/**
+ * Ends a session: marks it ENDED, broadcasts the socket event, then cleans up
+ * all associated Q&A and slide files. Safe to call more than once — the DB
+ * update is idempotent for already-ended sessions.
+ *
+ * @param sessionId - The session to end
+ */
+export async function performSessionEnd(sessionId: string): Promise<void> {
+  await prisma.session.update({
+    where: { id: sessionId },
+    data: { status: "ENDED", endTime: new Date() },
+  });
+
+  try {
+    const io = getIO();
+    io.to(`session:${sessionId}`).emit("session:ended", {});
+  } catch {
+    // Socket.IO not initialised in test environments — safe to ignore
+  }
+
+  try {
+    await prisma.question.deleteMany({ where: { sessionId } });
+  } catch (err) {
+    console.error("[SessionService] Failed to clean up Q&A for session:", sessionId, err);
+  }
+
+  try {
+    const slideSets = await prisma.slideSet.findMany({
+      where: { sessionId },
+      select: { id: true, storageKey: true },
+    });
+
+    await Promise.allSettled(
+      slideSets.map((ss) =>
+        deleteFile(ss.storageKey).catch((err) =>
+          console.error(`[SessionService] Failed to delete slide file ${ss.storageKey}:`, err)
+        )
+      )
+    );
+
+    if (slideSets.length > 0) {
+      await prisma.slideSet.deleteMany({ where: { sessionId } });
+    }
+  } catch (err) {
+    console.error("[SessionService] Failed to clean up slides for session:", sessionId, err);
+  }
+}
+
+/**
+ * Checks whether an ACTIVE session has been inactive for longer than
+ * SESSION_INACTIVITY_MS and, if so, ends it automatically.
+ *
+ * @param sessionId - The session to check
+ * @returns true if the session was auto-ended, false otherwise
+ */
+export async function checkAndAutoEnd(sessionId: string): Promise<boolean> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { status: true, lastActivityAt: true },
+  });
+
+  if (!session || session.status !== "ACTIVE") {
+    return false;
+  }
+
+  const inactiveMs = Date.now() - session.lastActivityAt.getTime();
+  if (inactiveMs < SESSION_INACTIVITY_MS) {
+    return false;
+  }
+
+  console.info(
+    `[SessionService] Auto-ending session ${sessionId} after ${Math.round(inactiveMs / 60_000)} minutes of inactivity.`
+  );
+  await performSessionEnd(sessionId);
+  return true;
 }

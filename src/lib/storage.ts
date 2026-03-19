@@ -5,6 +5,21 @@ import path from "path";
 const UPLOADS_DIR = path.join(process.cwd(), "uploads");
 
 /**
+ * Resolves a storage key to an absolute path and validates that it stays
+ * within UPLOADS_DIR to prevent path traversal attacks.
+ */
+function resolveStoragePath(key: string): string {
+  const resolved = path.resolve(UPLOADS_DIR, key);
+  // Ensure the resolved path starts with the uploads directory.
+  // path.sep ensures we don't match a directory that is a prefix of another
+  // (e.g. /uploads-extra vs /uploads).
+  if (!resolved.startsWith(UPLOADS_DIR + path.sep) && resolved !== UPLOADS_DIR) {
+    throw new Error(`Invalid storage key: path traversal detected in "${key}"`);
+  }
+  return resolved;
+}
+
+/**
  * Ensures the directory exists, creating it if necessary
  */
 async function ensureDirectory(dirPath: string): Promise<void> {
@@ -28,7 +43,7 @@ export async function uploadFile(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for interface compatibility
   _contentType: string
 ): Promise<string> {
-  const filePath = path.join(UPLOADS_DIR, key);
+  const filePath = resolveStoragePath(key);
   const dirPath = path.dirname(filePath);
 
   await ensureDirectory(dirPath);
@@ -42,7 +57,7 @@ export async function uploadFile(
  * @param key - Storage key
  */
 export async function deleteFile(key: string): Promise<void> {
-  const filePath = path.join(UPLOADS_DIR, key);
+  const filePath = resolveStoragePath(key);
 
   try {
     await fs.unlink(filePath);
@@ -60,7 +75,7 @@ export async function deleteFile(key: string): Promise<void> {
  * @returns Absolute file path
  */
 export function getFilePath(key: string): string {
-  return path.join(UPLOADS_DIR, key);
+  return resolveStoragePath(key);
 }
 
 /**
@@ -69,7 +84,7 @@ export function getFilePath(key: string): string {
  * @returns true if file exists
  */
 export async function fileExists(key: string): Promise<boolean> {
-  const filePath = path.join(UPLOADS_DIR, key);
+  const filePath = resolveStoragePath(key);
 
   try {
     await fs.access(filePath);
@@ -85,7 +100,7 @@ export async function fileExists(key: string): Promise<boolean> {
  * @returns File content as Buffer
  */
 export async function readFile(key: string): Promise<Buffer> {
-  const filePath = path.join(UPLOADS_DIR, key);
+  const filePath = resolveStoragePath(key);
   return fs.readFile(filePath);
 }
 

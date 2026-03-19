@@ -1,6 +1,8 @@
 export interface SocketData {
   userId: string;
+  role: string;
   connectedAt: Date;
+  currentSessionId?: string;
 }
 
 export interface QuestionCreatePayload {
@@ -8,7 +10,6 @@ export interface QuestionCreatePayload {
   sessionId: string;
   visibility?: "PUBLIC" | "INSTRUCTOR_ONLY";
   isAnonymous?: boolean;
-  slideId?: string;
 }
 
 export interface QuestionCreatedPayload {
@@ -16,10 +17,10 @@ export interface QuestionCreatedPayload {
   content: string;
   visibility: string;
   isAnonymous: boolean;
-  slideId: string | null;
   createdAt: Date;
   authorId?: string | null;
   authorName?: string | null;
+  authorUtorid?: string | null;
 }
 
 export interface AnswerModeChangePayload {
@@ -56,6 +57,7 @@ export interface AnswerCreatedPayload {
   isAnonymous: boolean;
   authorId?: string;
   authorName?: string;
+  authorUtorid?: string;
   authorRole: "STUDENT" | "TA" | "PROFESSOR";
   isAccepted: boolean;
   createdAt: Date;
@@ -65,7 +67,36 @@ export interface QuestionUpvotePayload {
   questionId: string;
 }
 
+export interface AnswerUpvotePayload {
+  answerId: string;
+}
+
+export interface AnswerUpdatedPayload {
+  id: string;
+  questionId: string;
+  upvoteCount: number;
+}
+
 export interface QuestionResolvePayload {
+  questionId: string;
+}
+
+export interface QuestionDeletePayload {
+  questionId: string;
+  sessionId: string;
+}
+
+export interface QuestionDeletedPayload {
+  questionId: string;
+}
+
+export interface AnswerDeletePayload {
+  answerId: string;
+  sessionId: string;
+}
+
+export interface AnswerDeletedPayload {
+  answerId: string;
   questionId: string;
 }
 
@@ -96,6 +127,19 @@ export interface SlideSyncResponsePayload {
   pageIndex: number;
 }
 
+export interface SlidesUploadedPayload {
+  sessionId: string;
+  slideSetId: string;
+}
+
+export interface SlidesAvailablePayload {
+  slideSetId: string;
+}
+
+export interface ViewerSyncPayload {
+  sessionId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event maps
 // ---------------------------------------------------------------------------
@@ -107,11 +151,20 @@ export interface ClientToServerEvents {
   "session:join": (payload: SessionJoinPayload) => void;
   "session:leave": (payload: SessionLeavePayload) => void;
   "question:upvote": (payload: QuestionUpvotePayload) => void;
+  "answer:upvote": (payload: AnswerUpvotePayload) => void;
   "question:resolve": (payload: QuestionResolvePayload) => void;
+  "question:delete": (payload: QuestionDeletePayload) => void;
+  "answer:delete": (payload: AnswerDeletePayload) => void;
   "slide:change": (payload: SlideChangePayload) => void;
   "slide:sync": (payload: SlideSyncPayload) => void;
+  "slides:uploaded": (payload: SlidesUploadedPayload) => void;
   "answer-mode:change": (payload: AnswerModeChangePayload) => void;
   "answer-mode:sync": (payload: AnswerModeSyncPayload) => void;
+  "viewer:sync": (payload: ViewerSyncPayload) => void;
+}
+
+export interface ViewerCountPayload {
+  count: number;
 }
 
 /** Events the **server** can send to the **client**. */
@@ -121,11 +174,17 @@ export interface ServerToClientEvents {
   "answer:created": (payload: AnswerCreatedPayload) => void;
   "answer:error": (payload: { message: string }) => void;
   "question:updated": (payload: QuestionUpdatedPayload) => void;
+  "answer:updated": (payload: AnswerUpdatedPayload) => void;
   "question:resolved": (payload: QuestionResolvedPayload) => void;
+  "question:deleted": (payload: QuestionDeletedPayload) => void;
+  "answer:deleted": (payload: AnswerDeletedPayload) => void;
   "slide:changed": (payload: SlideChangedPayload) => void;
   "slide:sync": (payload: SlideSyncResponsePayload) => void;
   "slide:error": (payload: { message: string }) => void;
+  "slides:available": (payload: SlidesAvailablePayload) => void;
   "answer-mode:changed": (payload: AnswerModeChangedPayload) => void;
+  "viewer:count": (payload: ViewerCountPayload) => void;
+  "session:ended": (payload: Record<string, never>) => void;
 }
 
 /** Events exchanged between Socket.IO server instances (via Redis adapter). */

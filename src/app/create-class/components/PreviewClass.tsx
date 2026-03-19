@@ -6,6 +6,12 @@ interface PreviewClassProps {
   processedData: ProcessedClassData | null;
   onClear: () => void;
   onSubmit: () => void;
+  tasInput: string;
+  onTasChange: (value: string) => void;
+  courseCodeInput: string;
+  onCourseCodeChange: (value: string) => void;
+  sectionInput: string;
+  onSectionChange: (value: string) => void;
 }
 
 export default function PreviewClass({
@@ -13,6 +19,12 @@ export default function PreviewClass({
   processedData,
   onClear,
   onSubmit,
+  tasInput,
+  onTasChange,
+  courseCodeInput,
+  onCourseCodeChange,
+  sectionInput,
+  onSectionChange,
 }: PreviewClassProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -47,12 +59,26 @@ export default function PreviewClass({
             <h3 className="text-sm font-semibold text-stone-900 tracking-wide uppercase">
               Class Roster Preview
             </h3>
-            <div className="flex gap-2 text-sm font-semibold text-stone-600">
-              <div className="bg-stone-100 px-3 py-1 rounded-md">
-                Course: {processedData.courseCode}
+            <div className="flex gap-2 text-sm font-semibold text-stone-600 items-center flex-wrap">
+              <div className="flex items-center gap-1.5 bg-stone-100 px-3 py-1 rounded-md">
+                <span className="shrink-0">Course:</span>
+                <input
+                  type="text"
+                  value={courseCodeInput}
+                  onChange={(e) => onCourseCodeChange(e.target.value)}
+                  placeholder="e.g. CSC398H5"
+                  className="bg-transparent border-b border-stone-400 focus:border-stone-700 outline-none text-sm font-semibold text-stone-700 w-24 placeholder:font-normal placeholder:text-stone-400"
+                />
               </div>
-              <div className="bg-stone-100 px-3 py-1 rounded-md">
-                Section: {processedData.lectureSection}
+              <div className="flex items-center gap-1.5 bg-stone-100 px-3 py-1 rounded-md">
+                <span className="shrink-0">Section:</span>
+                <input
+                  type="text"
+                  value={sectionInput}
+                  onChange={(e) => onSectionChange(e.target.value)}
+                  placeholder="e.g. LEC0101"
+                  className="bg-transparent border-b border-stone-400 focus:border-stone-700 outline-none text-sm font-semibold text-stone-700 w-28 placeholder:font-normal placeholder:text-stone-400"
+                />
               </div>
             </div>
           </div>
@@ -86,6 +112,24 @@ export default function PreviewClass({
           )}
         </div>
       )}
+
+      {/* TA UTORid input */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-stone-900 tracking-wide uppercase">
+          Add TAs <span className="text-stone-400 font-normal normal-case">(optional)</span>
+        </label>
+        <p className="text-xs text-stone-500">
+          Enter UTORids separated by commas, spaces, or new lines. TAs can see all questions and
+          answer in restricted mode.
+        </p>
+        <textarea
+          value={tasInput}
+          onChange={(e) => onTasChange(e.target.value)}
+          placeholder={"tasmith\ndoeta, brownjane"}
+          rows={3}
+          className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-blue-400"
+        />
+      </div>
 
       <button
         onClick={onSubmit}
