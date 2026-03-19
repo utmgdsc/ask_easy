@@ -153,7 +153,10 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
         },
       });
 
-      // 8. Build broadcast payload and emit to the session room
+      // 8. Build broadcast payload and emit to the session room.
+      // Use answerEnrollment.role (CourseEnrollment) rather than answer.author.role
+      // (User.role) because User.role is always "STUDENT" for TAs — the per-course
+      // enrollment is the source of truth for role-based UI (e.g. instructor badge).
       const broadcastPayload: AnswerCreatedPayload = {
         id: answer.id,
         questionId: answer.questionId,
@@ -166,7 +169,7 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
               authorName: answer.author.name,
               authorUtorid: answer.author.utorid,
             }),
-        authorRole: answer.author.role,
+        authorRole: answerEnrollment!.role as AnswerCreatedPayload["authorRole"],
         isAccepted: answer.isAccepted,
         createdAt: answer.createdAt,
       };

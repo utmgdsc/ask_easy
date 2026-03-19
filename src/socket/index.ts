@@ -214,7 +214,7 @@ export async function initSocketIO(
         if (!syncEnrollment) return;
 
         const sockets = await io!.in(`session:${payload.sessionId}`).fetchSockets();
-        const count = sockets.length;
+        const count = sockets.filter((s) => s.data.role !== "PROFESSOR").length;
         socket.emit("viewer:count", { count });
       }
     });
