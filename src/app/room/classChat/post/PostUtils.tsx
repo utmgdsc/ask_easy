@@ -11,7 +11,7 @@ export function renderAvatar(post: Post) {
     return (
       <Avatar className="h-8 w-8">
         <AvatarImage src={post.user.pfp} alt={post.user.username} />
-        <AvatarFallback>{post.user.username[0]}</AvatarFallback>
+        <AvatarFallback>{post.user.username[1]}</AvatarFallback>
       </Avatar>
     );
   }

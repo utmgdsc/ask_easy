@@ -7,7 +7,7 @@ function renderAvatar(user: User) {
     <Avatar className="h-8 w-8">
       <AvatarImage src={user.pfp} alt={user.username} />
       <AvatarFallback className="bg-stone-50 font-medium text-xl">
-        {user.username[0]}
+        {user.username[2]}
       </AvatarFallback>
     </Avatar>
   );

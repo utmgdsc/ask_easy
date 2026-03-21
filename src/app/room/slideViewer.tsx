@@ -231,11 +231,11 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
       )}
 
       {/* Controls bar — always rendered */}
-      <div className="flex shrink-0 items-center justify-center gap-4 p-4">
+      <div className="flex shrink-0 items-center justify-start gap-4 p-4 overflow-x-auto whitespace-nowrap">
         {/* Professor: live indicator + nav */}
         {isProfessor && (
           <>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-700 rounded-md text-sm font-medium">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm font-medium">
               <Radio className="w-4 h-4" />
               Presenting Live
             </div>
@@ -267,14 +267,14 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
                 <button
                   onClick={handleEndLecture}
                   disabled={ending}
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-60"
+                  className="px-3 py-1.5 ml-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-60"
                 >
                   {ending ? "Ending…" : "Yes, end it"}
                 </button>
                 <button
                   onClick={() => setConfirmEnd(false)}
                   disabled={ending}
-                  className="px-3 py-1.5 bg-stone-200 hover:bg-stone-300 text-foreground rounded-md text-sm font-medium transition-colors"
+                  className="px-3 ml-2 py-1.5 bg-stone-200 hover:bg-stone-300 text-foreground rounded-md text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -282,7 +282,7 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
             ) : (
               <button
                 onClick={handleEndLecture}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-200 hover:bg-red-100 hover:text-red-700 text-stone-700 rounded-md text-sm font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-100 hover:text-red-700 text-red-700 rounded-md text-sm font-medium transition-colors"
               >
                 <Square className="w-3.5 h-3.5 fill-current" />
                 End Lecture
