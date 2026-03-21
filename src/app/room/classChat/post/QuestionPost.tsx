@@ -41,7 +41,7 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
     <div className="pt-1 pb-2">
       <Textarea
         placeholder="Write an answer..."
-        className="min-h-[72px] mb-2 focus-visible:ring-0 focus-visible:border-stone-400"
+        className="min-h-[72px] mb-1.5 focus-visible:ring-0 focus-visible:border-stone-400"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {

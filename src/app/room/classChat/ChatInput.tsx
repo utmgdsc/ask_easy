@@ -81,7 +81,7 @@ export default function ChatInput({
             
           </div>
           <Button
-            className="h-13 mb-4.5 w-16 shrink-0 bg-stone-900 hover:bg-stone-700"
+            className="h-13 mb-3.5 w-16 shrink-0 bg-stone-900 hover:bg-stone-700"
             onClick={handleSubmit}
             disabled={disabled || !content.trim()}
           >
