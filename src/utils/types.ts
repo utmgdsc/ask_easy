@@ -18,6 +18,7 @@ interface BasePost {
   timestamp: string;
   content: string;
   upvotes: number;
+  isAnonymous?: boolean;
 }
 
 export interface Question extends BasePost {

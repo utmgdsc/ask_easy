@@ -182,7 +182,7 @@ export default function QuestionPost({
           <div
             className={`w-2 h-2 rounded-full shrink-0 ${resolved ? "bg-green-500" : "bg-amber-400"}`}
           />
-          {renderUsername(post.user)}
+          {renderUsername(post.user, post.isAnonymous)}
           <span>{post.timestamp}</span>
 
           {hasAnyReplies && (
