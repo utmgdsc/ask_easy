@@ -78,7 +78,6 @@ export default function ChatInput({
               }`}
             />
             {error && <p className="text-xs text-red-500 px-1">{error}</p>}
-            
           </div>
           <Button
             className="h-13 mb-3.5 w-16 shrink-0 bg-stone-900 hover:bg-stone-700"
