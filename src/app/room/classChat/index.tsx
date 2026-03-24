@@ -49,16 +49,15 @@ function fmt(iso: string): string {
 }
 
 function apiAnswerToPost(a: APIAnswer): Comment {
-  const user =
-    !a.author
-      ? null
-      : {
-          id: a.author.id,
-          utorid: a.author.utorid,
-          username: a.author.name,
-          pfp: "",
-          role: a.author.role,
-        };
+  const user = !a.author
+    ? null
+    : {
+        id: a.author.id,
+        utorid: a.author.utorid,
+        username: a.author.name,
+        pfp: "",
+        role: a.author.role,
+      };
 
   return {
     id: a.id,
@@ -72,16 +71,15 @@ function apiAnswerToPost(a: APIAnswer): Comment {
 }
 
 function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
-  const user =
-    !q.author
-      ? null
-      : {
-          id: q.author.id,
-          utorid: q.author.utorid,
-          username: q.author.name,
-          pfp: "",
-          role: q.author.role,
-        };
+  const user = !q.author
+    ? null
+    : {
+        id: q.author.id,
+        utorid: q.author.utorid,
+        username: q.author.name,
+        pfp: "",
+        role: q.author.role,
+      };
 
   return {
     id: q.id,
