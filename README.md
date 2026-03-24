@@ -85,11 +85,10 @@ Open [http://localhost:3000](http://localhost:3000).
 ```bash
 docker-compose up -d postgres redis
 pnpm db:setup   # generate Prisma client + push schema
-pnpm db:seed    # seed sample data (prints test URLs)
 pnpm dev
 ```
 
-After seeding, the terminal prints URLs for each test role (professor, TA, student). Open them in separate tabs to simulate a live session.
+> **Note:** `pnpm db:seed` currently resets all tables (deletes all data). There is no sample data seeder yet — create test users by logging in through the app.
 
 ## Available Scripts
 
@@ -103,7 +102,7 @@ After seeding, the terminal prints URLs for each test role (professor, TA, stude
 | `pnpm test` | Run unit tests (Vitest) |
 | `pnpm test:integration` | Run integration tests |
 | `pnpm db:setup` | Generate Prisma client + push schema |
-| `pnpm db:seed` | Seed database with sample data |
+| `pnpm db:seed` | Reset database (clears all tables) |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm db:studio` | Open Prisma Studio GUI |
 
@@ -131,4 +130,11 @@ prisma/
 
 Built by the AskEasy team at **GDG on Campus — UTM** (University of Toronto Mississauga).
 
-- **Jaden Scali** — Project Lead
+- Jaden Scali
+- Phineas Truong
+- Jack Le
+- Jad El Asmar
+- Manjyot Birdi
+- Marwan Yousef
+
+
