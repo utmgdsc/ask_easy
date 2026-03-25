@@ -169,34 +169,6 @@ export default function CourseViewer() {
             </div>
           ))}
         </div>
-
-        {/* Also show active sessions from any enrolled course at the bottom */}
-        {mySessions.length > 0 && (
-          <div className="max-w-6xl mx-auto mt-12">
-            <h2 className="text-xl font-bold mb-4 text-stone-700">Live Now</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mySessions.map((session) => (
-                <button
-                  key={session.id}
-                  onClick={() => handleJoin(session)}
-                  disabled={joining === session.id}
-                  className="
-                    text-left flex flex-col gap-1 p-4 rounded-xl border-2 border-blue-200
-                    bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer
-                    disabled:opacity-60
-                  "
-                >
-                  <span className="font-bold text-blue-800">{session.course.code}</span>
-                  <span className="text-sm text-stone-600">{session.title}</span>
-                  <span className="text-xs text-blue-600 font-medium mt-1">
-                    {joining === session.id ? "Joining…" : "Join →"}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {joinError && <p className="text-sm text-red-600 mt-2">{joinError}</p>}
-          </div>
-        )}
       </div>
     );
   }
