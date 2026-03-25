@@ -25,17 +25,7 @@ export default function header(user: User) {
         AskEasy
       </Link>
 
-      <div className=" flex flex-end gap-2 items-center">
-        {user.role === "PROFESSOR" && (
-          <Link
-            href="/create-class"
-            className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
-          >
-            Create a Class
-          </Link>
-        )}
-        {renderAvatar(user)}
-      </div>
+      <div className=" flex flex-end gap-2 items-center">{renderAvatar(user)}</div>
     </div>
   );
 }
