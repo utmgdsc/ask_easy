@@ -49,16 +49,15 @@ function fmt(iso: string): string {
 }
 
 function apiAnswerToPost(a: APIAnswer): Comment {
-  const user =
-    a.isAnonymous || !a.author
-      ? null
-      : {
-          id: a.author.id,
-          utorid: a.author.utorid,
-          username: a.author.name,
-          pfp: "",
-          role: a.author.role,
-        };
+  const user = !a.author
+    ? null
+    : {
+        id: a.author.id,
+        utorid: a.author.utorid,
+        username: a.author.name,
+        pfp: "",
+        role: a.author.role,
+      };
 
   return {
     id: a.id,
@@ -67,20 +66,20 @@ function apiAnswerToPost(a: APIAnswer): Comment {
     timestamp: fmt(a.createdAt),
     content: a.content,
     upvotes: a.upvoteCount ?? 0,
+    isAnonymous: a.isAnonymous,
   };
 }
 
 function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
-  const user =
-    q.isAnonymous || !q.author
-      ? null
-      : {
-          id: q.author.id,
-          utorid: q.author.utorid,
-          username: q.author.name,
-          pfp: "",
-          role: q.author.role,
-        };
+  const user = !q.author
+    ? null
+    : {
+        id: q.author.id,
+        utorid: q.author.utorid,
+        username: q.author.name,
+        pfp: "",
+        role: q.author.role,
+      };
 
   return {
     id: q.id,
@@ -90,6 +89,7 @@ function apiQuestionToPost(q: APIQuestion, answers: APIAnswer[]): Question {
     content: q.content,
     upvotes: q.upvoteCount,
     isResolved: q.status === "RESOLVED",
+    isAnonymous: q.isAnonymous,
     replies: answers.map((a) => apiAnswerToPost(a)),
     visibility: q.visibility,
   };
@@ -203,6 +203,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
         content: payload.content,
         upvotes: 0,
         isResolved: false,
+        isAnonymous: payload.isAnonymous,
         replies: [],
         visibility: payload.visibility as "PUBLIC" | "INSTRUCTOR_ONLY",
       };
@@ -285,6 +286,66 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       setAnswerMode(payload.mode);
     };
 
+    const onQuestionAuthorRevealed = (payload: {
+      id: string;
+      authorId: string;
+      authorName: string | null;
+      authorUtorid: string | null;
+      authorRole: Role;
+    }) => {
+      if (!payload.authorName) return;
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === payload.id
+            ? {
+                ...q,
+                user: {
+                  id: payload.authorId,
+                  utorid: payload.authorUtorid ?? undefined,
+                  username: payload.authorName!,
+                  pfp: "",
+                  role: payload.authorRole,
+                },
+              }
+            : q
+        )
+      );
+    };
+
+    const onAnswerAuthorRevealed = (payload: {
+      id: string;
+      questionId: string;
+      authorId: string;
+      authorName: string | null;
+      authorUtorid: string | null;
+      authorRole: Role;
+    }) => {
+      if (!payload.authorName) return;
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === payload.questionId
+            ? {
+                ...q,
+                replies: q.replies.map((r) =>
+                  r.id === payload.id
+                    ? {
+                        ...r,
+                        user: {
+                          id: payload.authorId,
+                          utorid: payload.authorUtorid ?? undefined,
+                          username: payload.authorName!,
+                          pfp: "",
+                          role: payload.authorRole,
+                        },
+                      }
+                    : r
+                ),
+              }
+            : q
+        )
+      );
+    };
+
     const onQuestionError = (payload: { message: string }) => {
       console.error("[ClassChat] question:error", payload.message);
       setQuestionError(payload.message);
@@ -330,6 +391,8 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     socket.on("answer:deleted", onAnswerDeleted);
     socket.on("answer-mode:changed", onAnswerModeChanged);
     socket.on("question:error", onQuestionError);
+    socket.on("question:author:revealed", onQuestionAuthorRevealed);
+    socket.on("answer:author:revealed", onAnswerAuthorRevealed);
 
     return () => {
       socket.off("connect", syncAnswerMode);
@@ -342,6 +405,8 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       socket.off("answer:deleted", onAnswerDeleted);
       socket.off("answer-mode:changed", onAnswerModeChanged);
       socket.off("question:error", onQuestionError);
+      socket.off("question:author:revealed", onQuestionAuthorRevealed);
+      socket.off("answer:author:revealed", onAnswerAuthorRevealed);
     };
   }, [socket, sessionId, chatHistoryRef]);
 

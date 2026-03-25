@@ -24,7 +24,7 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
 
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-xs text-stone-900/50">
-          {renderUsername(post.user)}
+          {renderUsername(post.user, post.isAnonymous)}
           <span>{post.timestamp}</span>
           {isInstructor && (
             <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-medium">
