@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, CheckCircle2, Trash2 } from "lucide-react";
+import { MessageCircle, CheckCircle2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Question, Post } from "@/utils/types";
 import { UpvoteButton, renderUsername } from "./PostUtils";
 
@@ -13,13 +13,12 @@ import { UpvoteButton, renderUsername } from "./PostUtils";
 
 interface ReplySectionProps {
   canAnswer: boolean;
-  onSubmit: (content: string, isAnonymous: boolean) => void;
+  onSubmit: (content: string) => void;
   onCancel: () => void;
 }
 
 function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
   const [text, setText] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(false);
 
   if (!canAnswer) {
     return (
@@ -32,7 +31,7 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
   const handleSubmit = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    onSubmit(trimmed, isAnonymous);
+    onSubmit(trimmed);
     setText("");
     onCancel();
   };
@@ -51,16 +50,7 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
           }
         }}
       />
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={isAnonymous}
-            onChange={(e) => setIsAnonymous(e.target.checked)}
-            className="rounded"
-          />
-          Anonymous
-        </label>
+      <div className="flex items-center justify-end">
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
@@ -80,21 +70,24 @@ function ReplySection({ canAnswer, onSubmit, onCancel }: ReplySectionProps) {
 
 function ThreadToggle({
   label,
-  symbol,
+  expanded,
   onClick,
 }: {
   label: string;
-  symbol: "+" | "−";
+  expanded: boolean;
   onClick: () => void;
 }) {
+  const Icon = expanded ? ChevronUp : ChevronDown;
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={onClick}
-      aria-label={label}
-      className="flex items-center justify-center w-4 h-4 rounded-full border border-stone-400 text-stone-400 hover:border-stone-700 hover:text-stone-700 transition-colors leading-none"
+      className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
     >
-      <span className="text-[10px] font-bold select-none">{symbol}</span>
-    </button>
+      <Icon className="h-4 w-4" />
+      {label}
+    </Button>
   );
 }
 
@@ -130,7 +123,7 @@ export default function QuestionPost({
   onUpvote?: () => void;
   onResolve?: () => void;
   onDelete?: () => void;
-  onSubmitAnswer?: (content: string, isAnonymous: boolean) => void;
+  onSubmitAnswer?: (content: string) => void;
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
@@ -147,10 +140,7 @@ export default function QuestionPost({
   const replyList = replies ?? [];
   const hasAnyReplies = replyList.length > 0 || !!children || isReplying;
 
-  // What the +/- button should show:
-  //  collapsed        → "+" (click → default/show all)
-  //  default/expanded → "−" (click → collapsed)
-  const toggleSymbol: "+" | "−" = threadState === "collapsed" ? "+" : "−";
+  const isExpanded = threadState !== "collapsed";
 
   const handleToggle = () => {
     if (threadState === "collapsed") {
@@ -176,9 +166,9 @@ export default function QuestionPost({
       <div className="font-semibold whitespace-pre-wrap text-stone-900">{post.content}</div>
 
       {/* Meta row */}
-      <div className="flex items-center justify-between text-xs text-stone-500">
+      <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-1 text-xs text-stone-500">
         {/* Left: status dot + username + time + toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full shrink-0 ${resolved ? "bg-green-500" : "bg-amber-400"}`}
           />
@@ -187,13 +177,13 @@ export default function QuestionPost({
 
           {hasAnyReplies && (
             <ThreadToggle
-              symbol={toggleSymbol}
+              expanded={isExpanded}
               label={
-                threadState === "collapsed"
-                  ? "Expand replies"
-                  : toggleSymbol === "+"
-                    ? "Show all replies"
-                    : "Collapse replies"
+                isExpanded
+                  ? "Hide replies"
+                  : replyList.length > 0
+                    ? `${replyList.length} Repl${replyList.length === 1 ? "y" : "ies"}`
+                    : "Replies"
               }
               onClick={handleToggle}
             />
@@ -201,7 +191,7 @@ export default function QuestionPost({
         </div>
 
         {/* Right: upvote + reply + resolve  —or—  inline delete confirmation */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {confirmingDelete ? (
             <>
               <span className="text-xs text-stone-500 mr-1">Delete question and all replies?</span>
@@ -236,13 +226,13 @@ export default function QuestionPost({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs gap-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-200/60"
+                className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
                 onClick={() => {
                   setIsReplying((v) => !v);
                   if (threadState === "collapsed") setThreadState("expanded");
                 }}
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-4 w-4" />
                 Reply
               </Button>
 
@@ -250,11 +240,11 @@ export default function QuestionPost({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs gap-1 text-stone-500 hover:text-green-600 hover:bg-green-50"
+                  className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-green-600 hover:bg-green-50"
                   onClick={handleResolve}
                   title="Mark as resolved"
                 >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <CheckCircle2 className="h-4 w-4" />
                 </Button>
               )}
 
@@ -262,11 +252,11 @@ export default function QuestionPost({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-red-600 hover:bg-red-50"
+                  className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
                   onClick={() => setConfirmingDelete(true)}
                   title="Delete question"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </>
@@ -276,11 +266,11 @@ export default function QuestionPost({
 
       {/* Thread */}
       {showThread && (
-        <div className="mt-1 pl-4 border-l-2 border-stone-300 space-y-1">
+        <div className="mt-1 pl-2 sm:pl-4 border-l-2 border-stone-300 space-y-1">
           {isReplying && (
             <ReplySection
               canAnswer={canAnswer}
-              onSubmit={(content, isAnon) => onSubmitAnswer?.(content, isAnon)}
+              onSubmit={(content) => onSubmitAnswer?.(content)}
               onCancel={() => setIsReplying(false)}
             />
           )}

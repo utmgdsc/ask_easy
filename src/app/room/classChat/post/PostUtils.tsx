@@ -57,8 +57,10 @@ export function UpvoteButton({ initialVotes, controlledVotes, onUpvote }: Upvote
     <Button
       variant="ghost"
       size="sm"
-      className={`h-8 px-2 text-xs gap-2 ${
-        isUpvoted ? "text-green-500 hover:text-green-500" : "text-stone-900/50 hover:text-stone-900"
+      className={`h-7 px-2 text-xs gap-1 ${
+        isUpvoted
+          ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+          : "text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
       }`}
       onClick={handleUpvote}
     >

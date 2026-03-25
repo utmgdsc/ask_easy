@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Comment } from "@/utils/types";
 import { renderAvatar, UpvoteButton, renderUsername } from "./PostUtils";
 
@@ -16,14 +17,14 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
-    <div className="flex gap-3 mt-4">
+    <div className="flex gap-2 sm:gap-3 mt-4">
       <div className="flex flex-col items-center gap-1">
         {renderAvatar(post)}
         <div className="h-full w-px bg-border my-2" />
       </div>
 
       <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center gap-2 text-xs text-stone-900/50">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-900/50">
           {renderUsername(post.user, post.isAnonymous)}
           <span>{post.timestamp}</span>
           {isInstructor && (
@@ -54,7 +55,7 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
 
           {onDelete &&
             (confirmingDelete ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1">
                 <span className="text-xs text-stone-500">Delete this answer?</span>
                 <button
                   onClick={() => {
@@ -73,13 +74,15 @@ export default function CommentPost({ post, onUpvote, onDelete }: CommentPostPro
                 </button>
               </div>
             ) : (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setConfirmingDelete(true)}
                 title="Delete answer"
-                className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-600 transition-colors"
+                className="h-7 px-2 gap-1 text-xs text-stone-400 hover:text-stone-900 hover:bg-stone-200/60 transition-colors"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             ))}
         </div>
       </div>

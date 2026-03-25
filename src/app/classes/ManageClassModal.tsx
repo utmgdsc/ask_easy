@@ -657,7 +657,7 @@ export default function ManageClassModal({
                     setAddResult(null);
                     setAddError(null);
                   }}
-                  placeholder={"jsmith12\ndoe34, brown56"}
+                  placeholder={"tasmith2, janedooe, scalijad"}
                   rows={3}
                   className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />
@@ -716,7 +716,7 @@ export default function ManageClassModal({
                     setTaAddResult(null);
                     setTaAddError(null);
                   }}
-                  placeholder={"tasmith\ndoeta, brownjane"}
+                  placeholder={"tasmith2, janedooe, scalijad"}
                   rows={3}
                   className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />

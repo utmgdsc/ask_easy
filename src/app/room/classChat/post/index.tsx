@@ -11,7 +11,7 @@ interface PostItemProps {
   canAnswer?: boolean;
   onUpvote?: () => void;
   onResolve?: () => void;
-  onSubmitAnswer?: (content: string, isAnonymous: boolean) => void;
+  onSubmitAnswer?: (content: string) => void;
   onAnswerUpvote?: (answerId: string) => void;
   /** Called when the professor/TA wants to delete this question. */
   onDeleteQuestion?: () => void;
