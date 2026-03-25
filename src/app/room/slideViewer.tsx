@@ -54,6 +54,7 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
   const [inputValue, setInputValue] = useState("1");
   const [isSynced, setIsSynced] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
+  const [ending, setEnding] = useState(false);
   const professorPageRef = useRef(0);
 
   const { provides: docManager } = useDocumentManagerCapability();
