@@ -17,15 +17,8 @@ export const processRawData = (rawData: CSVRow[]): ProcessedClassData => {
     ? firstRowCourseCode.split(",")[0].trim()
     : "Unknown Course";
 
-  const primeTM = rawData.length > 0 ? rawData[0]["Prime TM"] || "" : "";
-  const primeSNR = rawData.length > 0 ? rawData[0]["Prime SNR"] || "" : "";
-
-  const extractedLectureSection =
-    primeTM && primeSNR ? `${primeTM.trim()} ${primeSNR.trim()}` : "Unknown Section";
-
   return {
     courseCode: extractedCourseCode,
-    lectureSection: extractedLectureSection,
     students:
       students.length > 0 ? students : [{ givenName: "ERROR", surname: "ERROR", utorid: "ERROR" }],
   };

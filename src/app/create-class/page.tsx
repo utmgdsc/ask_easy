@@ -18,7 +18,6 @@ export default function CreateClassPage() {
   const [processedData, setProcessedData] = useState<ProcessedClassData | null>(null);
   const [tasInput, setTasInput] = useState("");
   const [courseCodeInput, setCourseCodeInput] = useState("");
-  const [sectionInput, setSectionInput] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -46,7 +45,6 @@ export default function CreateClassPage() {
       const processed = await parseAndProcessCSV(selectedFile);
       setProcessedData(processed);
       setCourseCodeInput(processed.courseCode ?? "");
-      setSectionInput(processed.lectureSection ?? "");
     } catch (error) {
       console.error(error);
     }
@@ -57,7 +55,6 @@ export default function CreateClassPage() {
     setProcessedData(null);
     setTasInput("");
     setCourseCodeInput("");
-    setSectionInput("");
     setSubmitError(null);
   };
 
@@ -76,7 +73,6 @@ export default function CreateClassPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: courseCodeInput.trim() || processedData.courseCode,
-          section: sectionInput.trim() || undefined,
           students: processedData.students,
           ...(tas.length > 0 ? { tas } : {}),
         }),
@@ -108,13 +104,18 @@ export default function CreateClassPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans text-stone-800">
+    <div className="min-h-screen flex flex-col dot-grid relative">
       {header(user)}
       <div className="flex-grow flex items-center justify-center pt-32 pb-12 px-6">
-        <div className="max-w-3xl w-full bg-white p-8 rounded-lg shadow-sm border border-stone-200 space-y-6 z-10 mx-auto">
-          <h1 className="text-2xl font-semibold text-stone-900 tracking-wide uppercase border-b border-stone-300/50 pb-4">
-            Create Class
-          </h1>
+        <div className="max-w-3xl w-full bg-white p-6 sm:p-8 rounded-md border-2 border-stone-100 shadow-sm space-y-6 z-10 mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-stone-900 tracking-tight mb-2">
+              Create a Lecture
+            </h1>
+            <p className="text-lg text-stone-500">
+              Upload your student roster to create a new lecture.
+            </p>
+          </div>
 
           {submitError && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-2">
@@ -134,8 +135,6 @@ export default function CreateClassPage() {
               onTasChange={setTasInput}
               courseCodeInput={courseCodeInput}
               onCourseCodeChange={setCourseCodeInput}
-              sectionInput={sectionInput}
-              onSectionChange={setSectionInput}
             />
           )}
 
