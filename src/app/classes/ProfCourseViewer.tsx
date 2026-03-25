@@ -3,7 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Settings, BookOpen, Calendar, PlusCircle, Radio, Users, CheckCircle } from "lucide-react";
+import {
+  Settings,
+  BookOpen,
+  Calendar,
+  PlusCircle,
+  Radio,
+  Users,
+  CheckCircle,
+  Video,
+  Play,
+  Square,
+  AlertCircle,
+} from "lucide-react";
 
 import ManageClassModal, { type CourseForModal } from "./ManageClassModal";
 
@@ -25,7 +37,6 @@ export default function ProfCourseButtons() {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [activeSessions, setActiveSessions] = useState<Map<string, ActiveSession>>(new Map());
-  const [clickedCourseId, setClickedCourseId] = useState("");
   const [goingLive, setGoingLive] = useState<string | null>(null);
   const [liveInfo, setLiveInfo] = useState<{ sessionId: string; joinCode: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +67,7 @@ export default function ProfCourseButtons() {
       .catch(() => null);
   }, []);
 
-  function handleCourseClick(courseId: string) {
-    if (clickedCourseId === courseId) return; // Don't close when clicking expanded card
-    setClickedCourseId(courseId);
-    setLiveInfo(null);
+  function handleCourseClick() {
     setError(null);
   }
 
@@ -142,7 +150,6 @@ export default function ProfCourseButtons() {
 
   function handleDeleted(courseId: string) {
     setCourses((prev) => prev.filter((c) => c.id !== courseId));
-    setClickedCourseId("");
   }
 
   if (courses.length > 0) {
@@ -167,168 +174,120 @@ export default function ProfCourseButtons() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto relative">
+            {error && (
+              <div className="col-span-full md:col-span-2 lg:col-span-3 mb-2 bg-red-50 text-red-600 p-4 rounded-md border border-red-100 flex items-center gap-3 font-medium">
+                <AlertCircle className="w-5 h-5" />
+                {error}
+              </div>
+            )}
             {courses.map((course) => {
-              const isActive = activeSessions.has(course.id);
-              const isExpanded = clickedCourseId === course.id;
+              const session = activeSessions.get(course.id);
+              const isActive = !!session;
+              const isStarting = goingLive === course.id;
+              const isEnding = endingSession === course.id;
 
               return (
                 <div
                   key={course.id}
-                  onClick={() => handleCourseClick(course.id)}
+                  onClick={() => {
+                    handleCourseClick();
+                    if (isActive && !isEnding) {
+                      handleRejoin(course.id, course.name);
+                    }
+                  }}
                   className={`
                     group relative overflow-hidden flex flex-col
                     p-6 sm:p-8 rounded-md transition-all duration-300
-                    bg-white border-2 shadow-sm
+                    bg-white border-2 shadow-sm min-h-[16rem]
                     ${
-                      isExpanded
-                        ? "border-green-400 shadow-xl ring-4 ring-green-50 scale-[1.02] z-10"
-                        : "border-stone-100 hover:border-green-300 hover:shadow-lg cursor-pointer h-[16rem]"
+                      isActive
+                        ? "border-green-400 hover:shadow-xl cursor-pointer"
+                        : "border-stone-100 hover:border-stone-200 cursor-default"
                     }
                   `}
                 >
-                  {/* Close button for expanded view (overlay covers entire card top area to allow easily clicking away while inside the card) */}
-                  {isExpanded && (
-                    <div
-                      className="absolute inset-x-0 top-0 h-16 cursor-pointer z-0 opacity-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setClickedCourseId("");
-                      }}
-                    />
-                  )}
-
                   <div className="flex items-start justify-between w-full mb-6 relative z-10">
                     <div
-                      className={`w-12 h-12 rounded-md flex items-center justify-center transition-all shrink-0 ${isExpanded ? "bg-green-500 text-white" : "bg-stone-50 text-stone-600 group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110"}`}
+                      className={`w-12 h-12 rounded-md flex items-center justify-center transition-all shrink-0 ${isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}
                     >
-                      <BookOpen className="w-6 h-6" />
+                      {isActive ? <Video className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
                     </div>
 
-                    {/* Active session badge */}
-                    {isActive && !isExpanded && (
+                    {isActive && (
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-md border border-green-200 shadow-sm animate-pulse">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                         LIVE
                       </span>
                     )}
-
-                    {isExpanded && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setClickedCourseId("");
-                        }}
-                        className="text-stone-400 hover:text-stone-700 p-2 rounded-md hover:bg-stone-100 transition-colors"
-                      >
-                        <span className="sr-only">Close</span>
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    )}
                   </div>
 
                   <div className="flex flex-col gap-1 mt-auto relative z-10">
                     <h3
-                      className={`font-bold tracking-tight transition-colors line-clamp-2 ${isExpanded ? "text-3xl text-stone-900 border-b border-stone-100 pb-4 mb-4" : "text-3xl text-stone-900 group-hover:text-green-600"}`}
+                      className={`font-bold tracking-tight transition-colors line-clamp-2 ${isActive ? "text-3xl text-stone-900 group-hover:text-green-600" : "text-3xl text-stone-900"}`}
                     >
                       {course.name}
                     </h3>
                   </div>
 
-                  {!isExpanded ? (
-                    <div className="flex items-center gap-2 mt-6 pt-6 border-t border-stone-100 w-full text-sm font-medium text-stone-400 relative z-10">
-                      <Calendar className="w-4 h-4" />
-                      {course.semester}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4 relative z-10">
-                      <p className="text-sm font-medium text-stone-500 flex items-center gap-2 mb-2">
-                        <Calendar className="w-4 h-4" /> {course.semester}
-                      </p>
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-stone-100 w-full text-sm font-medium text-stone-400 relative z-10 mb-4">
+                    <Calendar className="w-4 h-4" />
+                    {course.semester}
+                  </div>
 
-                      {liveInfo ? (
-                        <div className="bg-green-50 rounded-md p-5 border border-green-100 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
-                          <CheckCircle className="w-8 h-8 text-green-500" />
-                          <p className="text-sm font-bold text-green-800">Session started!</p>
-                          <p className="text-xs text-green-600 font-medium animate-pulse mt-1">
-                            Redirecting to room…
-                          </p>
-                        </div>
-                      ) : error ? (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-md border border-red-100 text-sm font-medium">
-                          {error}
-                        </div>
-                      ) : isActive ? (
-                        <div className="bg-green-50/50 rounded-md p-5 border border-green-200 flex flex-col items-center gap-4">
-                          <div className="flex items-center gap-2 text-green-700 font-bold">
-                            <span className="relative flex h-3 w-3">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                            </span>
-                            Session in Progress
-                          </div>
+                  <div className="flex flex-col gap-2 relative z-10 w-full mt-auto">
+                    {liveInfo && liveInfo.sessionId === session?.id ? (
+                      <div className="bg-green-50 rounded-md py-3 px-4 border border-green-100 flex items-center justify-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <p className="text-sm font-bold text-green-800">Redirecting…</p>
+                      </div>
+                    ) : isActive ? (
+                      <div className="flex gap-2 w-full mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRejoin(course.id, course.name);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors text-sm"
+                        >
+                          <Play className="w-4 h-4" />
+                          Rejoin
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEndSession(course.id, session!.id);
+                          }}
+                          disabled={isEnding}
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-semibold shadow-sm transition-colors disabled:opacity-60 text-sm"
+                        >
+                          <Square className="w-4 h-4" />
+                          {isEnding ? "Ending..." : "End"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 w-full mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGoLive(course.id, course.name);
+                          }}
+                          disabled={isStarting}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-stone-900 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors disabled:opacity-60 text-sm hover:!bg-green-600 hover:text-white"
+                        >
+                          <Radio className={`w-4 h-4 ${isStarting ? "animate-pulse" : ""}`} />
+                          {isStarting ? "Starting..." : "Start Live Session"}
+                        </button>
 
-                          <div className="w-full flex flex-col gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRejoin(course.id, course.name);
-                              }}
-                              className="w-full py-3 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors"
-                            >
-                              Rejoin Session
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEndSession(course.id, activeSessions.get(course.id)!.id);
-                              }}
-                              disabled={endingSession === course.id}
-                              className="w-full py-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-semibold shadow-sm transition-colors disabled:opacity-60"
-                            >
-                              {endingSession === course.id ? "Ending..." : "End Lecture"}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-3 mt-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGoLive(course.id, course.name);
-                            }}
-                            disabled={goingLive === course.id}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:hover:bg-stone-900"
-                          >
-                            <Radio
-                              className={`w-5 h-5 ${goingLive === course.id ? "animate-pulse" : ""}`}
-                            />
-                            {goingLive === course.id ? "Starting Session…" : "Start Live Session"}
-                          </button>
-
-                          <button
-                            onClick={(e) => handleOpenManage(e, course)}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-md transition-colors font-medium text-sm"
-                          >
-                            <Settings className="w-4 h-4" />
-                            Manage Lecture
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        <button
+                          onClick={(e) => handleOpenManage(e, course)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-md transition-colors font-medium text-sm"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Manage Lecture
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}

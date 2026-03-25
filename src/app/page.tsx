@@ -4,10 +4,11 @@ import React, { useEffect, useState } from "react";
 import { User } from "@/utils/types";
 import CourseViewer from "./components/CourseViewer";
 import footer from "./components/footer";
-import header from "./components/header";
 import ProfCourseViewer from "./classes/ProfCourseViewer";
 import OnboardingCarousel from "./components/OnboardingCarousel";
 import { STUDENT_ONBOARDING_STEPS, PROF_ONBOARDING_STEPS } from "@/constants/onboarding";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/utils/types";
 
 export default function LandingPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -63,9 +64,17 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col dot-grid relative">
-      {header(user)}
+      <div className="absolute top-6 right-7 z-10 flex items-center gap-3">
+        <Avatar className="h-10 w-10 shadow-sm border-2 border-stone-100">
+          <AvatarImage src={user.pfp} alt={user.username} />
+          <AvatarFallback className="bg-white font-medium text-lg text-stone-900 tracking-tighter">
+            {getInitials(user.username)}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
       <div className="overflow-y-auto flex-1 flex flex-col">
-        <div className="flex-1 p-5 pt-32 pb-10 flex flex-col items-center">
+        <div className="flex-1 p-5 pt-16 pb-10 flex flex-col items-center">
           <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col">
             {user.role === "PROFESSOR" ? <ProfCourseViewer /> : <CourseViewer />}
           </div>
