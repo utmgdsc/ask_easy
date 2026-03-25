@@ -9,6 +9,7 @@ import OnboardingCarousel from "./components/OnboardingCarousel";
 import { STUDENT_ONBOARDING_STEPS, PROF_ONBOARDING_STEPS } from "@/constants/onboarding";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/utils/types";
+import { CircleHelp } from "lucide-react";
 
 export default function LandingPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -65,6 +66,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col dot-grid relative">
       <div className="absolute top-6 right-7 z-10 flex items-center gap-3">
+        <button
+          className="w-10 h-10 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200/60 rounded-md transition-colors"
+          onClick={() => setShowOnboarding(true)}
+        >
+          <CircleHelp className="w-5 h-5" />
+        </button>
         <Avatar className="h-10 w-10 shadow-sm border-2 border-stone-100">
           <AvatarImage src={user.pfp} alt={user.username} />
           <AvatarFallback className="bg-white font-medium text-lg text-stone-900 tracking-tighter">
