@@ -57,17 +57,6 @@ export default function ChatInput({
       <div className="max-w-4xl mx-auto px-4 pt-20 pb-4 relative">
         <div className="flex items-end gap-4 pointer-events-auto">
           <div className="flex flex-col gap-1.5 flex-1">
-            <Textarea
-              placeholder="Ask a question... (Shift+Enter for new line)"
-              value={content}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              disabled={disabled}
-              className={`resize-none focus-visible:ring-0 focus-visible:border-stone-400 ${
-                error ? "border-red-400 bg-red-50" : ""
-              }`}
-            />
-            {error && <p className="text-xs text-red-500 px-1">{error}</p>}
             <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none w-fit">
               <input
                 type="checkbox"
@@ -77,9 +66,21 @@ export default function ChatInput({
               />
               Post anonymously
             </label>
+            <Textarea
+              placeholder="Ask a question... (Shift+Enter for new line)"
+              value={content}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              disabled={disabled}
+              rows={3}
+              className={`resize-none focus-visible:ring-0 focus-visible:border-stone-400 ${
+                error ? "border-red-400 bg-red-50" : ""
+              }`}
+            />
+            {error && <p className="text-xs text-red-500 px-1">{error}</p>}
           </div>
           <Button
-            className="h-16 w-16 shrink-0 bg-stone-900 hover:bg-stone-700"
+            className="h-13 mb-3.5 w-16 shrink-0 bg-stone-900 hover:bg-stone-700"
             onClick={handleSubmit}
             disabled={disabled || !content.trim()}
           >

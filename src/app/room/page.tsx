@@ -305,7 +305,7 @@ function RoomInner() {
                   />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={resizableWidth} minSize={30}>
+                <ResizablePanel defaultSize={resizableWidth} minSize={40}>
                   <ClassChat chatHistoryRef={chatHistoryRef} />
                 </ResizablePanel>
               </ResizablePanelGroup>

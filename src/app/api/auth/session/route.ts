@@ -43,11 +43,13 @@ export async function GET(request: NextRequest) {
       request.headers.get("displayname") ??
       request.headers.get("utorid");
     email = request.headers.get("mail") ?? request.headers.get("email");
-  } else {
-    // Dev mode — set DEV_UTORID in your .env to simulate a logged-in user.
-    utorid = process.env.DEV_UTORID ?? null;
-    name = process.env.DEV_NAME ?? utorid;
-    email = process.env.DEV_EMAIL ?? `${utorid}@mail.utoronto.ca`;
+  }
+
+  if (!isProd || !utorid) {
+    // Dev mode or local Docker without Shibboleth — fall back to DEV_UTORID.
+    utorid = utorid ?? process.env.DEV_UTORID ?? null;
+    name = name ?? process.env.DEV_NAME ?? utorid;
+    email = email ?? process.env.DEV_EMAIL ?? `${utorid}@mail.utoronto.ca`;
   }
 
   if (!utorid) {
@@ -113,5 +115,10 @@ export async function GET(request: NextRequest) {
   const safeRedirect =
     redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
 
-  return NextResponse.redirect(new URL(safeRedirect, request.url));
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "localhost";
+  const origin = `${proto}://${host}`;
+
+  return NextResponse.redirect(new URL(safeRedirect, origin));
 }

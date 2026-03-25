@@ -110,6 +110,23 @@ export interface QuestionResolvedPayload {
   status: "RESOLVED";
 }
 
+export interface QuestionAuthorRevealedPayload {
+  id: string;
+  authorId: string;
+  authorName: string | null;
+  authorUtorid: string | null;
+  authorRole: "STUDENT" | "TA" | "PROFESSOR";
+}
+
+export interface AnswerAuthorRevealedPayload {
+  id: string;
+  questionId: string;
+  authorId: string;
+  authorName: string | null;
+  authorUtorid: string | null;
+  authorRole: "STUDENT" | "TA" | "PROFESSOR";
+}
+
 export interface SlideChangePayload {
   sessionId: string;
   pageIndex: number;
@@ -185,6 +202,8 @@ export interface ServerToClientEvents {
   "answer-mode:changed": (payload: AnswerModeChangedPayload) => void;
   "viewer:count": (payload: ViewerCountPayload) => void;
   "session:ended": (payload: Record<string, never>) => void;
+  "question:author:revealed": (payload: QuestionAuthorRevealedPayload) => void;
+  "answer:author:revealed": (payload: AnswerAuthorRevealedPayload) => void;
 }
 
 /** Events exchanged between Socket.IO server instances (via Redis adapter). */

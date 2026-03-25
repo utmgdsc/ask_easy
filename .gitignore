@@ -49,3 +49,8 @@ next-env.d.ts
 /src/generated
 
 /.claude/
+
+# local test data
+classlist.csv
+package-lock.json
+prisma/migrations/20260324204050_test/

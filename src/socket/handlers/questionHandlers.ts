@@ -146,6 +146,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         where: { id: payload.sessionId },
         select: { courseId: true },
       });
+      let authorEnrollmentRole: string = "STUDENT";
       if (sessionForEnrollment) {
         const enrollment = await prisma.courseEnrollment.findUnique({
           where: { userId_courseId: { userId, courseId: sessionForEnrollment.courseId } },
@@ -155,6 +156,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
           socket.emit("question:error", { message: "You are not enrolled in this session." });
           return;
         }
+        authorEnrollmentRole = enrollment.role;
       }
 
       // 7. Persist to database (include author for display name in broadcast)
@@ -190,6 +192,18 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
       };
 
       broadcastQuestion(io, question.sessionId, broadcastPayload);
+
+      // For anonymous questions, reveal the author to instructors via a separate event
+      // so that TAs and Professors can see who posted while students remain unaware.
+      if (question.isAnonymous) {
+        io.to(`session:${question.sessionId}:instructors`).emit("question:author:revealed", {
+          id: question.id,
+          authorId: question.authorId,
+          authorName: question.author?.name ?? null,
+          authorUtorid: question.author?.utorid ?? null,
+          authorRole: authorEnrollmentRole as "STUDENT" | "TA" | "PROFESSOR",
+        });
+      }
     } catch (error) {
       console.error("[QuestionHandler] Failed to create question:", error);
       socket.emit("question:error", {

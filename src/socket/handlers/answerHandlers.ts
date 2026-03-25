@@ -175,6 +175,21 @@ export function handleAnswerCreate(socket: Socket, io: Server): void {
       };
 
       broadcastAnswer(io, questionValidation.question!.sessionId, broadcastPayload);
+
+      // For anonymous answers, reveal the author to instructors via a separate event.
+      if (answer.isAnonymous) {
+        io.to(`session:${questionValidation.question!.sessionId}:instructors`).emit(
+          "answer:author:revealed",
+          {
+            id: answer.id,
+            questionId: answer.questionId,
+            authorId: answer.author.id,
+            authorName: answer.author.name,
+            authorUtorid: answer.author.utorid,
+            authorRole: answerEnrollment!.role as "STUDENT" | "TA" | "PROFESSOR",
+          }
+        );
+      }
     } catch (error) {
       console.error("[AnswerHandler] Failed to create answer:", error);
       socket.emit("answer:error", {

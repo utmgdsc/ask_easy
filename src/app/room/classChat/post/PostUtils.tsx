@@ -75,7 +75,7 @@ export function renderRoleIcon(user: User) {
   return null;
 }
 
-export function renderUsername(user: User | null) {
+export function renderUsername(user: User | null, isAnonymous?: boolean) {
   if (!user) {
     return <span className="font-semibold text-foreground italic text-stone-400">Anonymous</span>;
   }
@@ -83,6 +83,7 @@ export function renderUsername(user: User | null) {
     <span className="font-semibold flex flex-row items-center gap-1 text-foreground">
       {renderRoleIcon(user)}
       <span className="line-clamp-2">{user.username}</span>
+      {isAnonymous && <span className="italic text-stone-400 font-normal">(anonymous)</span>}
     </span>
   );
 }
