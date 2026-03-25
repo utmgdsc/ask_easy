@@ -37,7 +37,18 @@ const SHIB_HEADERS = [
 function stripShibHeaders(req: IncomingMessage): void {
   const remoteAddr = req.socket?.remoteAddress ?? "";
   const isLocalhost =
-    remoteAddr === "127.0.0.1" || remoteAddr === "::1" || remoteAddr === "::ffff:127.0.0.1";
+    remoteAddr === "127.0.0.1" ||
+    remoteAddr === "::1" ||
+    remoteAddr === "::ffff:127.0.0.1" ||
+    remoteAddr.startsWith("::ffff:172.");
+
+  if (req.url?.includes("/api/auth/session")) {
+    console.log("[DEBUG] /api/auth/session hit");
+    console.log("[DEBUG] remoteAddr:", remoteAddr);
+    console.log("[DEBUG] isLocalhost:", isLocalhost);
+    console.log("[DEBUG] utorid header:", req.headers["utorid"]);
+    console.log("[DEBUG] all headers:", JSON.stringify(req.headers, null, 2));
+  }
 
   if (!isLocalhost) {
     for (const header of SHIB_HEADERS) {

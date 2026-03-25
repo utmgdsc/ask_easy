@@ -4,8 +4,9 @@ const isProd = process.env.NODE_ENV === "production";
 
 // In production, remove 'unsafe-eval' to strengthen XSS protection.
 // In development, Next.js HMR requires 'unsafe-eval'.
+// Production needs 'wasm-unsafe-eval' so @embedpdf/pdfium (WebAssembly) can run under CSP.
 const scriptSrc = isProd
-  ? "script-src 'self' 'unsafe-inline' blob:"
+  ? "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:";
 
 const nextConfig: NextConfig = {

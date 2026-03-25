@@ -470,6 +470,7 @@ export default function SlideViewer({ isProfessor, onEndLecture }: SlideViewerPr
     async (slideSetId?: string) => {
       if (slideSetId) {
         setSlideUrl(`/api/sessions/${sessionId}/slides/${slideSetId}/file`);
+        setIsLoadingSlides(false);
         return;
       }
       try {
@@ -613,7 +614,7 @@ export default function SlideViewer({ isProfessor, onEndLecture }: SlideViewerPr
           <p className="text-stone-600 text-sm font-medium">Uploading new slides…</p>
         </div>
       )}
-      <EmbedPDF engine={engine} plugins={plugins!}>
+      <EmbedPDF key={slideUrl} engine={engine} plugins={plugins!}>
         {({ activeDocumentId }) => (
           <SlideUI
             activeDocumentId={activeDocumentId}

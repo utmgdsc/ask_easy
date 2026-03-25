@@ -113,5 +113,9 @@ export async function GET(request: NextRequest) {
   const safeRedirect =
     redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
 
-  return NextResponse.redirect(new URL(safeRedirect, request.url));
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "localhost";
+  const origin = `${proto}://${host}`;
+
+  return NextResponse.redirect(new URL(safeRedirect, origin));
 }
