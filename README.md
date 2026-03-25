@@ -1,6 +1,40 @@
-# Ask Easy
+# AskEasy
 
-A Next.js application with PostgreSQL and Redis.
+A real-time classroom Q&A platform that makes it easy for students to ask questions during lectures — and for instructors to keep the conversation organized. Built for the University of Toronto with Shibboleth (UTORid) authentication.
+
+## The Problem
+
+In large lecture halls, many students hesitate to raise their hand or wait for a microphone. Questions go unasked, concepts stay unclear, and instructors lose visibility into what the class is struggling with. Existing tools like Piazza are designed for asynchronous discussion, not live, in-lecture interaction.
+
+## The Solution
+
+AskEasy gives every lecture a live Q&A room where students can post questions (anonymously if they prefer), upvote the most pressing ones, and get answers from instructors or peers — all in real time via WebSockets. Professors and TAs see what the class needs help with *right now*, and can present slides side-by-side with the chat.
+
+## Features
+
+- **Real-time Q&A** — Questions, answers, and upvotes update instantly via Socket.IO with Redis pub/sub
+- **Role-based access** — Professors, TAs, and Students each see what's relevant to them; TAs are assigned per-course
+- **Anonymous posting** — Students can ask questions and post answers anonymously
+- **Upvoting** — The most important questions and best answers rise to the top
+- **Slide viewer** — Professors can upload PDFs and present slides alongside the live chat in a resizable split view
+- **Join codes** — Students join a session with a short code, no enrollment setup needed
+- **Question filtering** — Filter by status (open, answered, resolved) and visibility (public, instructor-only)
+- **Chat history export** — Professors can download the full Q&A transcript as a `.txt` file when ending a session
+- **Course management** — Create courses, manage enrollments, start/schedule/end sessions
+- **Shibboleth SSO** — Authenticates via UofT's identity provider; instructor whitelist controls professor access
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, Radix UI |
+| Backend | Next.js API routes + custom Node.js HTTP server |
+| Real-time | Socket.IO with Redis adapter |
+| Database | PostgreSQL 16 (via Prisma ORM) |
+| Cache / Pub-sub | Redis 7 |
+| Auth | iron-session + Shibboleth header-based SSO |
+| Testing | Vitest, Testing Library |
+| Containerization | Docker & Docker Compose |
 
 ## Prerequisites
 
@@ -8,182 +42,99 @@ A Next.js application with PostgreSQL and Redis.
 - [pnpm](https://pnpm.io/) v8+
 - [Docker](https://www.docker.com/) and Docker Compose
 
-## Quick Start
+## Getting Started
 
-### 1. Clone and install dependencies
+### 1. Clone and install
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/jadenScali/ask_easy.git
 cd ask_easy
 pnpm install
 ```
 
-> **Note:** `pnpm install` will automatically run `prisma generate` via the postinstall script to generate the Prisma client.
-
-### 2. Set up environment variables
+### 2. Configure environment variables
 
 ```bash
-# For Docker Compose
 cp .env.example .env
-
-# For native development (pnpm dev) - edit to use localhost
-cp .env.example .env.local
-# Then change @postgres to @localhost and @redis to @localhost in .env.local
 ```
 
-| File         | Used by        | Host values                           |
-| ------------ | -------------- | ------------------------------------- |
-| `.env`       | Docker Compose | `@postgres`, `@redis` (service names) |
-| `.env.local` | `pnpm dev`     | `@localhost`                          |
+For native development (`pnpm dev`), also create `.env.local` and point hosts at `localhost`:
 
-### 3. Start services with Docker Compose
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ask_easy
+REDIS_URL=redis://:changeme@localhost:6379
+```
 
-**Option A: Full stack (app + database + redis)**
+| File | Used by | Hosts |
+|------|---------|-------|
+| `.env` | Docker Compose | `@postgres`, `@redis` (service names) |
+| `.env.local` | `pnpm dev` | `@localhost` |
+
+### 3. Start services
+
+**Option A — Full stack (app + database + Redis):**
 
 ```bash
-docker-compose up # FOR ALL 3
+docker-compose up
 ```
 
-Access the app at [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000).
 
-**Option B: Services only (for native development)**
+**Option B — Database & Redis only (for local dev):**
 
 ```bash
 docker-compose up -d postgres redis
-```
-
-Copy env and point DB/Redis at localhost (for `pnpm dev`):
-
-```bash
-cp .env.example .env
-# Edit .env: use host "localhost" for DATABASE_URL and REDIS_URL
-#   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ask_easy
-#   REDIS_URL=redis://localhost:6379
-```
-
-Generate Prisma client, push schema, and seed:
-
-```bash
-pnpm db:setup
-pnpm db:seed
-```
-
-Then run the dev server:
-
-```bash
+pnpm db:setup   # generate Prisma client + push schema
 pnpm dev
 ```
 
-After seeding, the terminal prints localhost URLs for each role. You can also use:
-
-| Page | URL |
-|------|-----|
-| **All classes** | [http://localhost:3000/classes](http://localhost:3000/classes) |
-| **Room (role in query)** | `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<USER_ID>&role=<role>` |
-
-**Open as different roles (use IDs from seed output):**
-
-- **Professor** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<PROFESSOR_USER_ID>&role=professor`
-- **TA** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<TA_USER_ID>&role=ta`
-- **Student** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<STUDENT_USER_ID>&role=student`
-- **Student 2** — `http://localhost:3000/?sessionId=<SESSION_ID>&userId=<STUDENT2_USER_ID>&role=student`
-
-Run `pnpm db:seed` once; at the end it prints the exact URLs for professor, TA, student, and student 2. Copy those into your browser to open each role. To open all four at once, run the seed, copy the four printed URLs into separate tabs or windows.
+> **Note:** `pnpm db:seed` currently resets all tables (deletes all data). There is no sample data seeder yet — create test users by logging in through the app.
 
 ## Available Scripts
 
-| Script             | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| `pnpm dev`         | Start development server                          |
-| `pnpm build`       | Build for production                              |
-| `pnpm start`       | Start production server                           |
-| `pnpm typecheck`   | Run TypeScript type checking                      |
-| `pnpm lint`        | Run ESLint                                        |
-| `pnpm lint:fix`    | Fix ESLint issues                                 |
-| `pnpm format`      | Format code with Prettier                         |
-| `pnpm test`        | Run tests with Vitest                             |
-| `pnpm db:generate` | Generate Prisma client                            |
-| `pnpm db:push`     | Push schema to database                           |
-| `pnpm db:migrate`  | Run database migrations                           |
-| `pnpm db:setup`    | Generate client + push schema (for initial setup) |
-| `pnpm db:seed`     | Seed database (prints localhost URLs per role)    |
-| `pnpm db:studio`   | Open Prisma Studio                                |
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run ESLint |
+| `pnpm format` | Format code with Prettier |
+| `pnpm test` | Run unit tests (Vitest) |
+| `pnpm test:integration` | Run integration tests |
+| `pnpm db:setup` | Generate Prisma client + push schema |
+| `pnpm db:seed` | Reset database (clears all tables) |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:studio` | Open Prisma Studio GUI |
 
-## Docker Commands
+## Project Structure
 
-```bash
-# Start all services
-docker-compose up
-
-# Start in detached mode
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes (reset database)
-docker-compose down -v
-
-# Rebuild the app image
-docker-compose build app
+```
+src/
+├── app/                  # Next.js App Router pages & API routes
+│   ├── api/              # REST endpoints (auth, courses, sessions, questions)
+│   ├── classes/          # Course listing & management UI
+│   ├── create-class/     # Course creation flow
+│   └── room/             # Live session room (chat + slide viewer)
+├── components/ui/        # Shared UI components (Radix-based)
+├── lib/                  # Server utilities (auth, caching, validation, Prisma)
+├── socket/               # Socket.IO server setup, handlers, and middleware
+├── services/             # Business logic services
+└── utils/                # Shared types and helpers
+prisma/
+├── schema.prisma         # Database schema
+├── migrations/           # Migration history
+└── seed.ts               # Development seed data
 ```
 
----
+## Team
 
-## Workflow
+Built by the AskEasy team at **GDG on Campus — UTM** (University of Toronto Mississauga).
 
-Please only use names from the assigned board, make a new ticket if needed.
+- Jaden Scali
+- Phineas Truong
+- Jack Le
+- Jad El Asmar
+- Manjyot Birdi
+- Marwan Yousef
 
-```bash
-git checkout main
-git pull
-git checkout -b NAME_NUM
-```
 
-Run the development server WHILE you write code:
-
-```bash
-pnpm dev
-```
-
-Once you think everything is all good test in the prod env locally by using
-
-```bash
-docker-compose up
-```
-
-This will start the app, PostgreSQL, and Redis containers. Access the app at http://localhost:3000.
-
-Commit as you go, you MUST use CONVENTIONAL COMMITS (see bottom for conventional commit cheat sheet):
-
-```bash
-git add -A
-git commit -m "feat: add "
-git push
-```
-
-Once a task (branch) is completed send a PR to main. Do so through github DO NOT MERGE TO MAIN LOCALLY THEN PUSH.
-If you need help with this just shoot me (Jaden) a text.
-
-## Conventional Commit Cheat Sheet
-
-A conventional commit message follows the following criteria,
-
-1. Is of the form <type>(optional scope): <short description>
-2. Uses present tense, ex. add (good) but added (bad)
-3. Describes one change not many if needed break into multiple commits each with one idea captured
-
-The following are examples of amazing conventional commit messages:
-
-```bash
-feat: add JWT-based authentication
-fix: handle null user response from database
-docs: update setup instructions for local development
-refactor: extract validation logic into helper
-test: add unit tests for login endpoint
-chore: bump next.js from 14.0.2 to 14.1.0
-perf: reduce API response time by memoizing queries
-ci: add lint and test workflow
-```
-
-Please do not make up your own <types> (unless you asked the team first sometimes this is needed but rarely) use one of the <types> in the above examples.
