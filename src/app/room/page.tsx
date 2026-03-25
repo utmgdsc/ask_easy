@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
+import { Download, Square, X } from "lucide-react";
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -89,22 +90,25 @@ function EndSessionModal({
           <button
             onClick={onDownloadAndEnd}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <Download className="w-4 h-4" />
             {ending ? "Ending…" : "Download chat history & end"}
           </button>
           <button
             onClick={onEndWithout}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <Square className="w-4 h-4 fill-current" />
             End without downloading
           </button>
           <button
             onClick={onCancel}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <X className="w-4 h-4" />
             Cancel
           </button>
         </div>
