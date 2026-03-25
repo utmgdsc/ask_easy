@@ -20,7 +20,7 @@ export function renderAvatar(post: Post) {
   return (
     <Avatar className="h-10 w-10">
       <AvatarFallback className="text-stone-400 bg-stone-100 text-sm font-medium tracking-tighter">
-        ST:
+        ST
       </AvatarFallback>
     </Avatar>
   );
