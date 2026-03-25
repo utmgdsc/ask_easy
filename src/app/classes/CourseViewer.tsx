@@ -98,7 +98,7 @@ export default function CourseButtons() {
                 className="
                   hover:-translate-y-1 hover:shadow-xl relative overflow-hidden text-left
                   flex flex-col items-start justify-center cursor-pointer
-                  py-6 px-6 duration-300 rounded-xl
+                  py-6 px-6 duration-300 rounded-md
                   shadow-lg backdrop-blur-[1.5px] border-2 border-blue-50 bg-white/50
                   group disabled:opacity-60
                 "
@@ -116,7 +116,7 @@ export default function CourseButtons() {
             ))}
           </div>
         ) : (
-          <div className="p-4 py-10 w-full backdrop-blur-[1.5px] rounded-2xl flex items-center justify-center">
+          <div className="p-4 py-10 w-full backdrop-blur-[1.5px] rounded-md flex items-center justify-center">
             <h3 className="text-center font-bold text-2xl text-stone-600">No Active Sessions</h3>
           </div>
         )}
@@ -135,7 +135,7 @@ export default function CourseButtons() {
               className="
                 hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden
                 flex flex-col items-center justify-center cursor-pointer
-                py-6 px-4 duration-300 text-center rounded-2xl
+                py-6 px-4 duration-300 text-center rounded-md
                 shadow-xl backdrop-blur-[1.5px] border-4 border-blue-50
                 h-[15rem] group
               "
@@ -156,7 +156,7 @@ export default function CourseButtons() {
   }
 
   return (
-    <div className="p-4 py-10 w-full backdrop-blur-[1.5px] rounded-2xl flex items-center justify-center h-120">
+    <div className="p-4 py-10 w-full backdrop-blur-[1.5px] rounded-md flex items-center justify-center h-120">
       <h1 className="text-center font-bold text-2xl">No Classes Available Currently</h1>
     </div>
   );

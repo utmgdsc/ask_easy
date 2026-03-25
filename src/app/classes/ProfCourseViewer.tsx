@@ -159,7 +159,7 @@ export default function ProfCourseButtons() {
 
             <Link
               href="/create-class"
-              className="hidden sm:flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              className="hidden sm:flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
             >
               <PlusCircle className="w-5 h-5" />
               Create Lecture
@@ -177,7 +177,7 @@ export default function ProfCourseButtons() {
                   onClick={() => handleCourseClick(course.id)}
                   className={`
                     group relative overflow-hidden flex flex-col
-                    p-6 sm:p-8 rounded-2xl transition-all duration-300
+                    p-6 sm:p-8 rounded-md transition-all duration-300
                     bg-white border-2 shadow-sm
                     ${
                       isExpanded
@@ -199,7 +199,7 @@ export default function ProfCourseButtons() {
 
                   <div className="flex items-start justify-between w-full mb-6 relative z-10">
                     <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${isExpanded ? "bg-green-500 text-white" : "bg-stone-50 text-stone-600 group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110"}`}
+                      className={`w-12 h-12 rounded-md flex items-center justify-center transition-all shrink-0 ${isExpanded ? "bg-green-500 text-white" : "bg-stone-50 text-stone-600 group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110"}`}
                     >
                       <BookOpen className="w-6 h-6" />
                     </div>
@@ -258,7 +258,7 @@ export default function ProfCourseButtons() {
                       </p>
 
                       {liveInfo ? (
-                        <div className="bg-green-50 rounded-xl p-5 border border-green-100 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-green-50 rounded-md p-5 border border-green-100 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
                           <CheckCircle className="w-8 h-8 text-green-500" />
                           <p className="text-sm font-bold text-green-800">Session started!</p>
                           <p className="text-xs text-green-600 font-medium animate-pulse mt-1">
@@ -266,11 +266,11 @@ export default function ProfCourseButtons() {
                           </p>
                         </div>
                       ) : error ? (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-sm font-medium">
+                        <div className="bg-red-50 text-red-600 p-4 rounded-md border border-red-100 text-sm font-medium">
                           {error}
                         </div>
                       ) : isActive ? (
-                        <div className="bg-green-50/50 rounded-xl p-5 border border-green-200 flex flex-col items-center gap-4">
+                        <div className="bg-green-50/50 rounded-md p-5 border border-green-200 flex flex-col items-center gap-4">
                           <div className="flex items-center gap-2 text-green-700 font-bold">
                             <span className="relative flex h-3 w-3">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -285,7 +285,7 @@ export default function ProfCourseButtons() {
                                 e.stopPropagation();
                                 handleRejoin(course.id, course.name);
                               }}
-                              className="w-full py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 font-semibold shadow-sm transition-colors"
+                              className="w-full py-3 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors"
                             >
                               Rejoin Session
                             </button>
@@ -296,7 +296,7 @@ export default function ProfCourseButtons() {
                                 handleEndSession(course.id, activeSessions.get(course.id)!.id);
                               }}
                               disabled={endingSession === course.id}
-                              className="w-full py-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 font-semibold shadow-sm transition-colors disabled:opacity-60"
+                              className="w-full py-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-semibold shadow-sm transition-colors disabled:opacity-60"
                             >
                               {endingSession === course.id ? "Ending..." : "End Lecture"}
                             </button>
@@ -310,7 +310,7 @@ export default function ProfCourseButtons() {
                               handleGoLive(course.id, course.name);
                             }}
                             disabled={goingLive === course.id}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-white rounded-xl hover:bg-green-600 font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:hover:bg-stone-900"
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-white rounded-md hover:bg-green-600 font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:hover:bg-stone-900"
                           >
                             <Radio
                               className={`w-5 h-5 ${goingLive === course.id ? "animate-pulse" : ""}`}
@@ -320,7 +320,7 @@ export default function ProfCourseButtons() {
 
                           <button
                             onClick={(e) => handleOpenManage(e, course)}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl transition-colors font-medium text-sm"
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-md transition-colors font-medium text-sm"
                           >
                             <Settings className="w-4 h-4" />
                             Manage Lecture
@@ -337,7 +337,7 @@ export default function ProfCourseButtons() {
           <div className="max-w-6xl mx-auto w-full mt-8 sm:hidden">
             <Link
               href="/create-class"
-              className="flex items-center justify-center gap-2 w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-sm"
+              className="flex items-center justify-center gap-2 w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition-all shadow-sm"
             >
               <PlusCircle className="w-5 h-5" />
               Create New Lecture
@@ -370,7 +370,7 @@ export default function ProfCourseButtons() {
 
       <Link
         href="/create-class"
-        className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1 text-lg"
+        className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-md transition-all shadow-md hover:shadow-lg hover:-translate-y-1 text-lg"
       >
         <PlusCircle className="w-6 h-6" />
         Create a Lecture

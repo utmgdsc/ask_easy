@@ -104,7 +104,7 @@ export default function CourseViewer() {
 
         {joinError && (
           <div className="max-w-6xl mx-auto w-full mb-6">
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center gap-3 font-medium">
+            <div className="bg-red-50 text-red-600 p-4 rounded-md border border-red-100 flex items-center gap-3 font-medium">
               <div className="w-2 h-2 rounded-full bg-red-500" />
               {joinError}
             </div>
@@ -120,13 +120,13 @@ export default function CourseViewer() {
                 disabled={joining === session.id}
                 className="
                   group relative overflow-hidden text-left flex flex-col items-start
-                  p-6 sm:p-8 rounded-2xl transition-all duration-300
+                  p-6 sm:p-8 rounded-md transition-all duration-300
                   bg-white border-2 border-stone-100 hover:border-green-400
                   shadow-sm hover:shadow-xl
                   disabled:opacity-60 disabled:pointer-events-none disabled:hover:border-stone-100 disabled:hover:shadow-sm
                 "
               >
-                <div className="w-12 h-12 rounded-xl bg-stone-50 text-stone-600 flex items-center justify-center mb-6 group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110 transition-all shrink-0">
+                <div className="w-12 h-12 rounded-md bg-stone-50 text-stone-600 flex items-center justify-center mb-6 group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110 transition-all shrink-0">
                   <Video className="w-6 h-6" />
                 </div>
 
@@ -135,7 +135,7 @@ export default function CourseViewer() {
                 </h3>
 
                 <div className="flex items-center gap-2 mt-auto pt-8 w-full">
-                  <span className="text-sm font-semibold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg group-hover:bg-green-50 group-hover:text-green-600 transition-colors">
+                  <span className="text-sm font-semibold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-md group-hover:bg-green-50 group-hover:text-green-600 transition-colors">
                     {session.course.name}
                   </span>
 
@@ -148,7 +148,7 @@ export default function CourseViewer() {
             ))}
           </div>
         ) : (
-          <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center min-h-[40vh] bg-stone-50/50 rounded-3xl border-2 border-dashed border-stone-200 p-8">
+          <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center min-h-[40vh] bg-stone-50/50 rounded-md border-2 border-dashed border-stone-200 p-8">
             <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 mb-4">
               <Video className="w-8 h-8" />
             </div>
@@ -177,19 +177,19 @@ export default function CourseViewer() {
               onClick={() => setSelectedCourseId(course.id)}
               className="
                 group relative overflow-hidden flex flex-col
-                p-6 sm:p-8 rounded-2xl transition-all duration-300 cursor-pointer
+                p-6 sm:p-8 rounded-md transition-all duration-300 cursor-pointer
                 bg-white border-2 border-stone-100 hover:border-green-400
                 shadow-sm hover:shadow-xl h-[16rem]
               "
             >
               <div className="flex items-start justify-between w-full mb-6">
-                <div className="w-12 h-12 rounded-xl bg-stone-50 text-stone-600 flex items-center justify-center group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110 transition-all shrink-0">
+                <div className="w-12 h-12 rounded-md bg-stone-50 text-stone-600 flex items-center justify-center group-hover:bg-green-50 group-hover:text-green-500 group-hover:scale-110 transition-all shrink-0">
                   <BookOpen className="w-6 h-6" />
                 </div>
 
                 {/* Active sessions badge */}
                 {activeSessions.some((s) => s.course.name === course.name) && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200 shadow-sm animate-pulse">
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-md border border-green-200 shadow-sm animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                     LIVE
                   </span>
