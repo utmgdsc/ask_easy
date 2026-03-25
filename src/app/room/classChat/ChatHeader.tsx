@@ -18,29 +18,30 @@ interface ChatHeaderProps {
 function SlideToggle() {
   const { isSlidesVisible, rerender } = useContext(SlideUpdateContext);
   const isMDsize = useMediaQuery("(min-width: 1024px)");
+
   if (!isMDsize) {
     return (
       <button
-        className="w-10 h-10 flex items-center justify-center text-stone-900/50 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
+        className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200/60 rounded-md transition-colors"
         onClick={() => rerender()}
       >
         {isSlidesVisible ? (
-          <PanelRightClose className="w-6 h-6 rotate-270" />
+          <PanelRightClose className="w-5 h-5 rotate-270" />
         ) : (
-          <PanelRightClose className="w-6 h-6 rotate-90" />
+          <PanelRightClose className="w-5 h-5 rotate-90" />
         )}
       </button>
     );
   }
   return (
     <button
-      className="w-10 h-10 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-md transition-colors"
+      className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200/60 rounded-md transition-colors"
       onClick={() => rerender()}
     >
       {isSlidesVisible ? (
-        <PanelRightClose className="w-6 h-6 rotate-180" />
+        <PanelRightClose className="w-5 h-5 rotate-180" />
       ) : (
-        <PanelRightClose className="w-6 h-6" />
+        <PanelRightClose className="w-5 h-5" />
       )}
     </button>
   );
