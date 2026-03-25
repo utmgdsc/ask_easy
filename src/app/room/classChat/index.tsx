@@ -536,7 +536,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
           </div>
         </div>
 
-        <div className="absolute inset-0 overflow-y-auto px-6 pt-16">
+        <div className="absolute inset-0 overflow-y-auto px-4 pt-16">
           <div className="max-w-4xl mx-auto space-y-4 pb-36">
             {isLoading ? (
               <div className="text-center text-stone-500 py-8 text-sm">Loading questions...</div>

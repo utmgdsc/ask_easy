@@ -161,7 +161,7 @@ export default function QuestionPost({
   const showThread = threadState !== "collapsed" && (visibleReplies.length > 0 || isReplying);
 
   return (
-    <div className="flex flex-col gap-2 bg-stone-075 rounded-xl p-4 border border-stone-200">
+    <div className="flex flex-col gap-2 bg-stone-075 rounded-md p-4 border border-stone-200">
       {/* Question body */}
       <div className="font-semibold whitespace-pre-wrap text-stone-900">{post.content}</div>
 

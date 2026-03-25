@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Ghost, User, Send } from "lucide-react";
 
@@ -61,7 +60,7 @@ export default function ChatInput({
       <div className="max-w-4xl mx-auto px-4 pt-20 pb-4 relative">
         <div className="flex flex-col gap-2 pointer-events-auto w-full">
           <Textarea
-            placeholder="Ask a question... (Shift+Enter for new line)"
+            placeholder={`Ask a question!\n(Shift+Enter for new line)`}
             value={content}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
@@ -71,7 +70,7 @@ export default function ChatInput({
               error ? "border-red-400 bg-red-50" : ""
             }`}
           />
-          <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 type="button"
