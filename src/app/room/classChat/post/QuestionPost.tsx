@@ -223,18 +223,20 @@ export default function QuestionPost({
                 onUpvote={onUpvote}
               />
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
-                onClick={() => {
-                  setIsReplying((v) => !v);
-                  if (threadState === "collapsed") setThreadState("expanded");
-                }}
-              >
-                <MessageCircle className="h-4 w-4" />
-                Reply
-              </Button>
+              {canAnswer && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1 text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
+                  onClick={() => {
+                    setIsReplying((v) => !v);
+                    if (threadState === "collapsed") setThreadState("expanded");
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Reply
+                </Button>
+              )}
 
               {onResolve && !resolved && (
                 <Button
