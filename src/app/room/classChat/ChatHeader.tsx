@@ -104,7 +104,6 @@ export default function ChatHeader({
           <>
             <div className="flex items-center gap-2 shrink-0 animate-in fade-in duration-200">
               <SlideToggle />
-              <div className="w-px h-5 bg-stone-300 mx-1" />
               {sessionTitle && (
                 <h1 className="text-xl font-bold truncate max-w-[140px] sm:max-w-xs">
                   {sessionTitle}
@@ -137,7 +136,7 @@ export default function ChatHeader({
                       ? "Anyone can answer — click to restrict to TAs/Professors"
                       : "TAs/Professors only — click to allow everyone"
                   }
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shrink-0 ${
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-colors shrink-0 cursor-pointer ${
                     answerMode === "all"
                       ? "bg-green-100 text-green-700 hover:bg-green-200"
                       : "bg-amber-100 text-amber-700 hover:bg-amber-200"
