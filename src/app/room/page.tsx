@@ -204,7 +204,7 @@ function RoomInner() {
         setAuthReady(true);
       })
       .catch(() => setAuthReady(true));
-  }, [sessionId, router]);
+  }, [sessionId]);
 
   // Connect to Socket.IO once auth is ready.
   // withCredentials: true sends the iron-session cookie so the server-side
@@ -305,7 +305,7 @@ function RoomInner() {
                   />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={resizableWidth} minSize={40}>
+                <ResizablePanel defaultSize={resizableWidth} minSize={30}>
                   <ClassChat chatHistoryRef={chatHistoryRef} />
                 </ResizablePanel>
               </ResizablePanelGroup>
