@@ -59,7 +59,7 @@ export function UpvoteButton({ initialVotes, controlledVotes, onUpvote }: Upvote
       size="sm"
       className={`h-7 px-2 text-xs gap-1 ${
         isUpvoted
-          ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+          ? "text-green-500 hover:text-green-500 hover:bg-green-50"
           : "text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
       }`}
       onClick={handleUpvote}

@@ -189,7 +189,7 @@ export default function OnboardingCarousel({
             {/* Overlay styling for modern premium feel */}
             <div className="absolute inset-0 bg-gradient-to-tr from-stone-100/40 to-transparent pointer-events-none" />
             {!stepData.image && (
-              <span className="text-sm font-medium text-stone-400 bg-white/80 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm">
+              <span className="text-sm font-medium text-stone-400 bg-white/80 px-4 py-2 rounded-md backdrop-blur-md shadow-sm">
                 {stepData.altText}
               </span>
             )}

@@ -408,7 +408,7 @@ function UploadZone({ onUpload, isUploading, uploadError, onEndLecture }: Upload
   return (
     <div className="flex flex-col flex-1 w-full items-center justify-center p-8">
       <div
-        className={`flex flex-col items-center justify-center w-full max-w-md border-2 border-dashed rounded-xl p-10 gap-4 cursor-pointer transition-colors ${
+        className={`flex flex-col items-center justify-center w-full max-w-md border-2 border-dashed rounded-md p-10 gap-4 cursor-pointer transition-colors ${
           isDragging
             ? "border-stone-500 bg-stone-100"
             : "border-stone-300 bg-stone-50 hover:border-stone-400 hover:bg-stone-100"
