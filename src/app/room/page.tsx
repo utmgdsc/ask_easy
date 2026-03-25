@@ -208,7 +208,7 @@ function RoomInner() {
         setAuthReady(true);
       })
       .catch(() => setAuthReady(true));
-  }, [sessionId]);
+  }, [sessionId, router]);
 
   // Connect to Socket.IO once auth is ready.
   // withCredentials: true sends the iron-session cookie so the server-side

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Calendar, ArrowRight, Video, ChevronLeft, LayoutGrid } from "lucide-react";
+import { BookOpen, Calendar, ArrowRight, Video, LayoutGrid } from "lucide-react";
 
 interface Course {
   id: string;
