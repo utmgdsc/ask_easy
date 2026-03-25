@@ -47,8 +47,6 @@ function SlideToggle() {
   );
 }
 
-import Link from "next/link";
-
 import { useRoom } from "../RoomContext";
 
 export default function ChatHeader({
