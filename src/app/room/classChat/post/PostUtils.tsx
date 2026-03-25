@@ -4,20 +4,24 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, GraduationCap } from "lucide-react";
-import { Post, User } from "@/utils/types";
+import { Post, User, getInitials } from "@/utils/types";
 
 export function renderAvatar(post: Post) {
   if (post?.user) {
     return (
-      <Avatar className="h-8 w-8">
+      <Avatar className="h-10 w-10">
         <AvatarImage src={post.user.pfp} alt={post.user.username} />
-        <AvatarFallback>{post.user.username[0]}</AvatarFallback>
+        <AvatarFallback className="text-sm font-medium tracking-tighter text-stone-600">
+          {getInitials(post.user.username)}
+        </AvatarFallback>
       </Avatar>
     );
   }
   return (
-    <Avatar className="h-8 w-8">
-      <AvatarFallback className="text-stone-400 bg-stone-100">?</AvatarFallback>
+    <Avatar className="h-10 w-10">
+      <AvatarFallback className="text-stone-400 bg-stone-100 text-sm font-medium tracking-tighter">
+        ST:
+      </AvatarFallback>
     </Avatar>
   );
 }

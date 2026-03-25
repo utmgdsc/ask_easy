@@ -1,13 +1,13 @@
-import { User } from "@/utils/types";
+import { User, getInitials } from "@/utils/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 
 function renderAvatar(user: User) {
   return (
-    <Avatar className="h-8 w-8">
+    <Avatar className="h-10 w-10">
       <AvatarImage src={user.pfp} alt={user.username} />
-      <AvatarFallback className="bg-stone-50 font-medium text-xl">
-        {user.username[0]}
+      <AvatarFallback className="bg-stone-50 font-medium text-lg text-stone-900 tracking-tighter">
+        {getInitials(user.username)}
       </AvatarFallback>
     </Avatar>
   );
