@@ -60,7 +60,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./
 # Source files needed for the custom server (tsx transpiles at runtime)
 COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 
-# Prisma schema + config (needed for migrations / db push)
+# Prisma schema & config (needed by prisma migrate deploy)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 

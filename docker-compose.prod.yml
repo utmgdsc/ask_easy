@@ -5,6 +5,12 @@ services:
     image: jadendocks/ask_easy:latest
     build:
       context: .
+    volumes:
+      - ./src/server.ts:/app/src/server.ts:ro
+      - ./src/app/api/auth/session/route.ts:/app/src/app/api/auth/session/route.ts:ro
+      - ./whitelist.txt:/app/whitelist.txt:ro
+      - ./uploads:/app/uploads
+    env_file: .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
