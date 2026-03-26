@@ -10,8 +10,6 @@ interface PreviewClassProps {
   onTasChange: (value: string) => void;
   courseCodeInput: string;
   onCourseCodeChange: (value: string) => void;
-  sectionInput: string;
-  onSectionChange: (value: string) => void;
 }
 
 export default function PreviewClass({
@@ -23,12 +21,10 @@ export default function PreviewClass({
   onTasChange,
   courseCodeInput,
   onCourseCodeChange,
-  sectionInput,
-  onSectionChange,
 }: PreviewClassProps) {
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-stone-50 border border-stone-200 rounded-xl p-6 relative">
+    <div className="space-y-8 animate-in fade-in duration-300">
+      <div className="bg-stone-50 border-2 border-stone-100 rounded-md p-6 relative">
         <button
           onClick={onClear}
           className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 transition-colors p-1"
@@ -36,11 +32,13 @@ export default function PreviewClass({
           <X className="w-5 h-5" />
         </button>
         <div className="flex items-start gap-4 pr-8">
-          <div className="p-3 bg-white rounded-lg border border-stone-200 shrink-0 shadow-sm">
+          <div className="p-3 bg-white rounded-md border-2 border-stone-100 shrink-0 shadow-sm">
             <FileIcon className="w-8 h-8 text-stone-700" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-stone-900 font-semibold truncate text-lg">{file.name}</h3>
+            <h3 className="text-stone-900 font-bold truncate text-lg tracking-tight">
+              {file.name}
+            </h3>
             <p className="text-sm text-stone-500 mt-1">
               {(file.size / 1024).toFixed(2)} KB • {processedData?.students?.length || 0} students
               found
@@ -55,35 +53,27 @@ export default function PreviewClass({
 
       {processedData && processedData.students.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-stone-900 tracking-wide uppercase">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-stone-900 tracking-tight">
               Class Roster Preview
             </h3>
-            <div className="flex gap-2 text-sm font-semibold text-stone-600 items-center flex-wrap">
-              <div className="flex items-center gap-1.5 bg-stone-100 px-3 py-1 rounded-md">
-                <span className="shrink-0">Course:</span>
+            <div className="flex gap-4 items-center">
+              <div className="flex flex-col gap-1.5 w-[140px]">
+                <label className="text-xs uppercase tracking-wide font-bold text-stone-500">
+                  Course
+                </label>
                 <input
                   type="text"
                   value={courseCodeInput}
                   onChange={(e) => onCourseCodeChange(e.target.value)}
-                  placeholder="e.g. CSC398H5"
-                  className="bg-transparent border-b border-stone-400 focus:border-stone-700 outline-none text-sm font-semibold text-stone-700 w-24 placeholder:font-normal placeholder:text-stone-400"
-                />
-              </div>
-              <div className="flex items-center gap-1.5 bg-stone-100 px-3 py-1 rounded-md">
-                <span className="shrink-0">Section:</span>
-                <input
-                  type="text"
-                  value={sectionInput}
-                  onChange={(e) => onSectionChange(e.target.value)}
-                  placeholder="e.g. LEC0101"
-                  className="bg-transparent border-b border-stone-400 focus:border-stone-700 outline-none text-sm font-semibold text-stone-700 w-28 placeholder:font-normal placeholder:text-stone-400"
+                  placeholder="e.g. CSC398"
+                  className="w-full bg-white border-2 border-stone-200 focus:border-green-400 focus:ring-4 focus:ring-green-50 rounded-md px-3 py-2 text-sm font-bold text-stone-800 outline-none transition-all placeholder:font-normal placeholder:text-stone-400 shadow-sm"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-white border-2 border-stone-100 rounded-md overflow-hidden shadow-sm">
             <table className="w-full text-sm text-left whitespace-nowrap">
               <thead className="text-xs text-stone-500 bg-stone-50 uppercase border-b border-stone-200">
                 <tr>
@@ -114,28 +104,29 @@ export default function PreviewClass({
       )}
 
       {/* TA UTORid input */}
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-stone-900 tracking-wide uppercase">
-          Add TAs <span className="text-stone-400 font-normal normal-case">(optional)</span>
+      <div className="space-y-3 mt-4">
+        <label className="text-xl font-bold text-stone-900 tracking-tight block">
+          Add TAs <span className="text-stone-400 font-normal text-base">(optional)</span>
         </label>
-        <p className="text-xs text-stone-500">
-          Enter UTORids separated by commas, spaces, or new lines. TAs can see all questions and
-          answer in restricted mode.
+        <p className="text-sm text-stone-500">
+          Enter UTORids separated by commas, spaces, or new lines. TAs can answer all questions and
+          delete posts.
         </p>
         <textarea
           value={tasInput}
+          spellCheck={false}
           onChange={(e) => onTasChange(e.target.value)}
-          placeholder={"tasmith\ndoeta, brownjane"}
+          placeholder={"tasmith2, janedooe, scalijad"}
           rows={3}
-          className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-blue-400"
+          className="w-full border-2 border-stone-100 rounded-md px-4 py-3 text-sm font-mono resize-none focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all shadow-sm"
         />
       </div>
 
       <button
         onClick={onSubmit}
-        className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 transition-colors duration-200 py-3.5 rounded-lg font-semibold tracking-wide uppercase mt-4 shadow-sm border border-stone-800"
+        className="w-full py-4 bg-green-500 text-white hover:bg-green-600 rounded-md font-bold shadow-sm transition-colors text-lg mt-8"
       >
-        Confirm & Create Class
+        Confirm & Create Lecture
       </button>
     </div>
   );

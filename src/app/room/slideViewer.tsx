@@ -1,6 +1,16 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Radio, Navigation, Users, Square, Upload } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Radio,
+  Navigation,
+  Users,
+  Square,
+  Upload,
+  LogOut,
+  Unlink,
+} from "lucide-react";
 import { createPluginRegistration } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
@@ -44,8 +54,6 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
   const [inputValue, setInputValue] = useState("1");
   const [isSynced, setIsSynced] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
-  const [confirmEnd, setConfirmEnd] = useState(false);
-  const [ending, setEnding] = useState(false);
   const professorPageRef = useRef(0);
 
   const { provides: docManager } = useDocumentManagerCapability();
@@ -163,24 +171,17 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
   // -------------------------------------------------------------------------
 
   const handleEndLecture = async () => {
-    if (!confirmEnd) {
-      setConfirmEnd(true);
-      return;
-    }
     if (onEndLecture) {
       // Delegate to parent — it will show the download modal, then call PATCH.
-      setConfirmEnd(false);
       onEndLecture();
       return;
     }
     // Fallback: end session inline (when no parent callback is provided)
-    setEnding(true);
     try {
       await fetch(`/api/sessions/${sessionId}`, { method: "PATCH" });
       router.push("/");
     } catch {
-      setEnding(false);
-      setConfirmEnd(false);
+      // stay on page if end fails
     }
   };
 
@@ -231,15 +232,15 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
       )}
 
       {/* Controls bar — always rendered */}
-      <div className="flex shrink-0 items-center justify-start gap-4 p-4 overflow-x-auto whitespace-nowrap">
+      <div className="flex shrink-0 items-center justify-center gap-3 p-4 overflow-x-auto whitespace-nowrap">
         {/* Professor: live indicator + nav */}
         {isProfessor && (
           <>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm font-medium">
+            <div className="flex items-center gap-1.5 h-9 px-3 bg-green-100 text-green-700 rounded-md text-sm font-medium">
               <Radio className="w-4 h-4" />
-              Presenting Live
+              Live
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-700 rounded-md text-sm font-medium">
+            <div className="flex items-center gap-1.5 h-9 px-3 bg-stone-100 text-stone-700 rounded-md text-sm font-medium">
               <Users className="w-4 h-4" />
               {viewerCount}
             </div>
@@ -254,63 +255,43 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
                 />
                 <button
                   onClick={() => replaceInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-md text-sm font-medium transition-colors"
+                  className="flex items-center gap-1.5 h-9 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  Replace Slides
+                  Replace
                 </button>
               </>
             )}
-            {confirmEnd ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-stone-600">End lecture?</span>
-                <button
-                  onClick={handleEndLecture}
-                  disabled={ending}
-                  className="px-3 py-1.5 ml-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-60"
-                >
-                  {ending ? "Ending…" : "Yes, end it"}
-                </button>
-                <button
-                  onClick={() => setConfirmEnd(false)}
-                  disabled={ending}
-                  className="px-3 ml-2 py-1.5 bg-stone-200 hover:bg-stone-300 text-foreground rounded-md text-sm font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleEndLecture}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-100 hover:text-red-700 text-red-700 rounded-md text-sm font-medium transition-colors"
-              >
-                <Square className="w-3.5 h-3.5 fill-current" />
-                End Lecture
-              </button>
-            )}
             <button
-              className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
+              onClick={handleEndLecture}
+              className="flex items-center gap-1.5 h-9 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              End Lecture
+            </button>
+            <div className="w-px h-6 bg-stone-200 mx-1" />
+            <button
+              className="w-9 h-9 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors cursor-pointer"
               onClick={() => navigateTo(pageIndex === 0 ? pageCount - 1 : pageIndex - 1)}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-1 text-sm font-medium text-foreground">
-              <span>Slide</span>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onBlur={() => handleInputCommit(inputValue)}
                 onKeyDown={handleKeyDown}
-                className="w-8 h-8 px-1 py-1 text-center bg-white border border-stone-300 rounded"
+                className="w-10 h-9 px-1 text-center bg-white border border-stone-300 rounded focus-visible:ring-1 focus-visible:ring-stone-400 focus-visible:outline-none"
               />
               {pageCount > 0 && <span className="text-stone-500">/ {pageCount}</span>}
             </div>
             <button
-              className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors cursor-pointer"
               onClick={() => navigateTo((pageIndex + 1) % pageCount)}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </>
         )}
@@ -318,15 +299,24 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
         {/* Student: following mode */}
         {!isProfessor && isSynced && (
           <>
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-green-100 text-green-700 rounded-md text-sm font-medium">
+            <div className="flex items-center gap-1.5 h-9 px-3 bg-green-100 text-green-700 rounded-md text-sm font-medium">
               <Navigation className="w-4 h-4" />
               Following Professor
             </div>
             <button
               onClick={handleToggleSync}
-              className="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-foreground rounded-md text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
             >
+              <Unlink className="w-3.5 h-3.5" />
               Browse Freely
+            </button>
+            <div className="w-px h-6 bg-stone-200 mx-1" />
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-1.5 h-9 px-3 bg-stone-200 hover:bg-red-100 hover:text-red-700 text-stone-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Exit
             </button>
           </>
         )}
@@ -335,35 +325,42 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
         {!isProfessor && !isSynced && (
           <>
             <button
-              className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors cursor-pointer"
               onClick={() => navigateTo(pageIndex === 0 ? pageCount - 1 : pageIndex - 1)}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-1 text-sm font-medium text-foreground">
-              <span>Slide</span>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onBlur={() => handleInputCommit(inputValue)}
                 onKeyDown={handleKeyDown}
-                className="w-8 h-8 px-1 py-1 text-center bg-white border border-stone-300 rounded"
+                className="w-10 h-9 px-1 text-center bg-white border border-stone-300 rounded focus-visible:ring-1 focus-visible:ring-stone-400 focus-visible:outline-none"
               />
               {pageCount > 0 && <span className="text-stone-500">/ {pageCount}</span>}
             </div>
             <button
-              className="w-10 h-10 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-stone-900 hover:bg-stone-700 text-stone-50 rounded-md transition-colors cursor-pointer"
               onClick={() => navigateTo((pageIndex + 1) % pageCount)}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5" />
             </button>
             <button
               onClick={handleToggleSync}
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
             >
               <Radio className="w-4 h-4" />
               Back to Live
+            </button>
+            <div className="w-px h-6 bg-stone-200 mx-1" />
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-1.5 h-9 px-3 bg-stone-200 hover:bg-red-100 hover:text-red-700 text-stone-700 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Exit
             </button>
           </>
         )}
@@ -380,9 +377,10 @@ interface UploadZoneProps {
   onUpload: (file: File) => void;
   isUploading: boolean;
   uploadError: string | null;
+  onEndLecture?: () => void;
 }
 
-function UploadZone({ onUpload, isUploading, uploadError }: UploadZoneProps) {
+function UploadZone({ onUpload, isUploading, uploadError, onEndLecture }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -407,7 +405,7 @@ function UploadZone({ onUpload, isUploading, uploadError }: UploadZoneProps) {
   return (
     <div className="flex flex-col flex-1 w-full items-center justify-center p-8">
       <div
-        className={`flex flex-col items-center justify-center w-full max-w-md border-2 border-dashed rounded-xl p-10 gap-4 cursor-pointer transition-colors ${
+        className={`flex flex-col items-center justify-center w-full max-w-md border-2 border-dashed rounded-md p-10 gap-4 cursor-pointer transition-colors ${
           isDragging
             ? "border-stone-500 bg-stone-100"
             : "border-stone-300 bg-stone-50 hover:border-stone-400 hover:bg-stone-100"
@@ -420,7 +418,7 @@ function UploadZone({ onUpload, isUploading, uploadError }: UploadZoneProps) {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
       >
-        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-stone-200">
+        <div className="flex items-center justify-center w-14 h-14 rounded-md bg-stone-200">
           <Upload className="w-6 h-6 text-stone-600" />
         </div>
         <div className="text-center">
@@ -444,6 +442,20 @@ function UploadZone({ onUpload, isUploading, uploadError }: UploadZoneProps) {
       </div>
       {uploadError && (
         <p className="mt-4 text-sm text-red-600 max-w-md text-center">{uploadError}</p>
+      )}
+      {onEndLecture && (
+        <div className="mt-6 flex flex-col items-center">
+          <p className="text-sm text-stone-500 mb-3">
+            Or end the lecture without uploading slides.
+          </p>
+          <button
+            onClick={onEndLecture}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors"
+          >
+            <Square className="w-4 h-4 fill-current" />
+            End Lecture
+          </button>
+        </div>
       )}
     </div>
   );
@@ -591,14 +603,19 @@ export default function SlideViewer({ isProfessor, onEndLecture }: SlideViewerPr
     if (isProfessor) {
       return (
         <div className="flex flex-col bg-stone-50 flex-1 w-full h-full overflow-hidden">
-          <UploadZone onUpload={handleUpload} isUploading={isUploading} uploadError={uploadError} />
+          <UploadZone
+            onUpload={handleUpload}
+            isUploading={isUploading}
+            uploadError={uploadError}
+            onEndLecture={onEndLecture}
+          />
         </div>
       );
     }
 
     return (
       <div className="flex flex-col bg-stone-50 flex-1 w-full h-full items-center justify-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-md bg-stone-200 flex items-center justify-center">
           <Upload className="w-5 h-5 text-stone-400" />
         </div>
         <p className="text-stone-500 text-sm">Waiting for professor to upload slides…</p>

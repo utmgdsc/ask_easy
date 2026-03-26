@@ -42,10 +42,10 @@ export default function Upload({ onFileSelect }: UploadProps) {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
+      className={`group border-2 border-dashed rounded-md p-12 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
         isHovering
-          ? "border-stone-500 bg-stone-100"
-          : "border-stone-300 bg-stone-50 hover:bg-stone-100"
+          ? "border-green-400 bg-green-50 shadow-md scale-[1.02]"
+          : "border-stone-300 bg-stone-50 hover:bg-stone-100 hover:border-green-300 hover:shadow-sm"
       }`}
     >
       <input
@@ -56,13 +56,15 @@ export default function Upload({ onFileSelect }: UploadProps) {
         onChange={handleFileInput}
       />
       <label htmlFor="csv-upload" className="flex flex-col items-center cursor-pointer w-full">
-        <div className="p-4 bg-white shadow-sm border border-stone-200 rounded-full mb-6">
-          <UploadCloud className="w-8 h-8 text-stone-700" />
+        <div
+          className={`p-4 bg-white shadow-sm border-2 rounded-md mb-6 transition-colors ${isHovering ? "border-green-200 text-green-500" : "border-stone-100 text-stone-400 group-hover:text-green-500 group-hover:border-green-200"}`}
+        >
+          <UploadCloud className="w-8 h-8 text-[inherit]" />
         </div>
-        <h3 className="text-stone-900 font-semibold tracking-wide uppercase mb-2 text-lg">
+        <h3 className="text-stone-900 font-bold tracking-tight mb-2 text-xl">
           Click to upload or drag and drop
         </h3>
-        <p className="text-stone-500">CSV files only</p>
+        <p className="text-stone-500 font-medium">CSV files only</p>
       </label>
     </div>
   );

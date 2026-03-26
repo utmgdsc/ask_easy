@@ -4,20 +4,26 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, GraduationCap } from "lucide-react";
-import { Post, User } from "@/utils/types";
+import { Post, User, getInitials, isLikelyAvatarImageUrl } from "@/utils/types";
 
 export function renderAvatar(post: Post) {
   if (post?.user) {
     return (
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={post.user.pfp} alt={post.user.username} />
-        <AvatarFallback>{post.user.username[1]}</AvatarFallback>
+      <Avatar className="h-10 w-10">
+        {isLikelyAvatarImageUrl(post.user.pfp) && (
+          <AvatarImage src={post.user.pfp} alt={post.user.username} />
+        )}
+        <AvatarFallback className="text-sm font-medium tracking-tighter text-stone-600">
+          {getInitials(post.user.username)}
+        </AvatarFallback>
       </Avatar>
     );
   }
   return (
-    <Avatar className="h-8 w-8">
-      <AvatarFallback className="text-stone-400 bg-stone-100">?</AvatarFallback>
+    <Avatar className="h-10 w-10">
+      <AvatarFallback className="text-stone-400 bg-stone-100 text-sm font-medium tracking-tighter">
+        ST
+      </AvatarFallback>
     </Avatar>
   );
 }
@@ -53,8 +59,10 @@ export function UpvoteButton({ initialVotes, controlledVotes, onUpvote }: Upvote
     <Button
       variant="ghost"
       size="sm"
-      className={`h-8 px-2 text-xs gap-2 ${
-        isUpvoted ? "text-green-500 hover:text-green-500" : "text-stone-900/50 hover:text-stone-900"
+      className={`h-7 px-2 text-xs gap-1 ${
+        isUpvoted
+          ? "text-green-500 hover:text-green-500 hover:bg-green-50"
+          : "text-stone-400 hover:text-stone-900 hover:bg-stone-200/60"
       }`}
       onClick={handleUpvote}
     >

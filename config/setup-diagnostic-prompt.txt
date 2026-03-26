@@ -1,0 +1,134 @@
+I am setting up the AskEasy web app on an Ubuntu 22.04 VM. Shibboleth and Apache are already installed by the university.
+Please help me diagnose what is missing or broken by running each command below and pasting the output back to you.
+
+---
+
+## 1. Docker
+
+```bash
+docker --version
+docker compose version
+docker compose ps
+```
+
+Expected: Docker 24+, Compose v2+, three containers (app, postgres, redis) all "running".
+
+---
+
+## 2. Environment file
+
+```bash
+cat .env
+```
+
+Expected: these keys must be present and NOT placeholder values:
+- DATABASE_URL (must contain @postgres:5432)
+- POSTGRES_PASSWORD
+- REDIS_PASSWORD
+- REDIS_URL (must contain :PASSWORD@ not just redis://redis)
+- SESSION_SECRET (at least 32 chars)
+- CRON_SECRET (at least 32 chars)
+- WHITELIST_PATH=/app/whitelist.txt
+
+---
+
+## 3. Whitelist
+
+```bash
+cat whitelist.txt
+```
+
+Expected: one UTORid per line (e.g. yousef10). Must not be empty or contain placeholder text.
+
+---
+
+## 4. App health
+
+```bash
+curl -s http://localhost:3000/api/health
+```
+
+Expected: HTTP 200 response.
+
+---
+
+## 5. Database migrations
+
+```bash
+docker compose exec app npx prisma migrate status
+```
+
+Expected: all migrations show "Applied". If any show "Pending", run:
+`docker compose exec app npx prisma migrate deploy`
+
+---
+
+## 6. Apache config
+
+```bash
+sudo apache2ctl -t
+sudo apache2ctl -S | grep askeasy
+sudo a2query -e ask_easy
+```
+
+Expected: Syntax OK, askeasy site listed, site enabled (exit code 0).
+
+---
+
+## 7. Apache modules
+
+```bash
+sudo a2query -m proxy proxy_http proxy_wstunnel headers ssl rewrite shib
+```
+
+Expected: all modules enabled.
+
+---
+
+## 8. SSL certificate
+
+```bash
+sudo ls /etc/letsencrypt/live/askeasy.utm.utoronto.ca/
+```
+
+Expected: fullchain.pem and privkey.pem present.
+If missing, either get a cert via certbot or update the SSLCertificate paths in config/apache-shibboleth.conf.
+
+---
+
+## 9. Shibboleth
+
+```bash
+sudo systemctl is-active shibd
+curl -sk https://localhost/Shibboleth.sso/Status | grep -o '<Status>.*</Status>'
+```
+
+Expected: shibd active, status shows <Status><OK/></Status>.
+
+---
+
+## 10. Firewall
+
+```bash
+sudo ufw status
+```
+
+Expected: 80/tcp and 443/tcp ALLOW. 3000, 5432, 6379 should be DENY or not listed.
+
+---
+
+## 11. Full end-to-end
+
+Visit https://askeasy.utm.utoronto.ca in a browser.
+
+Expected flow:
+1. Redirected to UofT login (idpz.utorauth.utoronto.ca)
+2. After login, redirected back to askeasy.utm.utoronto.ca
+3. App loads with your name shown (logged in as the correct user)
+
+If any step fails, paste the output of:
+```bash
+docker compose logs app --tail=50
+sudo tail -30 /var/log/apache2/askeasy-error.log
+sudo tail -30 /var/log/shibboleth/shibd.log
+```

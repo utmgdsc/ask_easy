@@ -110,6 +110,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   const [commentView, setCommentView] = useState<"all" | "unresolved" | "resolved">("all");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answerMode, setAnswerMode] = useState<"all" | "instructors_only">("instructors_only");
+  const [globalIsAnonymous, setGlobalIsAnonymous] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -453,9 +454,9 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: true } : q)));
   };
 
-  const handleSubmitAnswer = (questionId: string, content: string, isAnonymous: boolean) => {
+  const handleSubmitAnswer = (questionId: string, content: string) => {
     if (!socket) return;
-    socket.emit("answer:create", { questionId, content, isAnonymous });
+    socket.emit("answer:create", { questionId, content, isAnonymous: globalIsAnonymous });
   };
 
   const handleToggleAnswerMode = () => {
@@ -535,7 +536,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
           </div>
         </div>
 
-        <div className="absolute inset-0 overflow-y-auto px-6 pt-16">
+        <div className="absolute inset-0 overflow-y-auto px-4 pt-16">
           <div className="max-w-4xl mx-auto space-y-4 pb-36">
             {isLoading ? (
               <div className="text-center text-stone-500 py-8 text-sm">Loading questions...</div>
@@ -559,11 +560,13 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
                       post={q}
                       commentView={commentView}
                       onUpvote={() => handleUpvote(q.id)}
-                      onResolve={isInstructor ? () => handleResolve(q.id) : undefined}
-                      canAnswer={canAnswerGlobal || q.user?.id === userId}
-                      onSubmitAnswer={(content, isAnon) =>
-                        handleSubmitAnswer(q.id, content, isAnon)
+                      onResolve={
+                        isInstructor || q.user?.id === userId
+                          ? () => handleResolve(q.id)
+                          : undefined
                       }
+                      canAnswer={canAnswerGlobal || q.user?.id === userId}
+                      onSubmitAnswer={(content) => handleSubmitAnswer(q.id, content)}
                       onAnswerUpvote={handleAnswerUpvote}
                       onDeleteQuestion={canDelete(q) ? () => handleDeleteQuestion(q.id) : undefined}
                       onDeleteAnswer={(reply) =>
@@ -584,6 +587,8 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
         disabled={!socket}
         serverError={questionError}
         onClearError={() => setQuestionError(null)}
+        isAnonymous={globalIsAnonymous}
+        onAnonymousChange={setGlobalIsAnonymous}
       />
     </div>
   );

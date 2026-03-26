@@ -62,6 +62,29 @@ export interface StudentRecord {
 
 export interface ProcessedClassData {
   courseCode: string;
-  lectureSection: string;
   students: StudentRecord[];
+}
+
+/** True when `pfp` looks like an image URL/path (not a placeholder initial). */
+export function isLikelyAvatarImageUrl(pfp: string | undefined): boolean {
+  if (!pfp) return false;
+  return (
+    pfp.startsWith("http://") ||
+    pfp.startsWith("https://") ||
+    pfp.startsWith("data:") ||
+    pfp.startsWith("/") ||
+    pfp.startsWith("blob:")
+  );
+}
+
+export function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  const only = parts[0];
+  if (only.length >= 2) return only.slice(0, 2).toUpperCase();
+  return only[0].toUpperCase();
 }

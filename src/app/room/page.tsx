@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
+import { Download, Square, X } from "lucide-react";
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -77,8 +78,8 @@ function EndSessionModal({
 }: EndSessionModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="px-6 py-5 border-b">
+      <div className="bg-white rounded-md shadow-xl border border-stone-200 w-full max-w-sm mx-4 overflow-hidden">
+        <div className="px-6 py-5 border-b border-stone-100">
           <h2 className="text-lg font-bold text-stone-900">End Session</h2>
           <p className="text-sm text-stone-500 mt-1">
             Would you like to download the chat history for{" "}
@@ -89,22 +90,25 @@ function EndSessionModal({
           <button
             onClick={onDownloadAndEnd}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <Download className="w-4 h-4" />
             {ending ? "Ending…" : "Download chat history & end"}
           </button>
           <button
             onClick={onEndWithout}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <Square className="w-4 h-4 fill-current" />
             End without downloading
           </button>
           <button
             onClick={onCancel}
             disabled={ending}
-            className="w-full px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
+            <X className="w-4 h-4" />
             Cancel
           </button>
         </div>
@@ -204,7 +208,7 @@ function RoomInner() {
         setAuthReady(true);
       })
       .catch(() => setAuthReady(true));
-  }, [sessionId]);
+  }, [sessionId, router]);
 
   // Connect to Socket.IO once auth is ready.
   // withCredentials: true sends the iron-session cookie so the server-side
@@ -305,7 +309,7 @@ function RoomInner() {
                   />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={resizableWidth} minSize={40}>
+                <ResizablePanel defaultSize={resizableWidth} minSize={30}>
                   <ClassChat chatHistoryRef={chatHistoryRef} />
                 </ResizablePanel>
               </ResizablePanelGroup>

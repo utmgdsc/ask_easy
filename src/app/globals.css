@@ -129,7 +129,7 @@
 
 .dot-grid {
   --dot-bg: white;
-  --dot-color: black;
+  --dot-color: var(--color-stone-400);
   --dot-size: 1px;
   --dot-space: 22px;
 

@@ -534,7 +534,7 @@ export default function ManageClassModal({
                 activeTab === id
                   ? id === "delete"
                     ? "border-red-500 text-red-600"
-                    : "border-blue-500 text-blue-600"
+                    : "border-green-500 text-green-600"
                   : "border-transparent text-stone-500 hover:text-stone-700"
               }`}
             >
@@ -568,9 +568,9 @@ export default function ManageClassModal({
                 </p>
 
                 {/* File picker */}
-                <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-stone-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors group">
-                  <Upload className="w-4 h-4 text-stone-400 group-hover:text-blue-500 shrink-0" />
-                  <span className="text-xs text-stone-500 group-hover:text-blue-600">
+                <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-stone-300 rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors group">
+                  <Upload className="w-4 h-4 text-stone-400 group-hover:text-green-500 shrink-0" />
+                  <span className="text-xs text-stone-500 group-hover:text-green-600">
                     {csvParsing ? "Parsing…" : "Choose a CSV file"}
                   </span>
                   <input
@@ -637,7 +637,7 @@ export default function ManageClassModal({
                     !csvPreview ||
                     (csvPreview.toAdd.length === 0 && csvPreview.toRemove.length === 0)
                   }
-                  className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   {csvSyncing ? "Applying…" : "Apply Changes"}
@@ -651,14 +651,15 @@ export default function ManageClassModal({
                 </p>
                 <textarea
                   value={utoridsInput}
+                  spellCheck={false}
                   onChange={(e) => {
                     setUtoridsInput(e.target.value);
                     setAddResult(null);
                     setAddError(null);
                   }}
-                  placeholder={"jsmith12\ndoe34, brown56"}
+                  placeholder={"tasmith2, janedooe, scalijad"}
                   rows={3}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-blue-400"
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />
                 {addError && <p className="text-sm text-red-600">{addError}</p>}
                 {addResult && (
@@ -679,7 +680,7 @@ export default function ManageClassModal({
                 <button
                   onClick={handleAddStudents}
                   disabled={addingStudents || utoridsInput.trim().length === 0}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {addingStudents ? "Adding…" : "Add Students"}
                 </button>
@@ -709,14 +710,15 @@ export default function ManageClassModal({
                 </p>
                 <textarea
                   value={taUtoridsInput}
+                  spellCheck={false}
                   onChange={(e) => {
                     setTaUtoridsInput(e.target.value);
                     setTaAddResult(null);
                     setTaAddError(null);
                   }}
-                  placeholder={"tasmith\ndoeta, brownjane"}
+                  placeholder={"tasmith2, janedooe, scalijad"}
                   rows={3}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-blue-400"
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />
                 {taAddError && <p className="text-sm text-red-600">{taAddError}</p>}
                 {taAddResult && (
@@ -737,7 +739,7 @@ export default function ManageClassModal({
                 <button
                   onClick={handleAddTas}
                   disabled={addingTas || taUtoridsInput.trim().length === 0}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {addingTas ? "Adding…" : "Add TAs"}
                 </button>
@@ -759,7 +761,7 @@ export default function ManageClassModal({
                     setRenameError(null);
                   }}
                   placeholder="e.g. CSC398H5"
-                  className="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                  className="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -773,7 +775,7 @@ export default function ManageClassModal({
                     setRenameError(null);
                   }}
                   placeholder="e.g. Winter 2026"
-                  className="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                  className="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-400 focus:ring-4 focus:ring-green-50 transition-all"
                 />
               </div>
               {renameError && <p className="text-sm text-red-600">{renameError}</p>}
@@ -788,7 +790,7 @@ export default function ManageClassModal({
                   !newSemester.trim() ||
                   (newCode.trim() === course.code && newSemester.trim() === course.semester)
                 }
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               >
                 {renaming ? "Saving…" : "Save Changes"}
               </button>
