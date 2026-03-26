@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import footer from "../components/footer";
-import { User, getInitials } from "@/utils/types";
+import { User, getInitials, isLikelyAvatarImageUrl } from "@/utils/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -118,7 +118,7 @@ export default function CreateClassPage() {
       </div>
       <div className="absolute top-6 right-7 z-10 flex items-center gap-3">
         <Avatar className="h-10 w-10 shadow-sm border-2 border-stone-100">
-          <AvatarImage src={user.pfp} alt={user.username} />
+          {isLikelyAvatarImageUrl(user.pfp) && <AvatarImage src={user.pfp} alt={user.username} />}
           <AvatarFallback className="bg-white font-medium text-lg text-stone-900 tracking-tighter">
             {getInitials(user.username)}
           </AvatarFallback>

@@ -8,7 +8,7 @@ import ProfCourseViewer from "./classes/ProfCourseViewer";
 import OnboardingCarousel from "./components/OnboardingCarousel";
 import { STUDENT_ONBOARDING_STEPS, PROF_ONBOARDING_STEPS } from "@/constants/onboarding";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/utils/types";
+import { getInitials, isLikelyAvatarImageUrl } from "@/utils/types";
 import { CircleHelp } from "lucide-react";
 
 export default function LandingPage() {
@@ -73,7 +73,7 @@ export default function LandingPage() {
           <CircleHelp className="w-5 h-5" />
         </button>
         <Avatar className="h-10 w-10 shadow-sm border-2 border-stone-100">
-          <AvatarImage src={user.pfp} alt={user.username} />
+          {isLikelyAvatarImageUrl(user.pfp) && <AvatarImage src={user.pfp} alt={user.username} />}
           <AvatarFallback className="bg-white font-medium text-lg text-stone-900 tracking-tighter">
             {getInitials(user.username)}
           </AvatarFallback>

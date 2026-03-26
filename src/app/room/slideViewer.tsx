@@ -54,7 +54,6 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
   const [inputValue, setInputValue] = useState("1");
   const [isSynced, setIsSynced] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
-  const [ending, setEnding] = useState(false);
   const professorPageRef = useRef(0);
 
   const { provides: docManager } = useDocumentManagerCapability();
@@ -178,12 +177,11 @@ function SlideUI({ activeDocumentId, isProfessor, onReplaceSlides, onEndLecture 
       return;
     }
     // Fallback: end session inline (when no parent callback is provided)
-    setEnding(true);
     try {
       await fetch(`/api/sessions/${sessionId}`, { method: "PATCH" });
       router.push("/");
     } catch {
-      setEnding(false);
+      // stay on page if end fails
     }
   };
 

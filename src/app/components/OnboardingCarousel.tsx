@@ -73,12 +73,17 @@ export default function OnboardingCarousel({
           "Post only valid questions related to the course material.",
           "Maintain a respectful attitude toward instructors and peers.",
         ],
-        image: "/images/onboarding/rules.png",
         altText: "Community Rules Illustration",
       }
     : steps[currentStepIndex];
 
   const StepIcon = stepData.icon ? iconMap[stepData.icon] : null;
+
+  /** Which step index last failed to load a hero image (no effect needed to reset on navigation). */
+  const [heroFailedAtIndex, setHeroFailedAtIndex] = useState<number | null>(null);
+
+  const heroSrc = "image" in stepData ? stepData.image : undefined;
+  const showHeroPhoto = Boolean(heroSrc && heroFailedAtIndex !== currentStepIndex);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-4 md:p-8">
@@ -175,25 +180,32 @@ export default function OnboardingCarousel({
           </div>
         </div>
 
-        {/* Right Image Half */}
+        {/* Right visual: optional photo from `public/`, otherwise large step icon (PNGs were never shipped) */}
         <div className="w-full h-48 sm:h-64 md:w-[45%] md:h-full bg-stone-50 relative flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 w-full h-full bg-stone-200/50 flex items-center justify-center">
-            {stepData.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-50/80 via-stone-100/70 to-stone-200/50" />
+          {showHeroPhoto ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={stepData.image}
-                alt={stepData.altText}
-                className="object-cover w-full h-full mix-blend-multiply opacity-80"
+                src={heroSrc}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-85"
+                onError={() => setHeroFailedAtIndex(currentStepIndex)}
               />
-            ) : null}
-            {/* Overlay styling for modern premium feel */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-stone-100/40 to-transparent pointer-events-none" />
-            {!stepData.image && (
-              <span className="text-sm font-medium text-stone-400 bg-white/80 px-4 py-2 rounded-md backdrop-blur-md shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-tr from-stone-100/50 to-transparent pointer-events-none" />
+            </>
+          ) : (
+            <div className="relative z-10 flex flex-col items-center justify-center gap-5 px-8 py-10 text-center">
+              {StepIcon && (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white/90 text-green-600 flex items-center justify-center shadow-lg border border-green-100/60">
+                  <StepIcon className="w-12 h-12 sm:w-14 sm:h-14" strokeWidth={2} />
+                </div>
+              )}
+              <p className="text-sm sm:text-base font-medium text-stone-600 max-w-[260px] leading-snug">
                 {stepData.altText}
-              </span>
-            )}
-          </div>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

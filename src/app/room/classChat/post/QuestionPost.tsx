@@ -127,12 +127,11 @@ export default function QuestionPost({
   children?: React.ReactNode;
 }) {
   const [isReplying, setIsReplying] = useState(false);
-  const [resolved, setResolved] = useState(post.isResolved);
   const [threadState, setThreadState] = useState<ThreadState>("default");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  // Keep resolved in sync if parent state updates
-  if (post.isResolved && !resolved) setResolved(true);
+  /** Parent (socket/API) is the source of truth; optimistic updates flow through `post`. */
+  const resolved = post.isResolved;
 
   if (commentView === "unresolved" && resolved) return null;
   if (commentView === "resolved" && !resolved) return null;
@@ -151,7 +150,6 @@ export default function QuestionPost({
   };
 
   const handleResolve = () => {
-    setResolved(true);
     onResolve?.();
   };
 
