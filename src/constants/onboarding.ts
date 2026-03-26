@@ -12,7 +12,7 @@ export const STUDENT_ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Welcome to AskEasy",
     description: [
       "When your professor starts a lecture, it will appear as a live session on your dashboard.",
-      "Just click \"Join\" on any live lecture to enter the Q&A room.",
+      'Just click "Join" on any live lecture to enter the Q&A room.',
     ],
     image: "/images/onboarding/join-class.svg",
     altText: "Joining a live lecture session",
