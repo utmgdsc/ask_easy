@@ -68,12 +68,13 @@ export default function OnboardingCarousel({
     ? {
         title: "Community Rules",
         icon: "ShieldCheck",
+        image: "/images/onboarding/community-rules.svg",
         description: [
-          "We maintain a focused learning environment for everyone.",
-          "Post only valid questions related to the course material.",
-          "Maintain a respectful attitude toward instructors and peers.",
+          "Post only genuine questions related to the lecture.",
+          "Be respectful toward instructors and peers.",
+          "Spam or off-topic posts may be removed.",
         ],
-        altText: "Community Rules Illustration",
+        altText: "Community rules and guidelines",
       }
     : steps[currentStepIndex];
 
@@ -180,7 +181,7 @@ export default function OnboardingCarousel({
           </div>
         </div>
 
-        {/* Right visual: optional photo from `public/`, otherwise large step icon (PNGs were never shipped) */}
+        {/* Right visual: illustration image */}
         <div className="w-full h-48 sm:h-64 md:w-[45%] md:h-full bg-stone-50 relative flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-50/80 via-stone-100/70 to-stone-200/50" />
           {showHeroPhoto ? (
@@ -188,11 +189,10 @@ export default function OnboardingCarousel({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={heroSrc}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-85"
+                alt={stepData.altText}
+                className="relative z-10 w-[70%] h-[70%] object-contain drop-shadow-sm"
                 onError={() => setHeroFailedAtIndex(currentStepIndex)}
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-stone-100/50 to-transparent pointer-events-none" />
             </>
           ) : (
             <div className="relative z-10 flex flex-col items-center justify-center gap-5 px-8 py-10 text-center">

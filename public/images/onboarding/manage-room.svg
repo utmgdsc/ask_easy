@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Main container -->
+  <rect x="60" y="50" width="280" height="300" rx="18" fill="#fafaf9" stroke="#e7e5e4" stroke-width="2"/>
+  <!-- Title -->
+  <text x="200" y="86" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#44403c">Session Tools</text>
+  <!-- Tool card 1 - Export Chat -->
+  <rect x="82" y="104" width="236" height="56" rx="12" fill="white" stroke="#e7e5e4" stroke-width="1.5"/>
+  <rect x="94" y="116" width="32" height="32" rx="8" fill="#dcfce7"/>
+  <text x="110" y="137" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16">📄</text>
+  <text x="138" y="130" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#44403c">Export Chat History</text>
+  <text x="138" y="146" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#78716c">Download full Q&amp;A as .txt</text>
+  <!-- Tool card 2 - Manage TAs -->
+  <rect x="82" y="172" width="236" height="56" rx="12" fill="white" stroke="#e7e5e4" stroke-width="1.5"/>
+  <rect x="94" y="184" width="32" height="32" rx="8" fill="#dcfce7"/>
+  <text x="110" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16">👥</text>
+  <text x="138" y="198" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#44403c">Manage TAs</text>
+  <text x="138" y="214" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#78716c">Assign TAs via CSV upload</text>
+  <!-- Tool card 3 - Answer Mode -->
+  <rect x="82" y="240" width="236" height="56" rx="12" fill="white" stroke="#e7e5e4" stroke-width="1.5"/>
+  <rect x="94" y="252" width="32" height="32" rx="8" fill="#dcfce7"/>
+  <text x="110" y="273" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16">🛡️</text>
+  <text x="138" y="266" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#44403c">Answer Mode Control</text>
+  <text x="138" y="282" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#78716c">Restrict who can reply</text>
+  <!-- Help link -->
+  <rect x="130" y="314" width="140" height="24" rx="12" fill="#f0fdf4"/>
+  <text x="200" y="330" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#16a34a">📖 View full docs in nav bar</text>
+  <!-- Decorative -->
+  <circle cx="44" cy="140" r="5" fill="#dcfce7"/>
+  <circle cx="356" cy="300" r="7" fill="#dcfce7"/>
+</svg>

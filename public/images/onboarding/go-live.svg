@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Monitor frame -->
+  <rect x="60" y="60" width="280" height="200" rx="16" fill="#fafaf9" stroke="#e7e5e4" stroke-width="2"/>
+  <!-- Screen -->
+  <rect x="74" y="74" width="252" height="160" rx="8" fill="white"/>
+  <!-- Split view: slides left, chat right -->
+  <line x1="210" y1="74" x2="210" y2="234" stroke="#e7e5e4" stroke-width="1.5"/>
+  <!-- Slide area -->
+  <rect x="86" y="90" width="112" height="76" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <rect x="96" y="100" width="60" height="4" rx="2" fill="#16a34a" opacity="0.4"/>
+  <rect x="96" y="110" width="80" height="3" rx="1.5" fill="#d6d3d1"/>
+  <rect x="96" y="118" width="70" height="3" rx="1.5" fill="#d6d3d1"/>
+  <rect x="96" y="126" width="75" height="3" rx="1.5" fill="#d6d3d1"/>
+  <rect x="96" y="140" width="40" height="20" rx="4" fill="#dcfce7"/>
+  <!-- Slide nav -->
+  <text x="142" y="186" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#78716c">1 / 24</text>
+  <!-- Upload icon on slide area -->
+  <rect x="98" y="196" width="54" height="22" rx="6" fill="#16a34a"/>
+  <text x="125" y="211" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="700" fill="white">Upload PDF</text>
+  <!-- Chat area right side -->
+  <rect x="220" y="86" width="96" height="24" rx="6" fill="#f0fdf4"/>
+  <text x="268" y="102" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#16a34a">Live Q&amp;A</text>
+  <rect x="220" y="118" width="96" height="16" rx="4" fill="#f5f5f4"/>
+  <rect x="220" y="140" width="96" height="16" rx="4" fill="#f5f5f4"/>
+  <rect x="220" y="162" width="96" height="16" rx="4" fill="#f5f5f4"/>
+  <!-- Monitor stand -->
+  <rect x="175" y="260" width="50" height="8" rx="2" fill="#d6d3d1"/>
+  <rect x="160" y="268" width="80" height="6" rx="3" fill="#e7e5e4"/>
+  <!-- Go Live button -->
+  <rect x="130" y="300" width="140" height="44" rx="12" fill="#16a34a"/>
+  <!-- Live dot -->
+  <circle cx="172" cy="322" r="5" fill="#ef4444"/>
+  <circle cx="172" cy="322" r="8" fill="#ef4444" opacity="0.3"/>
+  <text x="220" y="327" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="white">Go Live</text>
+  <!-- Decorative -->
+  <circle cx="44" cy="120" r="5" fill="#dcfce7"/>
+  <circle cx="360" cy="280" r="7" fill="#dcfce7"/>
+</svg>
