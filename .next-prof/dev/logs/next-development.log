@@ -1,0 +1,86 @@
+[00:00:01.370] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.563] Server  LOG     [Socket.IO] Redis adapter connected
+[00:00:01.564] Server  LOG     > Ready on http://0.0.0.0:3000 (development)
+[00:00:01.564] Server  LOG     > Socket.IO server attached
+[00:00:03.856] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:16.840] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:04:59.943] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:00.354] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:05.398] Server  LOG     ✓ Compiled in 33ms
+[00:05:11.303] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:11.880] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:12.428] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:13.614] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:13.759] Server  LOG     ✓ Compiled in 28ms
+[00:05:20.732] Server  LOG     ✓ Compiled in 35ms
+[00:05:24.396] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:24.901] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:26.902] Server  LOG     ✓ Compiled in 47ms
+[00:05:33.316] Server  LOG     ✓ Compiled in 34ms
+[00:05:34.054] Browser ERROR   ./src/app/create-class/components/Upload.tsx:72:7
+Parsing ecmascript source code failed
+  70 |     </div>
+  71 |     <button
+> 72 |       onClick={onSkip}
+     |       ^^^^^^^
+  73 |       className="w-full text-center text-sm text-stone-400 hover:text-stone-600 transition-colors py-2"
+  74 |     >
+  75 |       Skip — create without roster
+
+Expected ',', got 'onClick'
+
+Import traces:
+  Client Component Browser:
+    ./src/app/create-class/components/Upload.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/create-class/components/Upload.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Server Component]
+[00:05:40.054] Browser ERROR   ./src/app/create-class/components/Upload.tsx:72:7
+Parsing ecmascript source code failed
+  70 |     </div>
+  71 |     <button
+> 72 |       onClick={onSkip}
+     |       ^^^^^^^
+  73 |       className="w-full text-center text-sm text-stone-400 hover:text-stone-600 transition-colors py-2"
+  74 |     >
+  75 |       Skip — create without roster
+
+Expected ',', got 'onClick'
+
+Import traces:
+  Client Component Browser:
+    ./src/app/create-class/components/Upload.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/create-class/components/Upload.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Server Component]
+[00:05:53.292] Server  LOG     ✓ Compiled in 31ms
+[00:05:54.054] Browser ERROR   ./src/app/create-class/components/Upload.tsx:72:7
+Parsing ecmascript source code failed
+  70 |     </div>
+  71 |     <button
+> 72 |       onClick={onSkip}
+     |       ^^^^^^^
+  73 |       className="w-full text-center text-sm text-stone-400 hover:text-stone-600 transition-colors py-2"
+  74 |     >
+  75 |       Skip — create without roster
+
+Expected ',', got 'onClick'
+
+Import traces:
+  Client Component Browser:
+    ./src/app/create-class/components/Upload.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Client Component Browser]
+    ./src/app/create-class/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/create-class/components/Upload.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Client Component SSR]
+    ./src/app/create-class/page.tsx [Server Component]

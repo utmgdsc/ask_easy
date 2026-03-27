@@ -91,7 +91,7 @@ export default function OnboardingCarousel({
       {/* Main Container - Responsive Height & Mobile Stacking */}
       <div className="bg-white rounded-md shadow-2xl w-full max-w-[950px] min-h-[500px] md:h-[600px] overflow-hidden flex flex-col md:flex-row relative">
         {/* Left Content Half */}
-        <div className="w-full md:w-[55%] h-full flex flex-col bg-white relative z-10 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)]">
+        <div className="w-full md:w-[42%] h-full flex flex-col bg-white relative z-10 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)]">
           <div className="flex-1 p-6 md:p-8 pb-0 flex flex-col justify-start">
             <div className="flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 w-full mt-6 sm:mt-8 md:mt-[4.5rem]">
               {/* Flex Row: Icon + Title */}
@@ -160,7 +160,7 @@ export default function OnboardingCarousel({
               <button
                 onClick={handlePrev}
                 disabled={currentStepIndex === 0}
-                className="flex items-center justify-center gap-1.5 w-10 h-10 sm:w-12 sm:h-12 rounded-md transition-all bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-800 disabled:opacity-0 disabled:pointer-events-none"
+                className="flex items-center justify-center gap-1.5 w-10 h-10 sm:w-12 sm:h-12 rounded-md transition-all bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 disabled:opacity-0 disabled:pointer-events-none"
               >
                 <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 ml-[-2px]" />
               </button>
@@ -171,7 +171,7 @@ export default function OnboardingCarousel({
                 className={`flex items-center justify-center gap-1.5 sm:gap-2 px-5 sm:px-6 h-10 sm:h-12 rounded-md font-bold transition-all duration-200 text-sm sm:text-base ${
                   isLastStep
                     ? "bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg shadow-green-500/20"
-                    : "bg-stone-900 hover:bg-stone-800 text-white shadow-md hover:shadow-lg"
+                    : "bg-gray-400 hover:bg-gray-500 text-white shadow-md hover:shadow-lg"
                 } disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none`}
               >
                 {isLastStep ? "Get Started" : "Next"}
@@ -182,7 +182,7 @@ export default function OnboardingCarousel({
         </div>
 
         {/* Right visual: illustration image */}
-        <div className="w-full h-48 sm:h-64 md:w-[45%] md:h-full bg-stone-50 relative flex items-center justify-center overflow-hidden">
+        <div className="w-full h-56 sm:h-72 md:w-[58%] md:h-full bg-stone-50 relative flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-50/80 via-stone-100/70 to-stone-200/50" />
           {showHeroPhoto ? (
             <>
@@ -190,7 +190,7 @@ export default function OnboardingCarousel({
               <img
                 src={heroSrc}
                 alt={stepData.altText}
-                className="relative z-10 w-[70%] h-[70%] object-contain drop-shadow-sm"
+                className="relative z-10 w-[85%] h-[85%] md:w-[80%] md:h-[80%] object-contain drop-shadow-sm"
                 onError={() => setHeroFailedAtIndex(currentStepIndex)}
               />
             </>
