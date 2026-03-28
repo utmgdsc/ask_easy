@@ -1,7 +1,7 @@
 export interface OnboardingStep {
   title: string;
   description: string[];
-  /** Optional hero image under `public/` (e.g. `/images/onboarding/foo.png`). If omitted, UI uses the step icon. */
+  /** Optional hero image under `public/` (e.g. `/images/onboarding/foo.svg`). */
   image?: string;
   altText: string;
   icon: string;
@@ -11,69 +11,74 @@ export const STUDENT_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     title: "Welcome to AskEasy",
     description: [
-      "Join your classes easily by entering the 6-character room code.",
-      "You'll usually get this code from your professor's screen or syllabus.",
+      "When your professor starts a lecture, it will appear as a live session on your dashboard.",
+      'Just click "Join" on any live lecture to enter the Q&A room.',
     ],
-    altText: "Join a class using a 6-character code",
+    image: "/images/onboarding/onboard-welcome.jpg",
+    altText: "Joining a live lecture session",
     icon: "LogIn",
   },
   {
-    title: "Post Questions, Not Comments",
+    title: "Ask & Get Answers Live",
     description: [
-      "Got a question during lecture? Post it!",
-      "AskEasy is meant exclusively for questions to help maintain a focused learning environment.",
-      "Please refrain from posting general unstructured comments.",
+      "Post your question during lecture and it appears in the live feed instantly.",
+      "TAs and your professor can reply directly, so you get answers without disrupting the lecture.",
     ],
-    altText: "Posting a question in the chat",
+    image: "/images/onboarding/onboard-answers.jpg",
+    altText: "Live Q&A feed with questions and replies",
     icon: "MessageSquarePlus",
   },
   {
-    title: "Get Answers While You Learn",
+    title: "Upvote & Track Questions",
     description: [
-      "TAs will monitor the chat during the lecture.",
-      "They can reply directly to your questions, so you never miss a beat.",
+      "See a question you also have? Upvote it. The most popular questions rise to the top.",
+      "Questions are marked as resolved once answered. Filter between unresolved and resolved to find what you need.",
     ],
-    altText: "TA answering a student's question",
+    image: "/images/onboarding/onboard-upvotes.jpg",
+    altText: "Questions ranked by upvotes with resolution filters",
     icon: "MessageCircleReply",
   },
   {
-    title: "Anonymous Mode",
+    title: "Stay Anonymous",
     description: [
-      "Feeling shy? You can toggle Anonymous Mode on.",
-      "This hides your name from other students.",
-      "Note: TAs and Professors can still see who you are to prevent misuse.",
+      "Toggle Anonymous Mode to hide your name from other students.",
+      "TAs and professors can still see who you are to prevent misuse, but your classmates won't know.",
     ],
-    altText: "Toggling Anonymous Mode on",
+    image: "/images/onboarding/onboard-anon.jpg",
+    altText: "Anonymous mode toggle hiding your identity",
     icon: "Ghost",
   },
 ];
 
 export const PROF_ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    title: "Go Live & Upload Slides",
+    title: "Go Live & Share Slides",
     description: [
-      "Start your lecture room by simply pressing 'Go Live'.",
-      "Upload your presentation slides (PDF) directly from your dashboard so students can see them live.",
+      "Hit 'Go Live' on any course to start a session. Students will see it appear on their dashboard.",
+      "Upload your lecture slides as a PDF and students will see them in a synced split-view alongside the chat.",
     ],
-    altText: "Professor going live and uploading slides",
+    image: "/images/onboarding/onboard-classes.jpg",
+    altText: "Starting a live session with slides and chat",
     icon: "MonitorUp",
   },
   {
-    title: "Teach Interactively",
+    title: "Engage With Your Class",
     description: [
-      "As you present, students can ask questions in real-time.",
-      "You can choose to respond directly in the chat, or simply address their questions verbally during the lecture.",
+      "Students post and upvote questions in real time. The most pressing ones rise to the top.",
+      "Reply in the chat or address questions verbally. You can also control whether only TAs can answer.",
     ],
-    altText: "Professor teaching and viewing student questions",
+    image: "/images/onboarding/onboard-engage.jpg",
+    altText: "Professor replying to student questions in real time",
     icon: "Presentation",
   },
   {
-    title: "Comprehensive Documentation",
+    title: "Manage & Export",
     description: [
-      "AskEasy has many powerful features like downloading chat history or managing TA enrollment.",
-      "For comprehensive details on all features, check out the detailed docs in the top navigation bar.",
+      "Assign TAs, moderate posts, and control answer permissions from within the session.",
+      "When you end a session, download the full Q&A transcript as a .txt file.",
     ],
-    altText: "Professor checking the documentation",
+    image: "/images/onboarding/onboard-end.jpg",
+    altText: "Session management tools and chat export",
     icon: "BookOpen",
   },
 ];

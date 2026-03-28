@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Card container -->
+  <rect x="70" y="50" width="260" height="300" rx="18" fill="#fafaf9" stroke="#e7e5e4" stroke-width="2"/>
+  <!-- Filter tabs at top -->
+  <rect x="88" y="68" width="40" height="24" rx="12" fill="#16a34a"/>
+  <text x="108" y="84" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="700" fill="white">All</text>
+  <rect x="134" y="68" width="76" height="24" rx="12" fill="#f5f5f4"/>
+  <text x="172" y="84" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#78716c">Unresolved</text>
+  <rect x="216" y="68" width="62" height="24" rx="12" fill="#f5f5f4"/>
+  <text x="247" y="84" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#78716c">Resolved</text>
+  <!-- Top question - most upvoted, highlighted -->
+  <rect x="88" y="104" width="224" height="62" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <!-- Upvote button - big -->
+  <rect x="96" y="114" width="36" height="42" rx="8" fill="#dcfce7"/>
+  <polygon points="114,122 120,132 108,132" fill="#16a34a"/>
+  <text x="114" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="800" fill="#16a34a">24</text>
+  <!-- Question text -->
+  <text x="142" y="130" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#44403c">How does binary search</text>
+  <text x="142" y="146" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#44403c">handle edge cases?</text>
+  <!-- Unresolved badge -->
+  <rect x="248" y="148" width="56" height="16" rx="8" fill="#fef3c7"/>
+  <text x="276" y="160" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="700" fill="#d97706">Open</text>
+  <!-- Second question -->
+  <rect x="88" y="178" width="224" height="54" rx="12" fill="white" stroke="#e7e5e4" stroke-width="1.5"/>
+  <rect x="96" y="188" width="36" height="34" rx="8" fill="#f5f5f4"/>
+  <polygon points="114,194 118,201 110,201" fill="#a8a29e"/>
+  <text x="114" y="218" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#78716c">8</text>
+  <text x="142" y="204" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#57534e">What's the time complexity</text>
+  <text x="142" y="220" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#57534e">of merge sort?</text>
+  <rect x="248" y="214" width="56" height="16" rx="8" fill="#fef3c7"/>
+  <text x="276" y="226" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="700" fill="#d97706">Open</text>
+  <!-- Third question - resolved -->
+  <rect x="88" y="244" width="224" height="54" rx="12" fill="white" stroke="#e7e5e4" stroke-width="1.5"/>
+  <rect x="96" y="254" width="36" height="34" rx="8" fill="#f5f5f4"/>
+  <polygon points="114,260 118,267 110,267" fill="#a8a29e"/>
+  <text x="114" y="284" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#78716c">5</text>
+  <text x="142" y="270" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#57534e">Will this topic be on the</text>
+  <text x="142" y="286" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#57534e">final exam?</text>
+  <!-- Resolved badge -->
+  <rect x="240" y="280" width="64" height="16" rx="8" fill="#dcfce7"/>
+  <text x="272" y="292" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="700" fill="#16a34a">✓ Resolved</text>
+  <!-- Decorative -->
+  <circle cx="54" cy="140" r="5" fill="#dcfce7"/>
+  <circle cx="352" cy="100" r="7" fill="#dcfce7"/>
+</svg>

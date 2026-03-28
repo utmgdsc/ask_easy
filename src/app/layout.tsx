@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ask Easy",
+  title: "AskEasy",
   description: "Real-time classroom Q&A and lecture platform",
   icons: {
     icon: "/icon.png",
