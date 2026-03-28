@@ -8,20 +8,13 @@ import {
   ArrowRight,
   Radio,
   Settings,
-  Play,
   Square,
   PanelRightClose,
   Users,
   GraduationCap,
   Search,
-  Navigation,
-  LogOut,
-  Unlink,
   Download,
   X,
-  Ghost,
-  User,
-  Send,
 } from "lucide-react";
 
 import type { Question, Comment } from "@/utils/types";
@@ -40,7 +33,8 @@ const MOCK_QUESTIONS: Question[] = [
     type: "question",
     user: { username: "Sarah Chen", pfp: "", role: "STUDENT" },
     timestamp: "2:14 PM",
-    content: "Can you go over that last example one more time? I didn't quite follow the recursion step.",
+    content:
+      "Can you go over that last example one more time? I didn't quite follow the recursion step.",
     upvotes: 12,
     isResolved: false,
     isAnonymous: false,
@@ -234,38 +228,74 @@ function MockSlide() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="bg-white w-full h-full rounded shadow-md flex flex-col p-10 overflow-hidden">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-stone-900 mb-1">Lecture 5: Recursion &amp; Binary Search</h2>
+          <h2 className="text-3xl font-bold text-stone-900 mb-1">
+            Lecture 5: Recursion &amp; Binary Search
+          </h2>
           <p className="text-sm text-stone-400">CSC108 — Introduction to Computer Science</p>
         </div>
         <div className="flex-1 space-y-6">
           <div>
             <h3 className="text-lg font-semibold text-stone-800 mb-3">Binary Search Algorithm</h3>
             <ul className="space-y-2 text-sm text-stone-600 list-disc pl-5">
-              <li>Works on <span className="font-semibold text-stone-800">sorted</span> arrays only</li>
+              <li>
+                Works on <span className="font-semibold text-stone-800">sorted</span> arrays only
+              </li>
               <li>Repeatedly divides the search interval in half</li>
               <li>Compare target with the middle element</li>
-              <li>Time complexity: <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded text-stone-700">O(log n)</span></li>
+              <li>
+                Time complexity:{" "}
+                <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded text-stone-700">
+                  O(log n)
+                </span>
+              </li>
             </ul>
           </div>
           <div className="bg-stone-50 border border-stone-200 rounded-md p-4 font-mono text-sm leading-relaxed">
             <div className="text-stone-400 text-xs mb-2"># Python</div>
-            <div><span className="text-blue-600">def</span> <span className="text-amber-600">binary_search</span>(arr, target):</div>
-            <div className="pl-6">low, high = <span className="text-green-700">0</span>, <span className="text-amber-600">len</span>(arr) - <span className="text-green-700">1</span></div>
-            <div className="pl-6"><span className="text-blue-600">while</span> low &lt;= high:</div>
-            <div className="pl-12">mid = (low + high) // <span className="text-green-700">2</span></div>
-            <div className="pl-12"><span className="text-blue-600">if</span> arr[mid] == target:</div>
-            <div className="pl-[4.5rem]"><span className="text-blue-600">return</span> mid</div>
-            <div className="pl-12"><span className="text-blue-600">elif</span> arr[mid] &lt; target:</div>
-            <div className="pl-[4.5rem]">low = mid + <span className="text-green-700">1</span></div>
-            <div className="pl-12"><span className="text-blue-600">else</span>:</div>
-            <div className="pl-[4.5rem]">high = mid - <span className="text-green-700">1</span></div>
-            <div className="pl-6"><span className="text-blue-600">return</span> -<span className="text-green-700">1</span></div>
+            <div>
+              <span className="text-blue-600">def</span>{" "}
+              <span className="text-amber-600">binary_search</span>(arr, target):
+            </div>
+            <div className="pl-6">
+              low, high = <span className="text-green-700">0</span>,{" "}
+              <span className="text-amber-600">len</span>(arr) -{" "}
+              <span className="text-green-700">1</span>
+            </div>
+            <div className="pl-6">
+              <span className="text-blue-600">while</span> low &lt;= high:
+            </div>
+            <div className="pl-12">
+              mid = (low + high) // <span className="text-green-700">2</span>
+            </div>
+            <div className="pl-12">
+              <span className="text-blue-600">if</span> arr[mid] == target:
+            </div>
+            <div className="pl-[4.5rem]">
+              <span className="text-blue-600">return</span> mid
+            </div>
+            <div className="pl-12">
+              <span className="text-blue-600">elif</span> arr[mid] &lt; target:
+            </div>
+            <div className="pl-[4.5rem]">
+              low = mid + <span className="text-green-700">1</span>
+            </div>
+            <div className="pl-12">
+              <span className="text-blue-600">else</span>:
+            </div>
+            <div className="pl-[4.5rem]">
+              high = mid - <span className="text-green-700">1</span>
+            </div>
+            <div className="pl-6">
+              <span className="text-blue-600">return</span> -
+              <span className="text-green-700">1</span>
+            </div>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-stone-800 mb-2">Key Insight</h3>
             <p className="text-sm text-stone-600">
-              Each recursive call <span className="font-semibold text-stone-800">reduces the problem size by half</span>.
-              For an array of 1,000,000 elements, we need at most ~20 comparisons.
+              Each recursive call{" "}
+              <span className="font-semibold text-stone-800">reduces the problem size by half</span>
+              . For an array of 1,000,000 elements, we need at most ~20 comparisons.
             </p>
           </div>
         </div>
@@ -310,7 +340,9 @@ function Scene_JoinClass() {
             }`}
           >
             <div className="flex items-start justify-between w-full mb-6">
-              <div className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all ${course.isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}>
+              <div
+                className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all ${course.isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}
+              >
                 {course.isActive ? <Video className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
               </div>
               {course.isActive && (
@@ -321,7 +353,9 @@ function Scene_JoinClass() {
               )}
             </div>
             <div className="flex flex-col gap-1 mt-auto">
-              <h3 className={`font-bold text-3xl tracking-tight line-clamp-2 transition-colors ${course.isActive ? "text-stone-900 group-hover:text-green-600" : "text-stone-900"}`}>
+              <h3
+                className={`font-bold text-3xl tracking-tight line-clamp-2 transition-colors ${course.isActive ? "text-stone-900 group-hover:text-green-600" : "text-stone-900"}`}
+              >
                 {course.name}
               </h3>
             </div>
@@ -393,11 +427,7 @@ function Scene_Upvote() {
           </div>
         </div>
         <div className="absolute inset-0 overflow-y-auto px-4 pt-16">
-          <MockQuestionList
-            questions={MOCK_QUESTIONS}
-            commentView={commentView}
-            role="STUDENT"
-          />
+          <MockQuestionList questions={MOCK_QUESTIONS} commentView={commentView} role="STUDENT" />
         </div>
       </div>
       <ChatInput onSubmit={() => {}} isAnonymous={isAnonymous} onAnonymousChange={setIsAnonymous} />
@@ -424,11 +454,7 @@ function Scene_Anonymous() {
           </div>
         </div>
         <div className="absolute inset-0 overflow-y-auto px-4 pt-16">
-          <MockQuestionList
-            questions={MOCK_QUESTIONS}
-            commentView={commentView}
-            role="STUDENT"
-          />
+          <MockQuestionList questions={MOCK_QUESTIONS} commentView={commentView} role="STUDENT" />
         </div>
       </div>
       {/* Anonymous mode ON */}
@@ -546,7 +572,11 @@ function Scene_Interactive() {
             />
           </div>
         </div>
-        <ChatInput onSubmit={() => {}} isAnonymous={isAnonymous} onAnonymousChange={setIsAnonymous} />
+        <ChatInput
+          onSubmit={() => {}}
+          isAnonymous={isAnonymous}
+          onAnonymousChange={setIsAnonymous}
+        />
       </div>
     </div>
   );
@@ -600,7 +630,11 @@ function Scene_ManageExport() {
               />
             </div>
           </div>
-          <ChatInput onSubmit={() => {}} isAnonymous={isAnonymous} onAnonymousChange={setIsAnonymous} />
+          <ChatInput
+            onSubmit={() => {}}
+            isAnonymous={isAnonymous}
+            onAnonymousChange={setIsAnonymous}
+          />
         </div>
       </div>
 
@@ -669,7 +703,9 @@ export default function DemoPage() {
       {/* Scene selector bar */}
       <div className="sticky top-0 z-[60] bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto">
-          <span className="text-xs font-bold text-stone-400 shrink-0 uppercase tracking-wider">Student:</span>
+          <span className="text-xs font-bold text-stone-400 shrink-0 uppercase tracking-wider">
+            Student:
+          </span>
           {SCENES.filter((s) => s.group === "Student").map((s) => (
             <button
               key={s.key}
@@ -684,7 +720,9 @@ export default function DemoPage() {
             </button>
           ))}
           <div className="w-px h-6 bg-stone-200 mx-1 shrink-0" />
-          <span className="text-xs font-bold text-stone-400 shrink-0 uppercase tracking-wider">Prof:</span>
+          <span className="text-xs font-bold text-stone-400 shrink-0 uppercase tracking-wider">
+            Prof:
+          </span>
           {SCENES.filter((s) => s.group === "Professor").map((s) => (
             <button
               key={s.key}

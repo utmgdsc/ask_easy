@@ -1,5 +1,0 @@
-[00:00:01.344] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.562] Server  LOG     [Socket.IO] Redis adapter connected
-[00:00:01.564] Server  LOG     > Ready on http://0.0.0.0:3001 (development)
-[00:00:01.564] Server  LOG     > Socket.IO server attached
-[00:00:09.308] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
