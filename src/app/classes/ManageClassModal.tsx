@@ -117,7 +117,9 @@ function RosterTable({
             <table className="w-full text-xs text-left">
               <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">Name</th>
+                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
+                    Name
+                  </th>
                   <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
                     UTORid
                   </th>

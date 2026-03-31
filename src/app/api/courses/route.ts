@@ -157,7 +157,10 @@ export async function POST(request: NextRequest) {
         const utorid = s.utorid?.trim();
         if (!utorid || utorid === "Missing UTORid" || utorid === "ERROR") continue;
 
-        const name = (s.displayName ?? "").trim() || `${s.givenName ?? ""} ${s.surname ?? ""}`.trim() || utorid;
+        const name =
+          (s.displayName ?? "").trim() ||
+          `${s.givenName ?? ""} ${s.surname ?? ""}`.trim() ||
+          utorid;
 
         const studentUser = await tx.user.upsert({
           where: { utorid },
