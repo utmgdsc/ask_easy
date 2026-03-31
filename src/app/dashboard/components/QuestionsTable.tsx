@@ -167,7 +167,10 @@ export default function QuestionsTable() {
                   <tr className="border-b last:border-0 hover:bg-stone-50">
                     <td className="px-2 py-3">
                       {q._count.answers > 0 && (
-                        <button onClick={() => toggleExpand(q.id)} className="text-stone-400 hover:text-stone-600">
+                        <button
+                          onClick={() => toggleExpand(q.id)}
+                          className="text-stone-400 hover:text-stone-600"
+                        >
                           {expandedId === q.id ? (
                             <ChevronDown className="w-4 h-4" />
                           ) : (
@@ -180,7 +183,11 @@ export default function QuestionsTable() {
                       {q.content.length > 80 ? q.content.slice(0, 80) + "…" : q.content}
                     </td>
                     <td className="px-4 py-3 text-stone-500">
-                      {q.isAnonymous ? <span className="italic">Anonymous</span> : (q.author?.name ?? "—")}
+                      {q.isAnonymous ? (
+                        <span className="italic">Anonymous</span>
+                      ) : (
+                        (q.author?.name ?? "—")
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs">
                       <span className="font-mono">{q.session.course.code}</span>
@@ -221,7 +228,9 @@ export default function QuestionsTable() {
                                     {a.isAnonymous ? "Anonymous" : (a.author?.name ?? "—")} &middot;{" "}
                                     {a.upvoteCount} votes
                                     {a.isAccepted && (
-                                      <span className="ml-2 text-green-600 font-medium">Accepted</span>
+                                      <span className="ml-2 text-green-600 font-medium">
+                                        Accepted
+                                      </span>
                                     )}
                                   </p>
                                 </div>
@@ -249,7 +258,12 @@ export default function QuestionsTable() {
 
       {hasMore && (
         <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => fetchQuestions(true)} disabled={loading}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchQuestions(true)}
+            disabled={loading}
+          >
             {loading ? "Loading…" : "Load More"}
           </Button>
         </div>
@@ -265,7 +279,9 @@ function QuestionStatusBadge({ status }: { status: string }) {
     RESOLVED: "bg-green-100 text-green-700",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] ?? styles.OPEN}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] ?? styles.OPEN}`}
+    >
       {status}
     </span>
   );

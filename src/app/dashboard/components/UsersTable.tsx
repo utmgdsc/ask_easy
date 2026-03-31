@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
@@ -19,26 +19,25 @@ export default function UsersTable() {
   const [roleFilter, setRoleFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = useCallback(() => {
+  const fetchRef = useRef(0);
+
+  useEffect(() => {
+    const id = ++fetchRef.current;
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (roleFilter) params.set("role", roleFilter);
     fetch(`/api/admin/users?${params}`)
       .then((res) => (res.ok ? res.json() : { users: [] }))
-      .then((data) => setUsers(data.users ?? []))
-      .catch(() => setUsers([]))
-      .finally(() => setLoading(false));
+      .then((data) => { if (id === fetchRef.current) setUsers(data.users ?? []); })
+      .catch(() => { if (id === fetchRef.current) setUsers([]); })
+      .finally(() => { if (id === fetchRef.current) setLoading(false); });
   }, [search, roleFilter]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   const handleDelete = async (userId: string, name: string) => {
     if (!window.confirm(`Delete user "${name}" and ALL their data? This cannot be undone.`)) return;
     const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
-    if (res.ok) fetchUsers();
+    if (res.ok) { fetchRef.current++; setUsers((prev) => prev.filter((u) => u.id !== userId)); }
     else alert("Failed to delete user.");
   };
 
@@ -126,7 +125,9 @@ function RoleBadge({ role }: { role: string }) {
     STUDENT: "bg-stone-100 text-stone-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[role] ?? styles.STUDENT}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[role] ?? styles.STUDENT}`}
+    >
       {role}
     </span>
   );

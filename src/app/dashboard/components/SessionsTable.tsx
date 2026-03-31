@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
@@ -21,27 +21,30 @@ export default function SessionsTable() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchSessions = useCallback(() => {
+  const fetchRef = useRef(0);
+
+  useEffect(() => {
+    const id = ++fetchRef.current;
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (statusFilter) params.set("status", statusFilter);
     fetch(`/api/admin/sessions?${params}`)
       .then((res) => (res.ok ? res.json() : { sessions: [] }))
-      .then((data) => setSessions(data.sessions ?? []))
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
+      .then((data) => { if (id === fetchRef.current) setSessions(data.sessions ?? []); })
+      .catch(() => { if (id === fetchRef.current) setSessions([]); })
+      .finally(() => { if (id === fetchRef.current) setLoading(false); });
   }, [search, statusFilter]);
 
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
-
   const handleDelete = async (sessionId: string, title: string) => {
-    if (!window.confirm(`Delete session "${title}" and ALL its questions, answers, and slides? This cannot be undone.`))
+    if (
+      !window.confirm(
+        `Delete session "${title}" and ALL its questions, answers, and slides? This cannot be undone.`
+      )
+    )
       return;
     const res = await fetch(`/api/admin/sessions/${sessionId}`, { method: "DELETE" });
-    if (res.ok) fetchSessions();
+    if (res.ok) { fetchRef.current++; setSessions((prev) => prev.filter((s) => s.id !== sessionId)); }
     else alert("Failed to delete session.");
   };
 
@@ -135,7 +138,9 @@ function StatusBadge({ status }: { status: string }) {
     ENDED: "bg-stone-100 text-stone-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] ?? styles.ENDED}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] ?? styles.ENDED}`}
+    >
       {status}
     </span>
   );

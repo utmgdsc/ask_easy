@@ -137,7 +137,12 @@ export default function EnrollmentsTable() {
 
       {hasMore && (
         <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => fetchEnrollments(true)} disabled={loading}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchEnrollments(true)}
+            disabled={loading}
+          >
             {loading ? "Loading…" : "Load More"}
           </Button>
         </div>
@@ -153,7 +158,9 @@ function RoleBadge({ role }: { role: string }) {
     STUDENT: "bg-stone-100 text-stone-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[role] ?? styles.STUDENT}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[role] ?? styles.STUDENT}`}
+    >
       {role}
     </span>
   );

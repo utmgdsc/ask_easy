@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -36,23 +36,22 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchStats = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch("/api/admin/stats")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data) setStats(data);
+        if (!cancelled && data) setStats(data);
       })
       .catch(() => null)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
 
   const handleRefresh = () => {
-    fetchStats();
     setRefreshKey((k) => k + 1);
   };
 
@@ -108,7 +107,8 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="pt-6">
               <p className="text-stone-500 text-sm">
-                Select a tab above to manage data. Use the Refresh button to reload stats and table data.
+                Select a tab above to manage data. Use the Refresh button to reload stats and table
+                data.
               </p>
             </CardContent>
           </Card>

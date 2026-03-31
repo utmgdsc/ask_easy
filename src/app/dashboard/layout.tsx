@@ -14,10 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen flex flex-col bg-stone-50">
       <header className="border-b bg-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-stone-400 hover:text-stone-600 text-sm transition-colors"
-          >
+          <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm transition-colors">
             &larr; Back
           </Link>
           <h1 className="text-lg font-semibold text-stone-900">Admin Dashboard</h1>
