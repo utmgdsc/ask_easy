@@ -165,7 +165,7 @@ export interface ViewerSyncPayload {
 export interface ClientToServerEvents {
   "question:create": (payload: QuestionCreatePayload) => void;
   "answer:create": (payload: AnswerCreatePayload) => void;
-  "session:join": (payload: SessionJoinPayload) => void;
+  "session:join": (payload: SessionJoinPayload, ack?: (error?: string) => void) => void;
   "session:leave": (payload: SessionLeavePayload) => void;
   "question:upvote": (payload: QuestionUpvotePayload) => void;
   "answer:upvote": (payload: AnswerUpvotePayload) => void;
