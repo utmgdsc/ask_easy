@@ -56,6 +56,8 @@ export interface CSVRow {
 export interface StudentRecord {
   givenName: string;
   surname: string;
+  preferredName: string;
+  displayName: string;
   utorid: string;
   [key: string]: string;
 }

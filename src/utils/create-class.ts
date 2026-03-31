@@ -1,12 +1,23 @@
 import { CSVRow, ProcessedClassData, StudentRecord } from "./types";
 
 export const processRawData = (rawData: CSVRow[]): ProcessedClassData => {
-  const processStudent = (row: CSVRow): StudentRecord => ({
-    givenName: row["Given Name"] || "Unknown",
-    surname: row["Surname"] || "Student",
-    utorid: row["UTORid"] || row["Person ID"] || "Missing UTORid",
-    ...row,
-  });
+  const processStudent = (row: CSVRow): StudentRecord => {
+    const givenName = (row["Given Name"] ?? "").trim();
+    const surname = (row["Surname"] ?? "").trim();
+    const preferredName = (row["Prefered Name"] ?? row["Preferred Name"] ?? "").trim();
+    const utorid = (row["UTORid"] ?? row["Person ID"] ?? "").trim();
+
+    const displayName = `${preferredName || givenName} ${surname}`.replace(/\s+/g, " ").trim();
+
+    return {
+      ...row,
+      givenName: givenName || "Unknown",
+      surname: surname || "Student",
+      preferredName,
+      displayName,
+      utorid: utorid || "Missing UTORid",
+    };
+  };
 
   const students = rawData
     .map(processStudent)
@@ -20,7 +31,17 @@ export const processRawData = (rawData: CSVRow[]): ProcessedClassData => {
   return {
     courseCode: extractedCourseCode,
     students:
-      students.length > 0 ? students : [{ givenName: "ERROR", surname: "ERROR", utorid: "ERROR" }],
+      students.length > 0
+        ? students
+        : [
+            {
+              givenName: "ERROR",
+              surname: "ERROR",
+              preferredName: "",
+              displayName: "ERROR",
+              utorid: "ERROR",
+            },
+          ],
   };
 };
 

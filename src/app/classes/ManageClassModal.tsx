@@ -40,15 +40,6 @@ interface RosterEntry {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: split "Given Surname" into two parts
-// ---------------------------------------------------------------------------
-function splitName(fullName: string): { givenName: string; surname: string } {
-  const idx = fullName.indexOf(" ");
-  if (idx === -1) return { givenName: fullName, surname: "" };
-  return { givenName: fullName.slice(0, idx), surname: fullName.slice(idx + 1) };
-}
-
-// ---------------------------------------------------------------------------
 // RosterTable — defined outside ManageClassModal so React never remounts it
 // ---------------------------------------------------------------------------
 interface RosterTableProps {
@@ -126,12 +117,7 @@ function RosterTable({
             <table className="w-full text-xs text-left">
               <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
-                    Given Name
-                  </th>
-                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
-                    Surname
-                  </th>
+                  <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">Name</th>
                   <th className="px-3 py-2 font-semibold text-stone-500 uppercase tracking-wide">
                     UTORid
                   </th>
@@ -140,12 +126,10 @@ function RosterTable({
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filtered.map((entry) => {
-                  const { givenName, surname } = splitName(entry.name);
                   const isRemoving = removingUtorid === entry.utorid;
                   return (
                     <tr key={entry.utorid} className="hover:bg-stone-50 group">
-                      <td className="px-3 py-2 text-stone-700">{givenName}</td>
-                      <td className="px-3 py-2 text-stone-700">{surname}</td>
+                      <td className="px-3 py-2 text-stone-700">{entry.name}</td>
                       <td className="px-3 py-2 text-stone-500 font-mono">{entry.utorid}</td>
                       <td className="px-3 py-2 text-right">
                         <button
