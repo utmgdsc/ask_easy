@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  Video,
+  Monitor,
   BookOpen,
   Calendar,
   ArrowRight,
@@ -343,7 +343,11 @@ function Scene_JoinClass() {
               <div
                 className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all ${course.isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}
               >
-                {course.isActive ? <Video className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                {course.isActive ? (
+                  <Monitor className="w-6 h-6" />
+                ) : (
+                  <BookOpen className="w-6 h-6" />
+                )}
               </div>
               {course.isActive && (
                 <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-md border border-green-200 shadow-sm animate-pulse">

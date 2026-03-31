@@ -11,7 +11,7 @@ import {
   Radio,
   Users,
   CheckCircle,
-  Video,
+  Monitor,
   Play,
   Square,
   AlertCircle,
@@ -210,7 +210,11 @@ export default function ProfCourseButtons() {
                     <div
                       className={`w-12 h-12 rounded-md flex items-center justify-center transition-all shrink-0 ${isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}
                     >
-                      {isActive ? <Video className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                      {isActive ? (
+                        <Monitor className="w-6 h-6" />
+                      ) : (
+                        <BookOpen className="w-6 h-6" />
+                      )}
                     </div>
 
                     {isActive && (

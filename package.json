@@ -20,7 +20,9 @@
     "db:setup": "prisma generate && prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "scripts:get-test-ids": "tsx scripts/get-test-ids.ts"
+    "scripts:get-test-ids": "tsx scripts/get-test-ids.ts",
+    "stress:seed": "tsx stress-tests/seed.ts",
+    "stress:run": "tsx stress-tests/run.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
