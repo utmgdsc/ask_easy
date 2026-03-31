@@ -222,9 +222,12 @@ function RoomInner() {
 
     s.on("connect", () => {
       if (sessionIdRef.current) {
-        s.emit("session:join", { sessionId: sessionIdRef.current });
+        s.emit("session:join", { sessionId: sessionIdRef.current }, (error?: string) => {
+          if (!error) setSocket(s);
+        });
+      } else {
+        setSocket(s);
       }
-      setSocket(s);
     });
 
     s.on("session:ended", () => {

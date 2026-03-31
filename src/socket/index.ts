@@ -137,7 +137,7 @@ export async function initSocketIO(
     console.log(`[Socket.IO] Client connected: ${socket.id} (user: ${socket.data.userId})`);
 
     // Session room management
-    socket.on("session:join", async (payload) => {
+    socket.on("session:join", async (payload, ack) => {
       if (payload?.sessionId && typeof payload.sessionId === "string") {
         const userId = socket.data.userId;
 
@@ -149,6 +149,7 @@ export async function initSocketIO(
 
         if (!sessionRecord) {
           socket.emit("question:error", { message: "Session not found." });
+          if (typeof ack === "function") ack("Session not found.");
           return;
         }
 
@@ -173,6 +174,7 @@ export async function initSocketIO(
             reason: "not enrolled",
           });
           socket.emit("question:error", { message: "You are not enrolled in this session." });
+          if (typeof ack === "function") ack("Not enrolled.");
           return;
         }
 
@@ -192,6 +194,7 @@ export async function initSocketIO(
         }
 
         await broadcastViewerCount(payload.sessionId);
+        if (typeof ack === "function") ack();
       }
     });
 
