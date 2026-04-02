@@ -51,10 +51,10 @@ export const processRawData = (rawData: CSVRow[], headers: string[] = []): Proce
     const utorid = rawUtorid || (isLoginLike(rawPersonId) ? rawPersonId : "") || "Missing UTORid";
 
     return {
+      ...row,
       givenName: row[givenKey] || "Unknown",
       surname: row[surnameKey] || "Student",
       utorid,
-      ...row,
     };
   };
 
