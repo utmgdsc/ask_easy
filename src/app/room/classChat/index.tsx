@@ -466,7 +466,9 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     if (!socket) return;
     socket.emit("question:unresolve", { questionId });
     // Optimistic update
-    setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: false } : q)));
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === questionId ? { ...q, isResolved: false } : q))
+    );
   };
 
   const handleSubmitAnswer = (questionId: string, content: string) => {
@@ -513,19 +515,36 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   // -------------------------------------------------------------------------
 
   const filteredQuestions = (() => {
+    let list = questions;
+
+    // Search filter
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return questions;
-    const tokens = q.split(/\s+/).filter(Boolean);
-    return questions.filter((question) => {
-      const haystack = [
-        question.content,
-        question.user?.username ?? "",
-        ...question.replies.map((r) => r.content),
-        ...question.replies.map((r) => r.user?.username ?? ""),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return tokens.every((token) => haystack.includes(token));
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean);
+      list = list.filter((question) => {
+        const haystack = [
+          question.content,
+          question.user?.username ?? "",
+          ...question.replies.map((r) => r.content),
+          ...question.replies.map((r) => r.user?.username ?? ""),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return tokens.every((token) => haystack.includes(token));
+      });
+    }
+
+    // Priority sort: resolved sink to bottom (on "All" tab), then by upvotes
+    // desc, then oldest first as tiebreaker (index in original array = time order)
+    return [...list].sort((a, b) => {
+      // Resolved questions sink to bottom on the "All" tab
+      if (commentView === "all") {
+        if (a.isResolved !== b.isResolved) return a.isResolved ? 1 : -1;
+      }
+      // Higher upvotes first
+      if (b.upvotes !== a.upvotes) return b.upvotes - a.upvotes;
+      // Oldest first (earlier index in the original array = posted earlier)
+      return list.indexOf(a) - list.indexOf(b);
     });
   })();
 
@@ -580,9 +599,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
                           ? () => handleResolve(q.id)
                           : undefined
                       }
-                      onUnresolve={
-                        isInstructor ? () => handleUnresolve(q.id) : undefined
-                      }
+                      onUnresolve={isInstructor ? () => handleUnresolve(q.id) : undefined}
                       canAnswer={canAnswerGlobal || q.user?.id === userId}
                       onSubmitAnswer={(content) => handleSubmitAnswer(q.id, content)}
                       onAnswerUpvote={handleAnswerUpvote}
