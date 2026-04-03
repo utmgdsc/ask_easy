@@ -110,6 +110,15 @@ export interface QuestionResolvedPayload {
   status: "RESOLVED";
 }
 
+export interface QuestionUnresolvePayload {
+  questionId: string;
+}
+
+export interface QuestionUnresolvedPayload {
+  id: string;
+  status: "OPEN";
+}
+
 export interface QuestionAuthorRevealedPayload {
   id: string;
   authorId: string;
@@ -170,6 +179,7 @@ export interface ClientToServerEvents {
   "question:upvote": (payload: QuestionUpvotePayload) => void;
   "answer:upvote": (payload: AnswerUpvotePayload) => void;
   "question:resolve": (payload: QuestionResolvePayload) => void;
+  "question:unresolve": (payload: QuestionUnresolvePayload) => void;
   "question:delete": (payload: QuestionDeletePayload) => void;
   "answer:delete": (payload: AnswerDeletePayload) => void;
   "slide:change": (payload: SlideChangePayload) => void;
@@ -193,6 +203,7 @@ export interface ServerToClientEvents {
   "question:updated": (payload: QuestionUpdatedPayload) => void;
   "answer:updated": (payload: AnswerUpdatedPayload) => void;
   "question:resolved": (payload: QuestionResolvedPayload) => void;
+  "question:unresolved": (payload: QuestionUnresolvedPayload) => void;
   "question:deleted": (payload: QuestionDeletedPayload) => void;
   "answer:deleted": (payload: AnswerDeletedPayload) => void;
   "slide:changed": (payload: SlideChangedPayload) => void;

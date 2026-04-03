@@ -225,6 +225,12 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       );
     };
 
+    const onQuestionUnresolved = (payload: { id: string }) => {
+      setQuestions((prev) =>
+        prev.map((q) => (q.id === payload.id ? { ...q, isResolved: false } : q))
+      );
+    };
+
     const onAnswerCreated = (payload: {
       id: string;
       questionId: string;
@@ -386,6 +392,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     socket.on("question:created", onQuestionCreated);
     socket.on("question:updated", onQuestionUpdated);
     socket.on("question:resolved", onQuestionResolved);
+    socket.on("question:unresolved", onQuestionUnresolved);
     socket.on("question:deleted", onQuestionDeleted);
     socket.on("answer:created", onAnswerCreated);
     socket.on("answer:updated", onAnswerUpdated);
@@ -400,6 +407,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       socket.off("question:created", onQuestionCreated);
       socket.off("question:updated", onQuestionUpdated);
       socket.off("question:resolved", onQuestionResolved);
+      socket.off("question:unresolved", onQuestionUnresolved);
       socket.off("question:deleted", onQuestionDeleted);
       socket.off("answer:created", onAnswerCreated);
       socket.off("answer:updated", onAnswerUpdated);
@@ -452,6 +460,13 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     socket.emit("question:resolve", { questionId });
     // Optimistic update
     setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: true } : q)));
+  };
+
+  const handleUnresolve = (questionId: string) => {
+    if (!socket) return;
+    socket.emit("question:unresolve", { questionId });
+    // Optimistic update
+    setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: false } : q)));
   };
 
   const handleSubmitAnswer = (questionId: string, content: string) => {
@@ -564,6 +579,9 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
                         isInstructor || q.user?.id === userId
                           ? () => handleResolve(q.id)
                           : undefined
+                      }
+                      onUnresolve={
+                        isInstructor ? () => handleUnresolve(q.id) : undefined
                       }
                       canAnswer={canAnswerGlobal || q.user?.id === userId}
                       onSubmitAnswer={(content) => handleSubmitAnswer(q.id, content)}

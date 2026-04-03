@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, CheckCircle2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, CheckCircle2, Undo2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Question, Post } from "@/utils/types";
 import { UpvoteButton, renderUsername } from "./PostUtils";
 
@@ -111,6 +111,7 @@ export default function QuestionPost({
   canAnswer = true,
   onUpvote,
   onResolve,
+  onUnresolve,
   onDelete,
   onSubmitAnswer,
   children,
@@ -122,6 +123,7 @@ export default function QuestionPost({
   canAnswer?: boolean;
   onUpvote?: () => void;
   onResolve?: () => void;
+  onUnresolve?: () => void;
   onDelete?: () => void;
   onSubmitAnswer?: (content: string) => void;
   children?: React.ReactNode;
@@ -159,7 +161,7 @@ export default function QuestionPost({
   const showThread = threadState !== "collapsed" && (visibleReplies.length > 0 || isReplying);
 
   return (
-    <div className="flex flex-col gap-2 bg-stone-075 rounded-md p-4 border border-stone-200">
+    <div className={`flex flex-col gap-2 rounded-md p-4 border transition-colors duration-200 ease-out ${resolved ? "bg-green-50/60 border-l-2 border-green-200 border-l-green-400" : "bg-stone-075 border-l-2 border-stone-200 border-l-amber-400"}`}>
       {/* Question body */}
       <div className="font-semibold whitespace-pre-wrap text-stone-900">{post.content}</div>
 
@@ -245,6 +247,19 @@ export default function QuestionPost({
                   title="Mark as resolved"
                 >
                   <CheckCircle2 className="h-4 w-4" />
+                </Button>
+              )}
+
+              {onUnresolve && resolved && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="group/unresolve h-7 px-2 text-xs gap-1 text-green-600 hover:text-amber-600 hover:bg-amber-50"
+                  onClick={() => onUnresolve()}
+                  title="Unresolve"
+                >
+                  <CheckCircle2 className="h-4 w-4 group-hover/unresolve:hidden" />
+                  <Undo2 className="h-4 w-4 hidden group-hover/unresolve:block" />
                 </Button>
               )}
 
