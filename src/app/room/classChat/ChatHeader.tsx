@@ -6,6 +6,9 @@ import { PanelRightClose, Users, GraduationCap, Search, X } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SlideUpdateContext } from "../SlideUpdateContext";
 import type { Role } from "@/utils/types";
+import Link from "next/link";
+import Image from "next/image";
+import askEasyLogo from "@/app/icon.png";
 
 interface ChatHeaderProps {
   role: Role;
@@ -154,6 +157,14 @@ export default function ChatHeader({
                   )}
                 </button>
               )}
+
+              <Link
+                href="/"
+                aria-label="Go to main page"
+                className="inline-flex items-center justify-center rounded-md p-1 text-stone-900 hover:bg-stone-200/60 transition-colors"
+              >
+                <Image src={askEasyLogo} alt="AskEasy logo" width={50} height={50} />
+              </Link>
             </div>
           </>
         )}

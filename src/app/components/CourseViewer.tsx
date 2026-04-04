@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Calendar, ArrowRight, Video, LayoutGrid } from "lucide-react";
+import { BookOpen, Calendar, ArrowRight, Monitor, LayoutGrid } from "lucide-react";
 
 interface Course {
   id: string;
@@ -122,7 +122,7 @@ export default function CourseViewer() {
                   <div
                     className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all ${isActive ? "bg-green-50 text-green-500 group-hover:scale-110" : "bg-stone-50 text-stone-600"}`}
                   >
-                    {isActive ? <Video className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                    {isActive ? <Monitor className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
                   </div>
 
                   {isActive && (
