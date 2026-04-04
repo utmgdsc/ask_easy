@@ -2,13 +2,19 @@
 
 import { Input } from "@/components/ui/input";
 import { useContext, useState } from "react";
-import { PanelRightClose, Users, GraduationCap, Search, X } from "lucide-react";
+import {
+  ArrowLeft,
+  PanelRightClose,
+  Users,
+  GraduationCap,
+  Search,
+  X,
+  ArrowBigRight,
+} from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SlideUpdateContext } from "../SlideUpdateContext";
 import type { Role } from "@/utils/types";
 import Link from "next/link";
-import Image from "next/image";
-import askEasyLogo from "@/app/icon.png";
 
 interface ChatHeaderProps {
   role: Role;
@@ -159,10 +165,11 @@ export default function ChatHeader({
               )}
               <Link
                 href="/"
-                aria-label="Go to main page"
-                className="inline-flex items-center justify-center rounded-md p-1 text-stone-900 hover:bg-stone-200/60 transition-colors"
+                aria-label="Back to home"
+                className="inline-flex items-center gap-1.5 rounded-md h-9 px-3 text-sm font-medium text-stone-700 bg-stone-200 hover:bg-stone-300 transition-colors"
               >
-                <Image src={askEasyLogo} alt="AskEasy logo" width={50} height={50} />
+                Back
+                <ArrowBigRight className="w-4 h-4" />
               </Link>
             </div>
           </>
