@@ -9,6 +9,7 @@ import {
   handleQuestionCreate,
   handleQuestionUpvote,
   handleQuestionResolve,
+  handleQuestionUnresolve,
   handleQuestionDelete,
 } from "./handlers/questionHandlers";
 import {
@@ -238,6 +239,7 @@ export async function initSocketIO(
     handleQuestionCreate(socket, io!);
     handleQuestionUpvote(socket, io!);
     handleQuestionResolve(socket, io!);
+    handleQuestionUnresolve(socket, io!);
     handleQuestionDelete(socket, io!);
     handleAnswerCreate(socket, io!);
     handleAnswerUpvote(socket, io!);

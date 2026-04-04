@@ -455,6 +455,124 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
 }
 
 // ---------------------------------------------------------------------------
+// Unresolving
+// ---------------------------------------------------------------------------
+
+interface QuestionUnresolvePayload {
+  questionId: string;
+}
+
+/**
+ * Registers the `question:unresolve` event listener on the given socket.
+ *
+ * Only TA / PROFESSOR may unresolve. Reverts status to OPEN.
+ * Shares the same rate limit counter as resolve.
+ *
+ * Guard order (cheap-before-expensive):
+ *   1. Auth          — socket.data.userId must exist
+ *   2. Payload shape — must be a non-null object with a string questionId
+ *   3. Rate limit    — shared with resolve: 20 / 60 s per user
+ *   4. Question      — must exist and currently be RESOLVED
+ *   5. Permission    — TA/PROFESSOR only
+ *   6. Persist       — question status updated to OPEN
+ *   7. Broadcast     — emit unresolved status to the session room
+ */
+export function handleQuestionUnresolve(socket: Socket, io: Server): void {
+  socket.on("question:unresolve", async (payload: QuestionUnresolvePayload) => {
+    try {
+      // 1. Auth guard
+      const userId: string | undefined = socket.data?.userId;
+      if (!userId) {
+        socket.emit("question:error", { message: "Authentication required." });
+        return;
+      }
+
+      // 2. Payload shape guard
+      if (!payload || typeof payload !== "object") {
+        socket.emit("question:error", { message: "Invalid request." });
+        return;
+      }
+
+      const { questionId } = payload;
+      if (!questionId || typeof questionId !== "string") {
+        socket.emit("question:error", { message: "Question ID is required." });
+        return;
+      }
+
+      // 3. Rate limit (shared with resolve)
+      const isRateLimited = await checkResolveRateLimit(userId);
+      if (isRateLimited) {
+        socket.emit("question:error", {
+          message: "You are resolving too quickly. Please wait before trying again.",
+        });
+        return;
+      }
+
+      // 4. Fetch question
+      const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: {
+          id: true,
+          sessionId: true,
+          status: true,
+          visibility: true,
+          session: { select: { courseId: true } },
+        },
+      });
+
+      if (!question) {
+        socket.emit("question:error", { message: "Question not found." });
+        return;
+      }
+
+      if (question.status !== "RESOLVED") {
+        socket.emit("question:error", { message: "Question is not resolved." });
+        return;
+      }
+
+      // 5. Permission check — only TA/PROFESSOR may unresolve
+      const enrollment = await prisma.courseEnrollment.findUnique({
+        where: {
+          userId_courseId: { userId, courseId: question.session.courseId },
+        },
+        select: { role: true },
+      });
+
+      const requesterRole = enrollment?.role ?? "STUDENT";
+
+      if (requesterRole !== "TA" && requesterRole !== "PROFESSOR") {
+        socket.emit("question:error", {
+          message: "You do not have permission to unresolve this question.",
+        });
+        return;
+      }
+
+      // 6. Update status back to OPEN
+      await prisma.question.update({
+        where: { id: questionId },
+        data: { status: "OPEN" },
+      });
+
+      // 7. Broadcast to the appropriate room
+      const targetRoom =
+        question.visibility === "INSTRUCTOR_ONLY"
+          ? `session:${question.sessionId}:instructors`
+          : `session:${question.sessionId}`;
+
+      io.to(targetRoom).emit("question:unresolved", {
+        id: questionId,
+        status: "OPEN",
+      });
+    } catch (error) {
+      console.error("[QuestionHandler] Failed to unresolve question:", error);
+      socket.emit("question:error", {
+        message: "An error occurred while unresolving the question.",
+      });
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Deleting
 // ---------------------------------------------------------------------------
 

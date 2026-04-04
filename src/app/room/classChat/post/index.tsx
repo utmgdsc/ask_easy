@@ -11,6 +11,7 @@ interface PostItemProps {
   canAnswer?: boolean;
   onUpvote?: () => void;
   onResolve?: () => void;
+  onUnresolve?: () => void;
   onSubmitAnswer?: (content: string) => void;
   onAnswerUpvote?: (answerId: string) => void;
   /** Called when the professor/TA wants to delete this question. */
@@ -30,6 +31,7 @@ export default function PostItem({
   canAnswer = true,
   onUpvote,
   onResolve,
+  onUnresolve,
   onSubmitAnswer,
   onAnswerUpvote,
   onDeleteQuestion,
@@ -47,6 +49,7 @@ export default function PostItem({
           canAnswer={canAnswer}
           onUpvote={onUpvote}
           onResolve={onResolve}
+          onUnresolve={onUnresolve}
           onSubmitAnswer={onSubmitAnswer}
           onDelete={onDeleteQuestion}
           renderReply={(reply) => (

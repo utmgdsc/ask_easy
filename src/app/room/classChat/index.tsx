@@ -225,6 +225,12 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       );
     };
 
+    const onQuestionUnresolved = (payload: { id: string }) => {
+      setQuestions((prev) =>
+        prev.map((q) => (q.id === payload.id ? { ...q, isResolved: false } : q))
+      );
+    };
+
     const onAnswerCreated = (payload: {
       id: string;
       questionId: string;
@@ -386,6 +392,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     socket.on("question:created", onQuestionCreated);
     socket.on("question:updated", onQuestionUpdated);
     socket.on("question:resolved", onQuestionResolved);
+    socket.on("question:unresolved", onQuestionUnresolved);
     socket.on("question:deleted", onQuestionDeleted);
     socket.on("answer:created", onAnswerCreated);
     socket.on("answer:updated", onAnswerUpdated);
@@ -400,6 +407,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
       socket.off("question:created", onQuestionCreated);
       socket.off("question:updated", onQuestionUpdated);
       socket.off("question:resolved", onQuestionResolved);
+      socket.off("question:unresolved", onQuestionUnresolved);
       socket.off("question:deleted", onQuestionDeleted);
       socket.off("answer:created", onAnswerCreated);
       socket.off("answer:updated", onAnswerUpdated);
@@ -454,6 +462,15 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, isResolved: true } : q)));
   };
 
+  const handleUnresolve = (questionId: string) => {
+    if (!socket) return;
+    socket.emit("question:unresolve", { questionId });
+    // Optimistic update
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === questionId ? { ...q, isResolved: false } : q))
+    );
+  };
+
   const handleSubmitAnswer = (questionId: string, content: string) => {
     if (!socket) return;
     socket.emit("answer:create", { questionId, content, isAnonymous: globalIsAnonymous });
@@ -498,19 +515,36 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   // -------------------------------------------------------------------------
 
   const filteredQuestions = (() => {
+    let list = questions;
+
+    // Search filter
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return questions;
-    const tokens = q.split(/\s+/).filter(Boolean);
-    return questions.filter((question) => {
-      const haystack = [
-        question.content,
-        question.user?.username ?? "",
-        ...question.replies.map((r) => r.content),
-        ...question.replies.map((r) => r.user?.username ?? ""),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return tokens.every((token) => haystack.includes(token));
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean);
+      list = list.filter((question) => {
+        const haystack = [
+          question.content,
+          question.user?.username ?? "",
+          ...question.replies.map((r) => r.content),
+          ...question.replies.map((r) => r.user?.username ?? ""),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return tokens.every((token) => haystack.includes(token));
+      });
+    }
+
+    // Priority sort: resolved sink to bottom (on "All" tab), then by upvotes
+    // desc, then oldest first as tiebreaker (index in original array = time order)
+    return [...list].sort((a, b) => {
+      // Resolved questions sink to bottom on the "All" tab
+      if (commentView === "all") {
+        if (a.isResolved !== b.isResolved) return a.isResolved ? 1 : -1;
+      }
+      // Higher upvotes first
+      if (b.upvotes !== a.upvotes) return b.upvotes - a.upvotes;
+      // Oldest first (earlier index in the original array = posted earlier)
+      return list.indexOf(a) - list.indexOf(b);
     });
   })();
 
@@ -565,6 +599,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
                           ? () => handleResolve(q.id)
                           : undefined
                       }
+                      onUnresolve={isInstructor ? () => handleUnresolve(q.id) : undefined}
                       canAnswer={canAnswerGlobal || q.user?.id === userId}
                       onSubmitAnswer={(content) => handleSubmitAnswer(q.id, content)}
                       onAnswerUpvote={handleAnswerUpvote}

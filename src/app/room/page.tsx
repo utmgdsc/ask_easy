@@ -296,7 +296,7 @@ function RoomInner() {
 
   return (
     <RoomContext.Provider value={{ socket, sessionId, userId, role, sessionTitle }}>
-      <div className="h-screen w-full bg-background font-sans">
+      <div className="relative h-screen w-full bg-background font-sans">
         <SlideUpdateContext.Provider value={{ isSlidesVisible, rerender }}>
           {isSlidesVisible ? (
             <div className="h-screen w-full bg-background font-sans">
