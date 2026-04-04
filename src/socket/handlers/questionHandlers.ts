@@ -122,18 +122,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         return;
       }
 
-      // 5. Rate limit (first async check — only reached if all sync checks pass)
-      const isRateLimited = await checkQuestionRateLimit(userId);
-      if (isRateLimited) {
-        console.log("[QuestionHandler] Rejected: rate limited");
-        socket.emit("question:error", {
-          message:
-            "You have reached the question limit. Please wait before asking another question.",
-        });
-        return;
-      }
-
-      // 6. Session validation
+      // 5. Session validation
       const sessionValidation = await validateSessionForQuestions(payload.sessionId);
       if (!sessionValidation.valid) {
         console.log("[QuestionHandler] Rejected: session validation -", sessionValidation.error);
@@ -141,7 +130,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         return;
       }
 
-      // 6a. Enrollment check — any non-PROFESSOR must be enrolled in the session's course
+      // 5a. Enrollment check — any non-PROFESSOR must be enrolled in the session's course
       const sessionForEnrollment = await prisma.session.findUnique({
         where: { id: payload.sessionId },
         select: { courseId: true },
@@ -159,8 +148,22 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         authorEnrollmentRole = enrollment.role;
       }
 
+      // 6. Rate limit — students only (TAs and professors are exempt).
+      //    Counter is scoped to the session so a new session always starts fresh.
+      if (authorEnrollmentRole === "STUDENT") {
+        const isRateLimited = await checkQuestionRateLimit(userId, payload.sessionId);
+        if (isRateLimited) {
+          console.log("[QuestionHandler] Rejected: rate limited");
+          socket.emit("question:error", {
+            message:
+              "You have reached the question limit. Please wait before asking another question.",
+          });
+          return;
+        }
+      }
+
       // 7. Persist to database (include author for display name in broadcast)
-      //    authorId is always stored for audit purposes, but it is stripped
+      //    authorId is always stored for audit purposes, but stripped
       //    from the broadcast payload in step 8 when isAnonymous is true.
       const question = await prisma.question.create({
         data: {
@@ -332,17 +335,10 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
  * Checks whether a user has permission to resolve a question.
  *
  * - TA / PROFESSOR (per-course CourseEnrollment role) can resolve any question.
- * - STUDENT can only resolve their own question.
+ * - STUDENT cannot resolve any question.
  */
-function checkResolvePermission(
-  userId: string,
-  questionAuthorId: string | null,
-  enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"
-): boolean {
-  if (enrollmentRole === "TA" || enrollmentRole === "PROFESSOR") {
-    return true;
-  }
-  return questionAuthorId === userId;
+function checkResolvePermission(enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"): boolean {
+  return enrollmentRole === "TA" || enrollmentRole === "PROFESSOR";
 }
 
 /**
@@ -353,7 +349,7 @@ function checkResolvePermission(
  *   2. Payload shape — must be a non-null object with a string questionId
  *   3. Rate limit    — 20 resolves / 60 s per user, enforced in Redis
  *   4. Question      — must exist in the DB and not already be resolved
- *   5. Permission    — TA/PROFESSOR can resolve any; STUDENT only their own
+ *   5. Permission    — TA/PROFESSOR can resolve any; STUDENT cannot resolve
  *   6. Persist       — question status updated to RESOLVED
  *   7. Broadcast     — emit resolved status to the session room
  */
@@ -422,7 +418,7 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
 
       const requesterRole = enrollment?.role ?? "STUDENT";
 
-      if (!checkResolvePermission(userId, question.authorId, requesterRole)) {
+      if (!checkResolvePermission(requesterRole)) {
         socket.emit("question:error", {
           message: "You do not have permission to resolve this question.",
         });

@@ -210,8 +210,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: sessionValidation.error }, { status: statusCode });
     }
 
-    // 7. Check rate limit using shared validation
-    const isRateLimited = await checkQuestionRateLimit(authorId);
+    // 7. Check rate limit using shared validation (scoped to this session)
+    const isRateLimited = await checkQuestionRateLimit(authorId, sessionId);
     if (isRateLimited) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait before asking another question." },
