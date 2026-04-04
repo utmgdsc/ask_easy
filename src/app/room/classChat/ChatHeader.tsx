@@ -157,7 +157,6 @@ export default function ChatHeader({
                   )}
                 </button>
               )}
-
               <Link
                 href="/"
                 aria-label="Go to main page"
