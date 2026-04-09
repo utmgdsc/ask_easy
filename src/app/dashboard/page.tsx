@@ -20,6 +20,7 @@ import CoursesTable from "./components/CoursesTable";
 import SessionsTable from "./components/SessionsTable";
 import QuestionsTable from "./components/QuestionsTable";
 import EnrollmentsTable from "./components/EnrollmentsTable";
+import SlideSetsTable from "./components/SlideSetsTable";
 
 interface Stats {
   users: number;
@@ -102,6 +103,7 @@ export default function DashboardPage() {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="slidesets">Slide Sets</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
         </TabsList>
@@ -156,6 +158,10 @@ export default function DashboardPage() {
 
         <TabsContent value="sessions">
           <SessionsTable key={`sessions-${refreshKey}`} />
+        </TabsContent>
+
+        <TabsContent value="slidesets">
+          <SlideSetsTable key={`slidesets-${refreshKey}`} />
         </TabsContent>
 
         <TabsContent value="questions">
