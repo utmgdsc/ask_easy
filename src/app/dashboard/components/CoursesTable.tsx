@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface Course {
   id: string;
@@ -17,6 +18,11 @@ interface Course {
 export default function CoursesTable() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "single" | "all";
+    id?: string;
+    code?: string;
+  } | null>(null);
 
   const fetchRef = useRef(0);
 
@@ -34,13 +40,7 @@ export default function CoursesTable() {
       });
   }, [search]);
 
-  const handleDelete = async (courseId: string, code: string) => {
-    if (
-      !window.confirm(
-        `Delete course "${code}" and ALL its sessions, questions, and enrollments? This cannot be undone.`
-      )
-    )
-      return;
+  const confirmDeleteSingle = async (courseId: string) => {
     const res = await fetch(`/api/admin/courses/${courseId}`, { method: "DELETE" });
     if (res.ok) {
       fetchRef.current++;
@@ -48,16 +48,29 @@ export default function CoursesTable() {
     } else alert("Failed to delete course.");
   };
 
+  const confirmDeleteAll = async () => {
+    const res = await fetch(`/api/admin/courses/all`, { method: "DELETE" });
+    if (res.ok) {
+      fetchRef.current++;
+      setCourses([]);
+    } else alert("Failed to delete all courses.");
+  };
+
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-        <Input
-          placeholder="Search by code or name…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Input
+            placeholder="Search by code or name…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button variant="destructive" onClick={() => setDeleteTarget({ type: "all" })}>
+          Delete All Courses
+        </Button>
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
@@ -99,7 +112,9 @@ export default function CoursesTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => handleDelete(course.id, course.code)}
+                      onClick={() =>
+                        setDeleteTarget({ type: "single", id: course.id, code: course.code })
+                      }
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -111,6 +126,35 @@ export default function CoursesTable() {
           </tbody>
         </table>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget?.type === "all" ? "Delete All Courses" : "Delete Course"}
+        description={
+          deleteTarget?.type === "all" ? (
+            <>
+              This will permanently delete <strong>ALL courses</strong> and{" "}
+              <strong>ALL their sessions, questions, and enrollments</strong>. This cannot be
+              undone.
+            </>
+          ) : (
+            <>
+              This will permanently delete <strong>{deleteTarget?.code}</strong> and{" "}
+              <strong>ALL its sessions, questions, and enrollments</strong>. This cannot be undone.
+            </>
+          )
+        }
+        requireTypeToConfirm={deleteTarget?.type === "all" ? "DELETE COURSES" : undefined}
+        confirmText={deleteTarget?.type === "all" ? "Delete All Courses" : "Delete Course"}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "all") {
+            await confirmDeleteAll();
+          } else if (deleteTarget?.type === "single" && deleteTarget.id) {
+            await confirmDeleteSingle(deleteTarget.id);
+          }
+        }}
+      />
     </div>
   );
 }

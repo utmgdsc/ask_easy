@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface Session {
   id: string;
@@ -19,6 +20,11 @@ export default function SessionsTable() {
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "single" | "all";
+    id?: string;
+    title?: string;
+  } | null>(null);
 
   const fetchRef = useRef(0);
 
@@ -37,18 +43,20 @@ export default function SessionsTable() {
       });
   }, [search, statusFilter]);
 
-  const handleDelete = async (sessionId: string, title: string) => {
-    if (
-      !window.confirm(
-        `Delete session "${title}" and ALL its questions, answers, and slides? This cannot be undone.`
-      )
-    )
-      return;
+  const confirmDeleteSingle = async (sessionId: string) => {
     const res = await fetch(`/api/admin/sessions/${sessionId}`, { method: "DELETE" });
     if (res.ok) {
       fetchRef.current++;
       setSessions((prev) => (prev ? prev.filter((s) => s.id !== sessionId) : prev));
     } else alert("Failed to delete session.");
+  };
+
+  const confirmDeleteAll = async () => {
+    const res = await fetch(`/api/admin/sessions/all`, { method: "DELETE" });
+    if (res.ok) {
+      fetchRef.current++;
+      setSessions([]);
+    } else alert("Failed to delete all sessions.");
   };
 
   return (
@@ -73,6 +81,9 @@ export default function SessionsTable() {
           <option value="SCHEDULED">Scheduled</option>
           <option value="ENDED">Ended</option>
         </select>
+        <Button variant="destructive" onClick={() => setDeleteTarget({ type: "all" })}>
+          Delete All Sessions
+        </Button>
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
@@ -118,7 +129,9 @@ export default function SessionsTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => handleDelete(session.id, session.title)}
+                      onClick={() =>
+                        setDeleteTarget({ type: "single", id: session.id, title: session.title })
+                      }
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -130,6 +143,35 @@ export default function SessionsTable() {
           </tbody>
         </table>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget?.type === "all" ? "Delete All Sessions" : "Delete Session"}
+        description={
+          deleteTarget?.type === "all" ? (
+            <>
+              This will permanently delete <strong>ALL sessions</strong> and{" "}
+              <strong>ALL their associated questions, answers, and slides</strong>. This cannot be
+              undone.
+            </>
+          ) : (
+            <>
+              This will permanently delete session <strong>{deleteTarget?.title}</strong> and{" "}
+              <strong>ALL its questions, answers, and slides</strong>. This cannot be undone.
+            </>
+          )
+        }
+        requireTypeToConfirm={deleteTarget?.type === "all" ? "DELETE SESSIONS" : undefined}
+        confirmText={deleteTarget?.type === "all" ? "Delete All Sessions" : "Delete Session"}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "all") {
+            await confirmDeleteAll();
+          } else if (deleteTarget?.type === "single" && deleteTarget.id) {
+            await confirmDeleteSingle(deleteTarget.id);
+          }
+        }}
+      />
     </div>
   );
 }

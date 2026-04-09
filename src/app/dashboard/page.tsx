@@ -13,6 +13,7 @@ import {
   UserCheck,
   RefreshCw,
 } from "lucide-react";
+import DeleteConfirmModal from "./components/DeleteConfirmModal";
 
 import UsersTable from "./components/UsersTable";
 import CoursesTable from "./components/CoursesTable";
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showSystemDelete, setShowSystemDelete] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,11 +108,40 @@ export default function DashboardPage() {
 
         <TabsContent value="overview">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 space-y-4">
               <p className="text-stone-500 text-sm">
                 Select a tab above to manage data. Use the Refresh button to reload stats and table
                 data.
               </p>
+              <div className="p-4 bg-amber-50 rounded-md border border-amber-200">
+                <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                  Important Note on Deletions
+                </h3>
+                <p className="text-xs text-amber-700">
+                  Deleting a record may cascade to other sections. For example, if you delete a
+                  user, it will also delete their answers, questions, and enrollments across the
+                  platform. Note that deleting a user only deletes a class if that user is the
+                  professor who created it; deleting a student will not delete the class. Deleting a
+                  course will delete all of its sessions, enrollments, and questions. Exercise
+                  caution when deleting data.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-semibold text-red-600 mb-2">Danger Zone</h3>
+                <div className="flex items-center justify-between p-4 border border-red-200 bg-red-50 rounded-md">
+                  <div>
+                    <h4 className="text-sm font-medium text-red-900">Delete Everything</h4>
+                    <p className="text-xs text-red-700">
+                      This action will delete absolutely all data in the database. This cannot be
+                      undone.
+                    </p>
+                  </div>
+                  <Button variant="destructive" onClick={() => setShowSystemDelete(true)}>
+                    Delete All Data
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -135,6 +166,31 @@ export default function DashboardPage() {
           <EnrollmentsTable key={`enrollments-${refreshKey}`} />
         </TabsContent>
       </Tabs>
+
+      <DeleteConfirmModal
+        isOpen={showSystemDelete}
+        onClose={() => setShowSystemDelete(false)}
+        title="Delete Entire Database"
+        description={
+          <>
+            This action will permanently delete{" "}
+            <strong>
+              absolutely ALL users, courses, sessions, questions, enrollments, and answers
+            </strong>{" "}
+            in the database. This CANNOT be undone.
+          </>
+        }
+        requireTypeToConfirm="DELETE EVERYTHING"
+        confirmText="Delete Database"
+        onConfirm={async () => {
+          const res = await fetch("/api/admin/system/all", { method: "DELETE" });
+          if (res.ok) {
+            handleRefresh();
+          } else {
+            alert("Failed to clear database.");
+          }
+        }}
+      />
     </div>
   );
 }

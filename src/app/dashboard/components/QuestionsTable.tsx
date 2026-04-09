@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search, ChevronDown, ChevronRight } from "lucide-react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface Answer {
   id: string;
@@ -38,6 +39,12 @@ export default function QuestionsTable() {
   const [hasMore, setHasMore] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, Answer[]>>({});
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "question" | "answer" | "all";
+    id?: string; // id for single question or single answer
+    parentId?: string; // questionId if deleting answer
+    name?: string; // string snippet of question or answer text
+  } | null>(null);
 
   const fetchQuestions = useCallback(
     (append = false) => {
@@ -70,8 +77,7 @@ export default function QuestionsTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter]);
 
-  const handleDeleteQuestion = async (questionId: string) => {
-    if (!window.confirm("Delete this question and all its answers? This cannot be undone.")) return;
+  const confirmDeleteQuestion = async (questionId: string) => {
     const res = await fetch(`/api/admin/questions/${questionId}`, { method: "DELETE" });
     if (res.ok) {
       setQuestions((prev) => prev.filter((q) => q.id !== questionId));
@@ -79,8 +85,16 @@ export default function QuestionsTable() {
     } else alert("Failed to delete question.");
   };
 
-  const handleDeleteAnswer = async (answerId: string, questionId: string) => {
-    if (!window.confirm("Delete this answer?")) return;
+  const confirmDeleteAll = async () => {
+    const res = await fetch(`/api/admin/questions/all`, { method: "DELETE" });
+    if (res.ok) {
+      setQuestions([]);
+      setAnswers({});
+      setExpandedId(null);
+    } else alert("Failed to delete all questions.");
+  };
+
+  const confirmDeleteAnswer = async (answerId: string, questionId: string) => {
     const res = await fetch(`/api/admin/answers/${answerId}`, { method: "DELETE" });
     if (res.ok) {
       setAnswers((prev) => ({
@@ -89,7 +103,7 @@ export default function QuestionsTable() {
       }));
       setQuestions((prev) =>
         prev.map((q) =>
-          q.id === questionId ? { ...q, _count: { answers: q._count.answers - 1 } } : q
+          q.id === questionId ? { ...q, _count: { answers: Math.max(0, q._count.answers - 1) } } : q
         )
       );
     } else alert("Failed to delete answer.");
@@ -132,6 +146,9 @@ export default function QuestionsTable() {
           <option value="ANSWERED">Answered</option>
           <option value="RESOLVED">Resolved</option>
         </select>
+        <Button variant="destructive" onClick={() => setDeleteTarget({ type: "all" })}>
+          Delete All Questions
+        </Button>
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
@@ -202,7 +219,9 @@ export default function QuestionsTable() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => handleDeleteQuestion(q.id)}
+                        onClick={() =>
+                          setDeleteTarget({ type: "question", id: q.id, name: q.content })
+                        }
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -237,7 +256,14 @@ export default function QuestionsTable() {
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
-                                  onClick={() => handleDeleteAnswer(a.id, q.id)}
+                                  onClick={() =>
+                                    setDeleteTarget({
+                                      type: "answer",
+                                      id: a.id,
+                                      parentId: q.id,
+                                      name: a.content,
+                                    })
+                                  }
                                   className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -268,6 +294,68 @@ export default function QuestionsTable() {
           </Button>
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={
+          deleteTarget?.type === "all"
+            ? "Delete All Questions"
+            : deleteTarget?.type === "question"
+              ? "Delete Question"
+              : "Delete Answer"
+        }
+        description={
+          deleteTarget?.type === "all" ? (
+            <>
+              This will permanently delete <strong>ALL questions</strong> and{" "}
+              <strong>ALL answers</strong>. This cannot be undone.
+            </>
+          ) : deleteTarget?.type === "question" ? (
+            <>
+              This will permanently delete this question and <strong>ALL its answers</strong>. This
+              cannot be undone.
+              <br />
+              <br />
+              <span className="text-stone-500 italic block border-l-2 pl-2">
+                &ldquo;
+                {deleteTarget?.name?.slice(0, 100) +
+                  (deleteTarget?.name && deleteTarget.name.length > 100 ? "..." : "")}
+                &rdquo;
+              </span>
+            </>
+          ) : (
+            <>
+              This will permanently delete this answer. This cannot be undone.
+              <br />
+              <br />
+              <span className="text-stone-500 italic block border-l-2 pl-2">
+                &ldquo;
+                {deleteTarget?.name?.slice(0, 100) +
+                  (deleteTarget?.name && deleteTarget.name.length > 100 ? "..." : "")}
+                &rdquo;
+              </span>
+            </>
+          )
+        }
+        requireTypeToConfirm={deleteTarget?.type === "all" ? "DELETE QUESTIONS" : undefined}
+        confirmText={
+          deleteTarget?.type === "all"
+            ? "Delete All Questions"
+            : deleteTarget?.type === "question"
+              ? "Delete Question"
+              : "Delete Answer"
+        }
+        onConfirm={async () => {
+          if (deleteTarget?.type === "all") {
+            await confirmDeleteAll();
+          } else if (deleteTarget?.type === "question" && deleteTarget.id) {
+            await confirmDeleteQuestion(deleteTarget.id);
+          } else if (deleteTarget?.type === "answer" && deleteTarget.id && deleteTarget.parentId) {
+            await confirmDeleteAnswer(deleteTarget.id, deleteTarget.parentId);
+          }
+        }}
+      />
     </div>
   );
 }

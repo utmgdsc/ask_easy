@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface User {
   id: string;
@@ -17,6 +18,11 @@ export default function UsersTable() {
   const [users, setUsers] = useState<User[] | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "single" | "all";
+    id?: string;
+    name?: string;
+  } | null>(null);
 
   const fetchRef = useRef(0);
 
@@ -35,13 +41,20 @@ export default function UsersTable() {
       });
   }, [search, roleFilter]);
 
-  const handleDelete = async (userId: string, name: string) => {
-    if (!window.confirm(`Delete user "${name}" and ALL their data? This cannot be undone.`)) return;
+  const confirmDeleteSingle = async (userId: string) => {
     const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
     if (res.ok) {
       fetchRef.current++;
       setUsers((prev) => (prev ? prev.filter((u) => u.id !== userId) : prev));
     } else alert("Failed to delete user.");
+  };
+
+  const confirmDeleteAll = async () => {
+    const res = await fetch(`/api/admin/users/all`, { method: "DELETE" });
+    if (res.ok) {
+      fetchRef.current++;
+      setUsers([]);
+    } else alert("Failed to delete all users.");
   };
 
   return (
@@ -66,6 +79,9 @@ export default function UsersTable() {
           <option value="TA">TA</option>
           <option value="PROFESSOR">Professor</option>
         </select>
+        <Button variant="destructive" onClick={() => setDeleteTarget({ type: "all" })}>
+          Delete All Users
+        </Button>
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
@@ -105,7 +121,9 @@ export default function UsersTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => handleDelete(user.id, user.name)}
+                      onClick={() =>
+                        setDeleteTarget({ type: "single", id: user.id, name: user.name })
+                      }
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -117,6 +135,35 @@ export default function UsersTable() {
           </tbody>
         </table>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget?.type === "all" ? "Delete All Users" : "Delete User"}
+        description={
+          deleteTarget?.type === "all" ? (
+            <>
+              This will permanently delete <strong>ALL users</strong> and{" "}
+              <strong>ALL their associated data</strong>. This is extremely dangerous and cannot be
+              undone.
+            </>
+          ) : (
+            <>
+              This will permanently delete <strong>{deleteTarget?.name}</strong> and{" "}
+              <strong>ALL their data</strong>. This cannot be undone.
+            </>
+          )
+        }
+        requireTypeToConfirm={deleteTarget?.type === "all" ? "DELETE USERS" : undefined}
+        confirmText={deleteTarget?.type === "all" ? "Delete All Users" : "Delete User"}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "all") {
+            await confirmDeleteAll();
+          } else if (deleteTarget?.type === "single" && deleteTarget.id) {
+            await confirmDeleteSingle(deleteTarget.id);
+          }
+        }}
+      />
     </div>
   );
 }

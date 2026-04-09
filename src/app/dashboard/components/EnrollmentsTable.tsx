@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Search } from "lucide-react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface Enrollment {
   id: string;
@@ -19,6 +20,12 @@ export default function EnrollmentsTable() {
   const [loading, setLoading] = useState(true);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "single" | "all";
+    id?: string;
+    userName?: string;
+    courseCode?: string;
+  } | null>(null);
 
   const fetchEnrollments = useCallback(
     (append = false) => {
@@ -51,11 +58,17 @@ export default function EnrollmentsTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, roleFilter]);
 
-  const handleDelete = async (enrollmentId: string, userName: string, courseCode: string) => {
-    if (!window.confirm(`Remove ${userName} from ${courseCode}?`)) return;
+  const confirmDeleteSingle = async (enrollmentId: string) => {
     const res = await fetch(`/api/admin/enrollments/${enrollmentId}`, { method: "DELETE" });
     if (res.ok) setEnrollments((prev) => prev.filter((e) => e.id !== enrollmentId));
     else alert("Failed to delete enrollment.");
+  };
+
+  const confirmDeleteAll = async () => {
+    const res = await fetch(`/api/admin/enrollments/all`, { method: "DELETE" });
+    if (res.ok) {
+      setEnrollments([]);
+    } else alert("Failed to delete all enrollments.");
   };
 
   return (
@@ -80,6 +93,9 @@ export default function EnrollmentsTable() {
           <option value="TA">TA</option>
           <option value="PROFESSOR">Professor</option>
         </select>
+        <Button variant="destructive" onClick={() => setDeleteTarget({ type: "all" })}>
+          Delete All Enrollments
+        </Button>
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
@@ -122,7 +138,14 @@ export default function EnrollmentsTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => handleDelete(e.id, e.user.name, e.course.code)}
+                      onClick={() =>
+                        setDeleteTarget({
+                          type: "single",
+                          id: e.id,
+                          userName: e.user.name,
+                          courseCode: e.course.code,
+                        })
+                      }
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -147,6 +170,33 @@ export default function EnrollmentsTable() {
           </Button>
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget?.type === "all" ? "Delete All Enrollments" : "Delete Enrollment"}
+        description={
+          deleteTarget?.type === "all" ? (
+            <>
+              This will permanently delete <strong>ALL enrollments</strong>. This cannot be undone.
+            </>
+          ) : (
+            <>
+              Remove <strong>{deleteTarget?.userName}</strong> from{" "}
+              <strong>{deleteTarget?.courseCode}</strong>?
+            </>
+          )
+        }
+        requireTypeToConfirm={deleteTarget?.type === "all" ? "DELETE ENROLLMENTS" : undefined}
+        confirmText={deleteTarget?.type === "all" ? "Delete All Enrollments" : "Delete Enrollment"}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "all") {
+            await confirmDeleteAll();
+          } else if (deleteTarget?.type === "single" && deleteTarget.id) {
+            await confirmDeleteSingle(deleteTarget.id);
+          }
+        }}
+      />
     </div>
   );
 }
