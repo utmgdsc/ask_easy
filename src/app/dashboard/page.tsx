@@ -38,7 +38,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     fetch("/api/admin/stats")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -48,7 +47,9 @@ export default function DashboardPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [refreshKey]);
 
   const handleRefresh = () => {

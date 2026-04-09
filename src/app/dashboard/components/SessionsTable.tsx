@@ -16,24 +16,25 @@ interface Session {
 }
 
 export default function SessionsTable() {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<Session[] | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [loading, setLoading] = useState(true);
 
   const fetchRef = useRef(0);
 
   useEffect(() => {
     const id = ++fetchRef.current;
-    setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (statusFilter) params.set("status", statusFilter);
     fetch(`/api/admin/sessions?${params}`)
       .then((res) => (res.ok ? res.json() : { sessions: [] }))
-      .then((data) => { if (id === fetchRef.current) setSessions(data.sessions ?? []); })
-      .catch(() => { if (id === fetchRef.current) setSessions([]); })
-      .finally(() => { if (id === fetchRef.current) setLoading(false); });
+      .then((data) => {
+        if (id === fetchRef.current) setSessions(data.sessions ?? []);
+      })
+      .catch(() => {
+        if (id === fetchRef.current) setSessions([]);
+      });
   }, [search, statusFilter]);
 
   const handleDelete = async (sessionId: string, title: string) => {
@@ -44,8 +45,10 @@ export default function SessionsTable() {
     )
       return;
     const res = await fetch(`/api/admin/sessions/${sessionId}`, { method: "DELETE" });
-    if (res.ok) { fetchRef.current++; setSessions((prev) => prev.filter((s) => s.id !== sessionId)); }
-    else alert("Failed to delete session.");
+    if (res.ok) {
+      fetchRef.current++;
+      setSessions((prev) => (prev ? prev.filter((s) => s.id !== sessionId) : prev));
+    } else alert("Failed to delete session.");
   };
 
   return (
@@ -86,7 +89,7 @@ export default function SessionsTable() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {sessions === null ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-stone-400">
                   Loading…

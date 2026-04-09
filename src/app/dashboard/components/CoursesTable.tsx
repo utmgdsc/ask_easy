@@ -17,20 +17,21 @@ interface Course {
 export default function CoursesTable() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
 
   const fetchRef = useRef(0);
 
   useEffect(() => {
     const id = ++fetchRef.current;
-    setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     fetch(`/api/admin/courses?${params}`)
       .then((res) => (res.ok ? res.json() : { courses: [] }))
-      .then((data) => { if (id === fetchRef.current) setCourses(data.courses ?? []); })
-      .catch(() => { if (id === fetchRef.current) setCourses([]); })
-      .finally(() => { if (id === fetchRef.current) setLoading(false); });
+      .then((data) => {
+        if (id === fetchRef.current) setCourses(data.courses ?? []);
+      })
+      .catch(() => {
+        if (id === fetchRef.current) setCourses([]);
+      });
   }, [search]);
 
   const handleDelete = async (courseId: string, code: string) => {
@@ -41,8 +42,10 @@ export default function CoursesTable() {
     )
       return;
     const res = await fetch(`/api/admin/courses/${courseId}`, { method: "DELETE" });
-    if (res.ok) { fetchRef.current++; setCourses((prev) => prev.filter((c) => c.id !== courseId)); }
-    else alert("Failed to delete course.");
+    if (res.ok) {
+      fetchRef.current++;
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
+    } else alert("Failed to delete course.");
   };
 
   return (
@@ -71,7 +74,7 @@ export default function CoursesTable() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {courses === null ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-stone-400">
                   Loading…
