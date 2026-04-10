@@ -113,22 +113,8 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
   const [globalIsAnonymous, setGlobalIsAnonymous] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [questionError, setQuestionError] = useState<string | null>(null);
-  const [timeoutUntil, setTimeoutUntil] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Restore any active timeout from localStorage once userId is available.
-  // Professors and TAs are never subject to the question timeout.
-  useEffect(() => {
-    if (!userId || role === "PROFESSOR" || role === "TA") return;
-    const stored = localStorage.getItem(`question_timeout_${userId}_${sessionId}`);
-    if (!stored) return;
-    const ts = Number(stored);
-    if (ts > Date.now()) {
-      setTimeoutUntil(ts);
-    } else {
-      localStorage.removeItem(`question_timeout_${userId}_${sessionId}`);
-    }
-  }, [userId, sessionId, role]);
   const bottomRef = useRef<HTMLDivElement>(null);
   // Separate history that keeps deleted messages (marked as [deleted]) for the
   // session export. Never removes items — deletions are marked in-place.
@@ -369,19 +355,7 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
     };
 
     const onQuestionError = (payload: { message: string }) => {
-      const isRateLimit =
-        payload.message.toLowerCase().includes("question limit") ||
-        payload.message.toLowerCase().includes("rate limit");
-
-      if (isRateLimit && role !== "PROFESSOR" && role !== "TA") {
-        console.warn("[ClassChat] question:rate-limited — student timed out for 5 minutes");
-        const until = Date.now() + 5 * 60 * 1000;
-        localStorage.setItem(`question_timeout_${userId}_${sessionId}`, String(until));
-        setTimeoutUntil(until);
-        setQuestionError(null);
-      } else {
-        setQuestionError(payload.message);
-      }
+      setQuestionError(payload.message);
     };
 
     const onQuestionDeleted = (payload: { questionId: string }) => {
@@ -467,7 +441,6 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
 
   const handleSubmitQuestion = (content: string, isAnonymous: boolean) => {
     if (!socket) return;
-    if (timeoutUntil !== null && Date.now() < timeoutUntil) return;
     setQuestionError(null);
     socket.emit("question:create", { sessionId, content, isAnonymous });
   };
@@ -621,7 +594,11 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
                       post={q}
                       commentView={commentView}
                       onUpvote={() => handleUpvote(q.id)}
-                      onResolve={isInstructor ? () => handleResolve(q.id) : undefined}
+                      onResolve={
+                        isInstructor || q.user?.id === userId
+                          ? () => handleResolve(q.id)
+                          : undefined
+                      }
                       onUnresolve={isInstructor ? () => handleUnresolve(q.id) : undefined}
                       canAnswer={canAnswerGlobal || q.user?.id === userId}
                       onSubmitAnswer={(content) => handleSubmitAnswer(q.id, content)}
@@ -647,11 +624,6 @@ export default function ClassChat({ chatHistoryRef }: ClassChatProps) {
         onClearError={() => setQuestionError(null)}
         isAnonymous={globalIsAnonymous}
         onAnonymousChange={setGlobalIsAnonymous}
-        timeoutUntil={timeoutUntil}
-        onTimeoutExpired={() => {
-          localStorage.removeItem(`question_timeout_${userId}_${sessionId}`);
-          setTimeoutUntil(null);
-        }}
       />
     </div>
   );

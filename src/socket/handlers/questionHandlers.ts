@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import {
   validateQuestionContent,
   validateVisibility,
-  checkQuestionRateLimit,
   checkUpvoteRateLimit,
   checkResolveRateLimit,
   validateSessionForQuestions,
@@ -148,21 +147,7 @@ export function handleQuestionCreate(socket: Socket, io: Server): void {
         authorEnrollmentRole = enrollment.role;
       }
 
-      // 6. Rate limit — students only (TAs and professors are exempt).
-      //    Counter is scoped to the session so a new session always starts fresh.
-      if (authorEnrollmentRole === "STUDENT") {
-        const isRateLimited = await checkQuestionRateLimit(userId, payload.sessionId);
-        if (isRateLimited) {
-          console.log("[QuestionHandler] Rejected: rate limited");
-          socket.emit("question:error", {
-            message:
-              "You have reached the question limit. Please wait before asking another question.",
-          });
-          return;
-        }
-      }
-
-      // 7. Persist to database (include author for display name in broadcast)
+      // 6. Persist to database (include author for display name in broadcast)
       //    authorId is always stored for audit purposes, but stripped
       //    from the broadcast payload in step 8 when isAnonymous is true.
       const question = await prisma.question.create({
@@ -335,10 +320,15 @@ export function handleQuestionUpvote(socket: Socket, io: Server): void {
  * Checks whether a user has permission to resolve a question.
  *
  * - TA / PROFESSOR (per-course CourseEnrollment role) can resolve any question.
- * - STUDENT cannot resolve any question.
+ * - STUDENT can only resolve their own question.
  */
-function checkResolvePermission(enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"): boolean {
-  return enrollmentRole === "TA" || enrollmentRole === "PROFESSOR";
+function checkResolvePermission(
+  userId: string,
+  questionAuthorId: string | null,
+  enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"
+): boolean {
+  if (enrollmentRole === "TA" || enrollmentRole === "PROFESSOR") return true;
+  return questionAuthorId === userId;
 }
 
 /**
@@ -349,7 +339,7 @@ function checkResolvePermission(enrollmentRole: "STUDENT" | "TA" | "PROFESSOR"):
  *   2. Payload shape — must be a non-null object with a string questionId
  *   3. Rate limit    — 20 resolves / 60 s per user, enforced in Redis
  *   4. Question      — must exist in the DB and not already be resolved
- *   5. Permission    — TA/PROFESSOR can resolve any; STUDENT cannot resolve
+ *   5. Permission    — TA/PROFESSOR can resolve any; STUDENT only their own
  *   6. Persist       — question status updated to RESOLVED
  *   7. Broadcast     — emit resolved status to the session room
  */
@@ -418,7 +408,7 @@ export function handleQuestionResolve(socket: Socket, io: Server): void {
 
       const requesterRole = enrollment?.role ?? "STUDENT";
 
-      if (!checkResolvePermission(requesterRole)) {
+      if (!checkResolvePermission(userId, question.authorId, requesterRole)) {
         socket.emit("question:error", {
           message: "You do not have permission to resolve this question.",
         });
